@@ -4,7 +4,13 @@ Complete development workflow for Claude Code and Codex: issue pipeline, tracked
 
 ## Install
 
-### Project-scoped (recommended)
+### Claude Code plugin (recommended)
+
+```bash
+claude plugin add owebboy/maestro
+```
+
+### Project-scoped
 
 ```bash
 # Both harnesses at once
@@ -12,13 +18,6 @@ Complete development workflow for Claude Code and Codex: issue pipeline, tracked
 
 # With Superpowers (recommended — powers brainstorming, planning, and execution)
 ./bin/setup-project --both --with-superpowers /path/to/your/project
-```
-
-### User-scoped (global)
-
-**Claude Code:**
-```bash
-claude plugin add /path/to/maestro
 ```
 
 **Codex:** See [codex/INSTALL.md](codex/INSTALL.md)

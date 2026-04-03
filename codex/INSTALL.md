@@ -21,7 +21,7 @@ This symlinks skills into your project's `.agents/skills/` directory where Codex
 
 ```bash
 # Clone the plugin
-git clone <repo-url> ~/.codex/maestro
+git clone https://github.com/owebboy/maestro.git ~/.codex/maestro
 
 # Symlink each skill into Codex's global skill discovery path
 for skill in ~/.codex/maestro/skills/*/; do
