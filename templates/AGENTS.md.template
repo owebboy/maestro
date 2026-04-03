@@ -1,0 +1,53 @@
+# AGENTS.md
+
+<!-- Generated from CLAUDE.md by maestro:agents-md-sync -->
+<!-- Last synced: YYYY-MM-DD -->
+
+## Project Overview
+
+<!-- What is this project? Who is it for? -->
+
+## Build & Test
+
+```bash
+# Build
+# Test
+# Lint
+```
+
+## Coding Conventions
+
+<!-- Language-specific style rules, patterns, anti-patterns -->
+
+## Architecture
+
+<!-- Directory structure, module relationships, key invariants -->
+
+## Development Workflow
+
+### Issue Pipeline
+
+Issues are tracked in `issues/INBOX.md`. The workflow:
+
+1. Add raw bullets to `issues/INBOX.md`
+2. Run triage (`$triage`) to create structured issue files
+3. Run issue-review (`$issue-review <path>`) to add codebase context (3 parallel agents)
+4. Run issue-advance (`$issue-advance <path>`) to convert reviewed issues into conductor tracks
+5. Implement via conductor track workflow (TDD, phase checkpoints)
+6. Run UAT (`$uat-create` then `$uat-run`) to validate completed tracks
+7. Any UAT failures go back to INBOX as new issues
+
+### Git Conventions
+
+<!-- Commit format, branch strategy, PR process -->
+
+## Red Flags
+
+<!-- Stop-immediately patterns -->
+
+## Codex-Specific Notes
+
+- Multi-agent skills require `features.multi_agent = true` in config.toml
+- Hooks are experimental (`codex_hooks = true`): SessionStart, PreToolUse, PostToolUse, UserPromptSubmit, Stop
+- Agent spawning is explicit — ask for agents by name when needed
+- Memory is manual via this file — no auto-memory system

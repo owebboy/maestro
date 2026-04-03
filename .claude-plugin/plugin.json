@@ -1,0 +1,6 @@
+{
+  "name": "maestro",
+  "version": "1.0.0",
+  "description": "Complete development workflow: track management, issue pipeline, UAT, codebase review, and session wrap-up. Uses Superpowers as the execution engine for brainstorming, planning, TDD, and subagent-driven development.",
+  "author": "Oliver Pope"
+}
