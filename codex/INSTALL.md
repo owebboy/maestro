@@ -2,7 +2,18 @@
 
 Maestro skills are compatible with OpenAI Codex via the shared Agent Skills format. Track management is built in — no Conductor dependency.
 
-## Install (project-scoped, recommended)
+## Install via skills.sh (recommended)
+
+```bash
+# Maestro
+bunx skills add owebboy/maestro --agent codex
+
+# Recommended dependencies
+bunx skills add obra/superpowers --agent codex
+bunx skills add obra/elements-of-style --agent codex
+```
+
+## Install via setup-project
 
 ```bash
 # From the maestro directory:
@@ -17,7 +28,7 @@ Maestro skills are compatible with OpenAI Codex via the shared Agent Skills form
 
 This symlinks skills into your project's `.agents/skills/` directory where Codex discovers them automatically. Claude-only skills (workflow-router, agents-md-sync) are skipped.
 
-## Install (user-scoped, global)
+## Install manually (user-scoped, global)
 
 ```bash
 # Clone the plugin

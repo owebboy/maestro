@@ -111,37 +111,152 @@ Codex hooks are experimental (`codex_hooks = true` in config). Only SessionStart
 
 ## Dependencies
 
-- **Superpowers** (strongly recommended): Powers brainstorming, planning, TDD enforcement, and subagent-driven development inside `/new-track` and `/implement`. Without it, these skills fall back to inline workflows — functional but less powerful.
-- **code-simplifier** (optional): `/wrap-up` uses the `simplify` skill for code quality review when available. Falls back to a general-purpose review agent.
-- **claude-md-management** (optional): `/wrap-up` uses `revise-claude-md` for CLAUDE.md updates when available. Falls back to inline review.
-- **No Conductor dependency**: Track management is built in. This plugin absorbs Conductor's organizational patterns and wraps Superpowers' execution engine.
+Maestro works standalone — every dependency has an inline fallback. But the full experience comes from installing the recommended plugins.
+
+### Recommended
+
+```bash
+# Superpowers — brainstorming, phased planning, subagent-driven TDD, code review
+claude plugin marketplace add superpowers@superpowers-marketplace
+
+# Elements of Style — clear, concise writing polish for issue descriptions
+claude plugin marketplace add elements-of-style@superpowers-marketplace
+```
+
+| Plugin | Used by | What it adds |
+|--------|---------|-------------|
+| **[Superpowers](https://github.com/superpowers-marketplace/superpowers)** | `/new-track`, `/implement` | Brainstorming, phased planning, subagent-driven TDD, code review |
+| **[Elements of Style](https://github.com/superpowers-marketplace/elements-of-style)** | `/triage`, `/issue-review` | Clear, concise writing polish for issue descriptions |
+
+### Optional
+
+```bash
+# Code Simplifier — code quality review during phase checkpoints and wrap-up
+claude plugin marketplace add code-simplifier@claude-plugins-official
+
+# CLAUDE.md Management — automated CLAUDE.md updates at session end
+claude plugin marketplace add claude-md-management@claude-plugins-official
+```
+
+| Plugin | Used by | What it adds |
+|--------|---------|-------------|
+| **code-simplifier** | `/wrap-up`, `/implement` | Code quality review during phase checkpoints and session wrap-up |
+| **claude-md-management** | `/wrap-up` | Automated CLAUDE.md updates at session end |
+
+### No external dependencies required
+
+- **No Conductor dependency**: Track management is built in. Maestro absorbs Conductor's organizational patterns and wraps Superpowers' execution engine.
+- Every skill that uses an optional plugin falls back to an inline workflow when the plugin isn't installed.
 
 ## Codex Compatibility
 
-13 of 15 skills work in Codex via the shared Agent Skills format. See [codex/INSTALL.md](codex/INSTALL.md) for setup and compatibility matrix.
+13 of 15 skills work in Codex via the shared Agent Skills format. Install with [skills.sh](https://skills.sh/):
+
+```bash
+# Maestro
+bunx skills add owebboy/maestro --agent codex
+
+# Recommended
+bunx skills add obra/superpowers --agent codex
+bunx skills add obra/elements-of-style --agent codex
+```
+
+See [codex/INSTALL.md](codex/INSTALL.md) for full setup and compatibility matrix.
 
 ## Quick Start
 
+### 1. Install and initialize
+
 ```bash
-# 1. Set up project context
+claude plugin add owebboy/maestro
+
+# In your project:
 /setup
+```
 
-# 2. Create a track from an idea
+`/setup` walks you through an interactive Q&A (product, tech stack, workflow preferences) and creates a `conductor/` directory with your project context. Every other skill reads from this.
+
+### 2. Pick your path
+
+**Path A: Direct track** — you know what you want to build.
+
+```
 /new-track feature user-authentication
+```
 
-# 3. Implement it
-/implement user-auth_20260403
+Maestro gathers a spec (interactive Q&A), runs brainstorming for the design, then generates a phased implementation plan. All artifacts land in `conductor/tracks/{trackId}/`.
 
-# 4. Test it
-/uat-create
-/uat-run
+```
+/implement
+```
 
-# 5. Wrap up the session
+Executes the plan task-by-task with TDD (red-green-refactor), commits per task, and runs parallel code review at each phase checkpoint. Out-of-scope findings get filed to `issues/INBOX.md` automatically.
+
+**Path B: Issue pipeline** — you have a pile of bugs, ideas, or review findings.
+
+```
+/triage
+```
+
+Parses raw bullets from `issues/INBOX.md` into structured issue files with type/priority classification.
+
+```
+/issue-review all
+```
+
+Three parallel agents enrich each issue with affected files, related tests, and similar prior work. Writing gets polished automatically.
+
+```
+/issue-advance all
+```
+
+Converts reviewed issues into tracks (invokes `/new-track` under the hood, auto-answering from issue data). Related issues get grouped. Then `/implement` as above.
+
+**Path C: Health check** — audit the whole codebase.
+
+```
+/codebase-review
+```
+
+Six review agents (security, performance, architecture, testing, data integrity, UX) run in parallel, then six audit agents verify the findings. Confirmed issues go to `issues/INBOX.md` for triage.
+
+### 3. Validate and ship
+
+```
+/uat-create          # generates acceptance test checklist from completed tracks
+/uat-run             # interactive proctor — walks through tests, captures failures to INBOX
+```
+
+### 4. Wrap up
+
+```
 /wrap-up
 ```
 
-Or from issues:
-```bash
-# Add findings to issues/INBOX.md, then:
-/triage → /issue-review → /issue-advance → /implement → /uat-create → /wrap-up
+Parallel quality review (code simplifier + code reviewer + spec reviewer), captures any untracked issues to INBOX, updates CLAUDE.md and project context, commits session work.
+
+### 5. Housekeeping
+
+```
+/manage                      # interactive menu: archive, restore, delete, rename, cleanup
+/manage --archive auth_20260403   # archive a completed track
+/manage --cleanup            # find orphaned artifacts, stale in-progress tracks
+/issue-close issues/2026-04-03-old-bug.md   # close an issue as wont-fix, deferred, or duplicate
+```
+
+### 6. Check in anytime
+
+```
+/status              # tracks, tasks, phases, blockers, and issue pipeline counts
+/status --quick      # one-liner: "MyApp: 14/20 tasks (70%) — Active: auth, Task 2.3"
+```
+
+### Lifecycle at a glance
+
+```
+/setup → /new-track → /implement → /uat-create → /uat-run → /wrap-up
+                          ↑
+/triage → /issue-review → /issue-advance
+                          ↑
+              /codebase-review
 ```
