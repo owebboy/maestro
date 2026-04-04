@@ -20,9 +20,7 @@ if ! head -1 "$file_path" | grep -q '^---$'; then
   exit 0
 fi
 
-# Extract frontmatter block
-frontmatter=$(sed -n '1,/^---$/{ /^---$/d; p; }' "$file_path" | tail -n +1)
-# The above gets content between first --- and second ---
+# Extract frontmatter block (content between first and second ---)
 frontmatter=$(awk '/^---$/{n++; next} n==1' "$file_path")
 
 errors=""

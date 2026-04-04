@@ -71,7 +71,7 @@ project_doc_fallback_filenames = ["CLAUDE.md"]
 | codebase-review | Full | Needs `multi_agent = true` |
 | uat-create | Partial | MCP tool detection varies |
 | uat-run | Partial | Falls back to manual verification |
-| wrap-up | Partial | Some skill invocations are Claude-only |
+| session-wrap-up | Partial | Some skill invocations are Claude-only |
 | workflow-router | N/A | Uses Claude-only `user-invocable: false` |
 | agents-md-sync | N/A | Purpose is to generate Codex artifacts from Claude |
 

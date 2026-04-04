@@ -40,7 +40,7 @@ Maestro (WHAT and WHEN)                    Superpowers (HOW)
 ├── /codebase-review → 6+6 agents
 ├── /uat-create     → UAT checklist
 ├── /uat-run        → interactive proctor
-├── /wrap-up        → session cleanup
+├── /session-wrap-up → session cleanup
 └── /agents-md-sync → Codex interop
 ```
 
@@ -74,7 +74,7 @@ Maestro (WHAT and WHEN)                    Superpowers (HOW)
 | codebase-review | `/codebase-review [scope]` | 6+6 parallel agents: review wave then audit wave |
 | uat-create | `/uat-create` | Completed tracks → UAT checklist |
 | uat-run | `/uat-run [file\|date]` | Interactive UAT proctor with failure capture |
-| wrap-up | `/wrap-up` | End-of-session: quality review, issue capture, context updates, commit |
+| session-wrap-up | `/session-wrap-up` | End-of-session: quality review, issue capture, context updates, commit |
 
 ### Routing & Interop
 
@@ -85,29 +85,16 @@ Maestro (WHAT and WHEN)                    Superpowers (HOW)
 
 ## Hooks
 
-Two lifecycle hooks automate issue pipeline hygiene. Installed by `setup-project` into `.claude/hooks/` (and `.agents/hooks/` for Codex).
+Two lifecycle hooks auto-activate when the plugin is installed (via `hooks/hooks.json`). No manual `settings.json` configuration needed.
 
-| Hook | Event | What it does | Codex? |
-|------|-------|-------------|--------|
-| `session-start-issues.sh` | SessionStart | Shows inbox/triaged/reviewed counts at session start | Yes |
-| `validate-issue-frontmatter.sh` | PostToolUse (Write/Edit) | Validates issue file frontmatter (status, type, priority, filed) | No |
+| Hook | Event | What it does |
+|------|-------|-------------|
+| `session-start-issues.sh` | SessionStart | Shows inbox/triaged/reviewed counts at session start |
+| `validate-issue-frontmatter.sh` | PostToolUse (Write/Edit) | Validates issue file frontmatter (status, type, priority, filed) |
 
-### Activating hooks (Claude Code)
+### Codex
 
-Add to your project's `.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "SessionStart": [{ "command": ".claude/hooks/session-start-issues.sh" }],
-    "PostToolUse":  [{ "command": ".claude/hooks/validate-issue-frontmatter.sh", "matcher": "Write|Edit" }]
-  }
-}
-```
-
-### Activating hooks (Codex)
-
-Codex hooks are experimental (`codex_hooks = true` in config). Only SessionStart is supported — the frontmatter validation hook requires Claude Code's richer PostToolUse event.
+Codex hooks are experimental (`codex_hooks = true` in config). The `setup-project --codex` script copies the compatible `session-start-issues.sh` hook to `.agents/hooks/`. The frontmatter validation hook requires Claude Code's richer PostToolUse event and is not available in Codex.
 
 ## Dependencies
 
@@ -140,8 +127,8 @@ claude plugin marketplace add claude-md-management@claude-plugins-official
 
 | Plugin | Used by | What it adds |
 |--------|---------|-------------|
-| **code-simplifier** | `/wrap-up`, `/implement` | Code quality review during phase checkpoints and session wrap-up |
-| **claude-md-management** | `/wrap-up` | Automated CLAUDE.md updates at session end |
+| **code-simplifier** | `/session-wrap-up`, `/implement` | Code quality review during phase checkpoints and session wrap-up |
+| **claude-md-management** | `/session-wrap-up` | Automated CLAUDE.md updates at session end |
 
 ### No external dependencies required
 
@@ -230,7 +217,7 @@ Six review agents (security, performance, architecture, testing, data integrity,
 ### 4. Wrap up
 
 ```
-/wrap-up
+/session-wrap-up
 ```
 
 Parallel quality review (code simplifier + code reviewer + spec reviewer), captures any untracked issues to INBOX, updates CLAUDE.md and project context, commits session work.
@@ -254,9 +241,13 @@ Parallel quality review (code simplifier + code reviewer + spec reviewer), captu
 ### Lifecycle at a glance
 
 ```
-/setup → /new-track → /implement → /uat-create → /uat-run → /wrap-up
+/setup → /new-track → /implement → /uat-create → /uat-run → /session-wrap-up
                           ↑
 /triage → /issue-review → /issue-advance
                           ↑
               /codebase-review
 ```
+
+## Acknowledgements
+
+Inspired by [wshobson/agents](https://github.com/wshobson/agents) for the track-based development workflow and issue pipeline patterns. Built on [obra/superpowers](https://github.com/obra/superpowers) as the execution engine.

@@ -1,5 +1,5 @@
 ---
-name: wrap-up
+name: session-wrap-up
 description: End-of-session wrap-up that reviews code quality, checks for untracked issues, updates CLAUDE.md and project context files, and commits. Use when finishing a Claude session, wrapping up work, or the user says they're done for now.
 ---
 

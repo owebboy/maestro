@@ -21,7 +21,7 @@ This project uses up to three workflow engines at different scope levels. Pick t
 | Reviewed issue ready for implementation | **Issue pipeline** `/issue-advance` | Convert issue to track via `/new-track` |
 | Need a full codebase health check | **Codebase review** `/codebase-review` | 6+6 parallel agent review/audit pattern |
 | Completed tracks need acceptance testing | **UAT** `/uat-create` then `/uat-run` | Generate and run UAT checklist |
-| Session ending, user is done for now | **Wrap-up** `/wrap-up` | Quality review, issue capture, context updates, commit |
+| Session ending, user is done for now | **Wrap-up** `/session-wrap-up` | Quality review, issue capture, context updates, commit |
 | New project, no conductor/ directory | **Setup** `/setup` | Initialize project context (product, tech stack, workflow) |
 | Need project overview | **Status** `/status` | Track summary, current focus, next actions |
 | Track housekeeping needed | **Manage** `/manage` | Archive, restore, delete, rename, cleanup |
@@ -43,7 +43,7 @@ Common compositions:
 1. **Issue → Track → Implementation**: `/triage` → `/issue-review` → `/issue-advance` → `/implement`
 2. **Quick fix found during track work**: Use Plan Mode for the fix, capture as INBOX item if out of scope
 3. **Review → Issues → Tracks**: `/codebase-review` → `/triage` → `/issue-advance all`
-4. **End of day**: `/wrap-up` → quality review, issue capture, context updates, commit
+4. **End of day**: `/session-wrap-up` → quality review, issue capture, context updates, commit
 
 ## When to Use Plan Mode vs /new-track
 

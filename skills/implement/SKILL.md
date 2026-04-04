@@ -67,7 +67,7 @@ Mark track as in-progress:
 
 ## Execution Mode Selection
 
-Detect Superpowers availability: check for `superpowers:subagent-driven-development` (plugin-installed) or `subagent-driven-development` (project-scoped). Use whichever is found.
+Detect Superpowers availability: check for `superpowers:subagent-driven-development` (plugin-installed) or `subagent-driven-development` (project-scoped), AND `superpowers:executing-plans` (plugin-installed) or `executing-plans` (project-scoped). Use whichever forms are found.
 
 If Superpowers is available, offer the choice:
 
@@ -101,6 +101,8 @@ After each task completes, update track metadata:
 **Superpowers output control:** When invoking the skill, instruct it that all artifacts belong in `conductor/tracks/{trackId}/` — not `docs/superpowers/`. If Superpowers writes artifacts outside the track directory despite the instruction, move them in. If Superpowers invokes `finishing-a-development-branch` at the end, defer to our own Track Completion flow below instead — we manage the track lifecycle, not Superpowers.
 
 ### Inline Execution (via Superpowers)
+
+Detect availability: check for `superpowers:executing-plans` (plugin-installed) or `executing-plans` (project-scoped). If neither is found, fall back to the no-Superpowers path below.
 
 Invoke the executing-plans skill using the Skill tool, passing the track's plan.
 
