@@ -7,7 +7,11 @@ Complete development workflow for Claude Code and Codex: issue pipeline, tracked
 ### Claude Code plugin (recommended)
 
 ```bash
-claude plugin add owebboy/maestro
+# Add as a marketplace source
+claude plugin marketplace add owebboy/maestro
+
+# Install the plugin
+claude plugin install maestro@maestro-dev
 ```
 
 ### Project-scoped
