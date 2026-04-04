@@ -76,7 +76,7 @@ Show spec to user for review. Wait for approval before proceeding.
 
 ## Step 4: Design via Brainstorming
 
-Detect Superpowers availability using the [detection procedure](../../docs/detecting-optional-skills.md): check system-reminder skill list, then `.claude/settings.json` `enabledPlugins` for `superpowers@superpowers-marketplace`, then `.claude/skills/brainstorming/SKILL.md`. The skill is available if **any** signal is positive.
+Detect Superpowers availability using the [detection procedure](../../docs/detecting-optional-skills.md). Use only Codex-visible signals and inline fallback when no signal is positive.
 
 If available, invoke the brainstorming skill using the Skill tool. Pass the approved spec as context AND instruct it to write its design doc to `conductor/tracks/{trackId}/design.md` instead of the default `docs/superpowers/specs/` location. Example invocation context:
 
@@ -94,7 +94,7 @@ If Superpowers is not installed, run an inline design discussion:
 
 ## Step 5: Plan via Writing Plans
 
-Detect Superpowers availability using the [detection procedure](../../docs/detecting-optional-skills.md): check system-reminder skill list, then `.claude/settings.json` `enabledPlugins`, then `.claude/skills/writing-plans/SKILL.md`. Available if **any** signal is positive.
+Detect Superpowers availability using the [detection procedure](../../docs/detecting-optional-skills.md). Use only Codex-visible signals and inline fallback when no signal is positive.
 
 If available, invoke the writing-plans skill using the Skill tool. Instruct it to write the plan to `conductor/tracks/{trackId}/plan.md` instead of the default `docs/superpowers/plans/` location. Example invocation context:
 

@@ -21,11 +21,11 @@ Fill technical context in a triaged issue file by exploring the codebase.
    - Specific, searchable problem description?
    - At least one concrete acceptance criterion?
    - If NO to either:
-     - Detect `brainstorming` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) — check system-reminder, project settings, and project skills directory. If found via any signal, invoke it to scope the issue with the user.
+    - Detect `brainstorming` using the [detection procedure](../../docs/detecting-optional-skills.md). If found via any Codex-visible signal, invoke it to scope the issue with the user.
      - Otherwise, run an inline brainstorming discussion: ask the user to clarify the problem, propose possible causes, and refine acceptance criteria
      - Update the issue file with the refined content, then continue
 
-3. **Explore codebase** — launch 3 parallel agents. In Claude Code, use the Agent tool with `subagent_type=Explore`. In Codex, spawn 3 worker agents explicitly.
+3. **Explore codebase** — launch 3 parallel Codex agents when available. If multi-agent execution is unavailable, run the same searches sequentially.
 
    **Agent 1 — Affected Files:**
    > Find source files related to: "{summary}". Search for relevant keywords, types, functions. List file paths with brief relevance notes.
@@ -44,7 +44,7 @@ Fill technical context in a triaged issue file by exploring the codebase.
    - Refine `## Acceptance Criteria` if exploration revealed new requirements
    - Update frontmatter `status` to `reviewed`
 
-5. **Polish writing** — detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md).
+5. **Polish writing** — detect `writing-clearly-and-concisely` using the [detection procedure](../../docs/detecting-optional-skills.md).
    - If found, invoke it against the issue file to tighten the Summary, Problem Description, and Acceptance Criteria
    - If not available, do a quick inline pass: remove filler words, prefer active voice, ensure each acceptance criterion is a single testable statement
    - Do not change technical meaning — only improve clarity

@@ -67,7 +67,7 @@ Mark track as in-progress:
 
 ## Execution Mode Selection
 
-Detect Superpowers availability using the procedure in [docs/detecting-optional-skills.md](../../docs/detecting-optional-skills.md): check system-reminder skill list, then `.claude/settings.json` `enabledPlugins` for `superpowers@superpowers-marketplace`, then `.claude/skills/` for project-scoped installs. The skill is available if **any** signal is positive. Check for both `subagent-driven-development` and `executing-plans` (in either plugin-prefixed or bare form).
+Detect Superpowers availability using the procedure in [docs/detecting-optional-skills.md](../../docs/detecting-optional-skills.md). The skill is available if any Codex-visible signal is positive. Check for both `subagent-driven-development` and `executing-plans`.
 
 If Superpowers is available, offer the choice:
 
@@ -102,7 +102,7 @@ After each task completes, update track metadata:
 
 ### Inline Execution (via Superpowers)
 
-Detect availability using the [detection procedure](../../docs/detecting-optional-skills.md): check system-reminder, project settings, and project skills directory for `executing-plans`. If no signal is positive, fall back to the no-Superpowers path below.
+Detect availability using the [detection procedure](../../docs/detecting-optional-skills.md). If no Codex-visible signal is positive, fall back to the no-Superpowers path below.
 
 Invoke the executing-plans skill using the Skill tool, passing the track's plan.
 

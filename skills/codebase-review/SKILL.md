@@ -25,7 +25,7 @@ Codebase Review Progress:
 
 ## Phase 1: Review Wave
 
-Launch 6 review agents in parallel. In Claude Code, use the Agent tool with `subagent_type=Explore`. In Codex, spawn 6 worker agents explicitly. Each agent has a specific focus area and produces findings as a numbered list.
+Launch 6 review agents in parallel when Codex multi-agent support is available. Otherwise run the same review passes sequentially. Each pass produces findings as a numbered list.
 
 **Agent 1 — Security:**
 > Review {scope} for security issues. Check for: injection vulnerabilities (SQL, command, XSS), authentication/authorization gaps, secrets in code, insecure deserialization, SSRF, path traversal, timing attacks, missing input validation at system boundaries. For each finding: file, line, severity (critical/high/medium/low), description, suggested fix.
@@ -34,7 +34,7 @@ Launch 6 review agents in parallel. In Claude Code, use the Agent tool with `sub
 > Review {scope} for performance issues. Check for: N+1 queries, missing indexes, unbounded queries, unnecessary re-renders, memory leaks, missing pagination, expensive operations in hot paths, missing caching opportunities. For each finding: file, line, severity, description, suggested fix.
 
 **Agent 3 — Architecture:**
-> Review {scope} for architecture issues. Check for: layer violations, circular dependencies, god classes/functions, missing abstractions, inconsistent patterns, violation of project conventions (check CLAUDE.md or AGENTS.md), dead code, orphaned files. For each finding: file, line, severity, description, suggested fix.
+> Review {scope} for architecture issues. Check for: layer violations, circular dependencies, god classes/functions, missing abstractions, inconsistent patterns, violation of project conventions (check AGENTS.md and project docs), dead code, orphaned files. For each finding: file, line, severity, description, suggested fix.
 
 **Agent 4 — Testing:**
 > Review {scope} for testing gaps. Check for: untested public functions, missing edge case tests, flaky test patterns (time-dependent, ordering-dependent), test isolation issues, missing integration tests for critical paths, tests that don't assert meaningful behavior. For each finding: file, line, severity, description, suggested fix.

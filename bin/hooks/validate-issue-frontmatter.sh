@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Hook: PostToolUse (Write/Edit) — validate issue file frontmatter
-# Install: add to settings.json hooks array for PostToolUse event
-# Claude Code only (Codex PostToolUse doesn't pass file path context)
+# Helper: validate issue file frontmatter after writes
+# This script is kept for manual use or future compatible automation.
+# It is not part of the automatic Codex hook contract because Codex does not provide equivalent file-path context.
 #
 # Reads the modified file path from stdin (JSON with tool_input.file_path).
 # Only activates for files matching issues/*.md (not INBOX.md).

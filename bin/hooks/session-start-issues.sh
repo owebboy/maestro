@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Hook: SessionStart — show issue pipeline status
-# Install: add to settings.json hooks array for SessionStart event
-# Works in both Claude Code and Codex
+# Install in Codex via .agents/hooks/session-start-issues.sh
 
 ISSUES_DIR="${1:-issues}"
 

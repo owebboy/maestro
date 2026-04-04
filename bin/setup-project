@@ -1,63 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# maestro: project-scoped setup for Claude Code and Codex
+# maestro: project-scoped setup for Codex
 #
 # Usage:
-#   setup-project [--claude] [--codex] [--both] [--with-superpowers] [target-dir]
-#
-# Installs Maestro (and optionally Superpowers) into
-# the target project directory for the selected harness(es).
-#
-# Claude Code: symlinks into .claude/skills/ (project-scoped, discoverable automatically)
-# Codex:       symlinks into .agents/skills/ (project-scoped, discoverable automatically)
+#   setup-project [--with-superpowers] [target-dir]
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-INSTALL_CLAUDE=false
-INSTALL_CODEX=false
 WITH_SUPERPOWERS=false
 TARGET_DIR=""
 
-# Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --claude)     INSTALL_CLAUDE=true; shift ;;
-    --codex)      INSTALL_CODEX=true; shift ;;
-    --both)       INSTALL_CLAUDE=true; INSTALL_CODEX=true; shift ;;
     --with-superpowers) WITH_SUPERPOWERS=true; shift ;;
     --help|-h)
-      echo "Usage: setup-project [--claude] [--codex] [--both] [--with-superpowers] [target-dir]"
+      echo "Usage: setup-project [--with-superpowers] [target-dir]"
       echo ""
       echo "Options:"
-      echo "  --claude            Install for Claude Code (.claude/skills/)"
-      echo "  --codex             Install for Codex (.agents/skills/)"
-      echo "  --both              Install for both harnesses"
-      echo "  --with-superpowers  Also install Superpowers skills (recommended)"
+      echo "  --with-superpowers  Also install Superpowers from ~/.codex/superpowers/skills if available"
       echo "  target-dir          Project directory (default: current directory)"
       exit 0
       ;;
-    *)            TARGET_DIR="$1"; shift ;;
+    *) TARGET_DIR="$1"; shift ;;
   esac
 done
 
-# Defaults
 TARGET_DIR="${TARGET_DIR:-.}"
 TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
 
-if ! $INSTALL_CLAUDE && ! $INSTALL_CODEX; then
-  echo "No harness selected. Use --claude, --codex, or --both"
-  exit 1
-fi
-
 echo "maestro setup"
 echo "  Target:      $TARGET_DIR"
-echo "  Plugin:      $SCRIPT_DIR"
-echo "  Claude:      $INSTALL_CLAUDE"
-echo "  Codex:       $INSTALL_CODEX"
+echo "  Codex:       true"
 echo "  Superpowers: $WITH_SUPERPOWERS"
 echo ""
 
-# --- Helper ---
 symlink_skill() {
   local src="$1" dest_dir="$2" name="$3"
   mkdir -p "$dest_dir"
@@ -70,179 +46,55 @@ symlink_skill() {
   fi
 }
 
-# --- Claude Code ---
-if $INSTALL_CLAUDE; then
-  echo "=== Claude Code ==="
-  CLAUDE_SKILLS="$TARGET_DIR/.claude/skills"
+echo "=== Codex ==="
+CODEX_SKILLS="$TARGET_DIR/.agents/skills"
 
-  for skill_dir in "$SCRIPT_DIR/skills"/*/; do
-    skill_name="$(basename "$skill_dir")"
-    symlink_skill "$skill_dir" "$CLAUDE_SKILLS" "$skill_name"
-  done
+for skill_dir in "$SCRIPT_DIR/skills"/*/; do
+  skill_name="$(basename "$skill_dir")"
+  symlink_skill "$skill_dir" "$CODEX_SKILLS" "$skill_name"
+done
 
-  echo ""
-fi
+echo ""
 
-# --- Codex ---
-if $INSTALL_CODEX; then
-  echo "=== Codex ==="
-  CODEX_SKILLS="$TARGET_DIR/.agents/skills"
-
-  for skill_dir in "$SCRIPT_DIR/skills"/*/; do
-    skill_name="$(basename "$skill_dir")"
-    # Skip Claude-only skills
-    if [[ "$skill_name" == "workflow-router" || "$skill_name" == "agents-md-sync" ]]; then
-      echo "  skip: $skill_name (Claude-only)"
-      continue
-    fi
-    symlink_skill "$skill_dir" "$CODEX_SKILLS" "$skill_name"
-  done
-
-  echo ""
-fi
-
-# --- Superpowers ---
 if $WITH_SUPERPOWERS; then
-  SUPERPOWERS_SRC=""
-  for candidate in \
-    "$HOME/.claude/plugins/cache/superpowers-marketplace/superpowers/"*/  \
-    "$(dirname "$SCRIPT_DIR")/found-skills/cache/superpowers-marketplace/superpowers/"*/; do
-    if [[ -d "$candidate/skills" ]]; then
-      SUPERPOWERS_SRC="$candidate"
-      break
-    fi
-  done
-
-  if [[ -z "$SUPERPOWERS_SRC" ]]; then
-    echo "=== Superpowers ==="
-    echo "  NOT FOUND. Install via: claude plugin add superpowers@superpowers-marketplace"
-    echo "  Then re-run this script with --with-superpowers"
-    echo ""
+  echo "=== Superpowers ==="
+  SUPERPOWERS_SRC="$HOME/.codex/superpowers/skills"
+  if [[ -d "$SUPERPOWERS_SRC" ]]; then
+    for skill_dir in "$SUPERPOWERS_SRC"/*/; do
+      skill_name="$(basename "$skill_dir")"
+      symlink_skill "$skill_dir" "$CODEX_SKILLS" "$skill_name"
+    done
   else
-    echo "=== Superpowers (from $SUPERPOWERS_SRC) ==="
-
-    if $INSTALL_CLAUDE; then
-      for skill_dir in "$SUPERPOWERS_SRC/skills"/*/; do
-        skill_name="$(basename "$skill_dir")"
-        symlink_skill "$skill_dir" "$CLAUDE_SKILLS" "$skill_name"
-      done
-    fi
-
-    if $INSTALL_CODEX; then
-      for skill_dir in "$SUPERPOWERS_SRC/skills"/*/; do
-        skill_name="$(basename "$skill_dir")"
-        symlink_skill "$skill_dir" "$CODEX_SKILLS" "$skill_name"
-      done
-    fi
-
-    echo ""
+    echo "  not found at $SUPERPOWERS_SRC"
+    echo "  install Superpowers for Codex or continue with Maestro inline fallbacks"
   fi
+  echo ""
 fi
 
-# --- Issues directory ---
 if [[ ! -d "$TARGET_DIR/issues" ]]; then
   echo "=== Issues Directory ==="
-  REPLY=""
-  if [[ -t 0 ]]; then
-    read -p "Create issues/ directory with INBOX.md? [y/N] " -n 1 -r || true
-    echo
-  else
-    echo "  skip: non-interactive mode (run interactively to create issues/)"
-  fi
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    mkdir -p "$TARGET_DIR/issues/archived"/{tracked,deferred,wont-fix,duplicate}
-    cat > "$TARGET_DIR/issues/INBOX.md" << 'INBOX_EOF'
-# Issue Inbox
-
-Add issues as bullet points below. Run `/triage` to process them into individual issue files.
-
-## Format
-
-```
-- <description>
-- <description> (type: bug, priority: P1)
-```
-
-Type and priority are optional — `/triage` will infer them.
-
-**Types:** bug | feature | refactor | chore
-**Priorities:** P1 (blocking) | P2 (important) | P3 (nice-to-have)
-
-## Inbox
-
-INBOX_EOF
-    echo "  created: issues/INBOX.md"
-    echo "  created: issues/archived/{tracked,deferred,wont-fix,duplicate}/"
-    echo ""
-  fi
+  echo "  skip: issues/ is not created automatically in non-interactive setup"
+  echo ""
 fi
 
-# --- Hooks ---
 HOOKS_SRC="$SCRIPT_DIR/bin/hooks"
 if [[ -d "$HOOKS_SRC" ]]; then
   echo "=== Hooks ==="
-
-  if $INSTALL_CLAUDE; then
-    CLAUDE_SETTINGS="$TARGET_DIR/.claude/settings.json"
-
-    # Create settings.json if it doesn't exist
-    if [[ ! -f "$CLAUDE_SETTINGS" ]]; then
-      mkdir -p "$(dirname "$CLAUDE_SETTINGS")"
-      echo '{}' > "$CLAUDE_SETTINGS"
-    fi
-
-    # Copy hook scripts to .claude/hooks/
-    HOOKS_DEST="$TARGET_DIR/.claude/hooks"
-    mkdir -p "$HOOKS_DEST"
-    for hook_script in "$HOOKS_SRC"/*.sh; do
-      hook_name="$(basename "$hook_script")"
-      if [[ -e "$HOOKS_DEST/$hook_name" ]]; then
-        echo "  skip: $hook_name (already exists)"
-      else
-        cp "$hook_script" "$HOOKS_DEST/$hook_name"
-        chmod +x "$HOOKS_DEST/$hook_name"
-        echo "  copy: $hook_name -> .claude/hooks/"
-      fi
-    done
-
-    echo ""
-    echo "  To activate hooks, add to $CLAUDE_SETTINGS:"
-    echo '  {'
-    echo '    "hooks": {'
-    echo '      "SessionStart": [{ "command": ".claude/hooks/session-start-issues.sh" }],'
-    echo '      "PostToolUse":  [{ "command": ".claude/hooks/validate-issue-frontmatter.sh", "matcher": "Write|Edit" }]'
-    echo '    }'
-    echo '  }'
-    echo ""
+  CODEX_HOOKS="$TARGET_DIR/.agents/hooks"
+  mkdir -p "$CODEX_HOOKS"
+  if [[ -e "$CODEX_HOOKS/session-start-issues.sh" ]]; then
+    echo "  skip: session-start-issues.sh (already exists)"
+  else
+    cp "$HOOKS_SRC/session-start-issues.sh" "$CODEX_HOOKS/session-start-issues.sh"
+    chmod +x "$CODEX_HOOKS/session-start-issues.sh"
+    echo "  copy: session-start-issues.sh -> .agents/hooks/"
   fi
-
-  if $INSTALL_CODEX; then
-    CODEX_HOOKS="$TARGET_DIR/.agents/hooks"
-    mkdir -p "$CODEX_HOOKS"
-    # Only copy the hook Codex supports (SessionStart)
-    for hook_name in session-start-issues.sh; do
-      if [[ -e "$CODEX_HOOKS/$hook_name" ]]; then
-        echo "  skip: $hook_name (already exists)"
-      else
-        cp "$HOOKS_SRC/$hook_name" "$CODEX_HOOKS/$hook_name"
-        chmod +x "$CODEX_HOOKS/$hook_name"
-        echo "  copy: $hook_name -> .agents/hooks/ (Codex)"
-      fi
-    done
-    echo "  note: validate-issue-frontmatter.sh skipped (Claude-only)"
-    echo ""
-  fi
+  echo ""
 fi
 
-# --- AGENTS.md hint ---
-if $INSTALL_CODEX && [[ ! -f "$TARGET_DIR/AGENTS.md" ]]; then
+if [[ ! -f "$TARGET_DIR/AGENTS.md" ]]; then
   echo "=== Codex Tip ==="
-  echo "  No AGENTS.md found. Consider running /agents-md-sync"
-  echo "  from Claude Code to generate one from your CLAUDE.md."
-  echo ""
-  echo "  Or add to .codex/config.toml:"
-  echo '  [project]'
-  echo '  project_doc_fallback_filenames = ["CLAUDE.md"]'
+  echo "  No AGENTS.md found. Create one for persistent project instructions."
   echo ""
 fi
 
