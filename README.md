@@ -107,26 +107,29 @@ Maestro works standalone — every dependency has an inline fallback. But the fu
 ### Recommended
 
 ```bash
+# Add the superpowers marketplace (hosts both plugins)
+claude plugin marketplace add obra/superpowers-marketplace
+
 # Superpowers — brainstorming, phased planning, subagent-driven TDD, code review
-claude plugin marketplace add superpowers@superpowers-marketplace
+claude plugin install superpowers@superpowers-marketplace
 
 # Elements of Style — clear, concise writing polish for issue descriptions
-claude plugin marketplace add elements-of-style@superpowers-marketplace
+claude plugin install elements-of-style@superpowers-marketplace
 ```
 
 | Plugin | Used by | What it adds |
 |--------|---------|-------------|
-| **[Superpowers](https://github.com/superpowers-marketplace/superpowers)** | `/new-track`, `/implement` | Brainstorming, phased planning, subagent-driven TDD, code review |
-| **[Elements of Style](https://github.com/superpowers-marketplace/elements-of-style)** | `/triage`, `/issue-review` | Clear, concise writing polish for issue descriptions |
+| **[Superpowers](https://github.com/obra/superpowers)** | `/new-track`, `/implement` | Brainstorming, phased planning, subagent-driven TDD, code review |
+| **[Elements of Style](https://github.com/obra/the-elements-of-style)** | `/triage`, `/issue-review` | Clear, concise writing polish for issue descriptions |
 
 ### Optional
 
 ```bash
 # Code Simplifier — code quality review during phase checkpoints and wrap-up
-claude plugin marketplace add code-simplifier@claude-plugins-official
+claude plugin install code-simplifier@claude-plugins-official
 
 # CLAUDE.md Management — automated CLAUDE.md updates at session end
-claude plugin marketplace add claude-md-management@claude-plugins-official
+claude plugin install claude-md-management@claude-plugins-official
 ```
 
 | Plugin | Used by | What it adds |
@@ -159,7 +162,8 @@ See [codex/INSTALL.md](codex/INSTALL.md) for full setup and compatibility matrix
 ### 1. Install and initialize
 
 ```bash
-claude plugin add owebboy/maestro
+claude plugin marketplace add owebboy/maestro
+claude plugin install maestro@maestro-dev
 
 # In your project:
 /setup
