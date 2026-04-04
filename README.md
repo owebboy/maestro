@@ -14,7 +14,35 @@ claude plugin marketplace add owebboy/maestro
 claude plugin install maestro@maestro-dev
 ```
 
-### Project-scoped
+### Via project settings
+
+Add to your project's `.claude/settings.json` so collaborators get Maestro (and recommended plugins) automatically when they trust the project folder:
+
+```json
+{
+  "enabledPlugins": {
+    "maestro@maestro-dev": true,
+    "superpowers@superpowers-marketplace": true,
+    "elements-of-style@superpowers-marketplace": true
+  },
+  "extraKnownMarketplaces": {
+    "maestro-dev": {
+      "source": {
+        "source": "github",
+        "repo": "owebboy/maestro"
+      }
+    },
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
+    }
+  }
+}
+```
+
+### Project-scoped (manual)
 
 ```bash
 # Both harnesses at once
