@@ -21,7 +21,7 @@ Fill technical context in a triaged issue file by exploring the codebase.
    - Specific, searchable problem description?
    - At least one concrete acceptance criterion?
    - If NO to either:
-     - Check if `superpowers:brainstorming` (plugin-installed) or `brainstorming` (project-scoped) skill is available. If found, invoke it to scope the issue with the user.
+     - Detect `brainstorming` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) — check system-reminder, project settings, and project skills directory. If found via any signal, invoke it to scope the issue with the user.
      - Otherwise, run an inline brainstorming discussion: ask the user to clarify the problem, propose possible causes, and refine acceptance criteria
      - Update the issue file with the refined content, then continue
 
@@ -44,7 +44,7 @@ Fill technical context in a triaged issue file by exploring the codebase.
    - Refine `## Acceptance Criteria` if exploration revealed new requirements
    - Update frontmatter `status` to `reviewed`
 
-5. **Polish writing** — check if `elements-of-style:writing-clearly-and-concisely` (plugin-installed) or `writing-clearly-and-concisely` (project-scoped) skill is available.
+5. **Polish writing** — detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md).
    - If found, invoke it against the issue file to tighten the Summary, Problem Description, and Acceptance Criteria
    - If not available, do a quick inline pass: remove filler words, prefer active voice, ensure each acceptance criterion is a single testable statement
    - Do not change technical meaning — only improve clarity

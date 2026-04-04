@@ -67,7 +67,7 @@ Mark track as in-progress:
 
 ## Execution Mode Selection
 
-Detect Superpowers availability: check for `superpowers:subagent-driven-development` (plugin-installed) or `subagent-driven-development` (project-scoped), AND `superpowers:executing-plans` (plugin-installed) or `executing-plans` (project-scoped). Use whichever forms are found.
+Detect Superpowers availability using the procedure in [docs/detecting-optional-skills.md](../../docs/detecting-optional-skills.md): check system-reminder skill list, then `.claude/settings.json` `enabledPlugins` for `superpowers@superpowers-marketplace`, then `.claude/skills/` for project-scoped installs. The skill is available if **any** signal is positive. Check for both `subagent-driven-development` and `executing-plans` (in either plugin-prefixed or bare form).
 
 If Superpowers is available, offer the choice:
 
@@ -102,7 +102,7 @@ After each task completes, update track metadata:
 
 ### Inline Execution (via Superpowers)
 
-Detect availability: check for `superpowers:executing-plans` (plugin-installed) or `executing-plans` (project-scoped). If neither is found, fall back to the no-Superpowers path below.
+Detect availability using the [detection procedure](../../docs/detecting-optional-skills.md): check system-reminder, project settings, and project skills directory for `executing-plans`. If no signal is positive, fall back to the no-Superpowers path below.
 
 Invoke the executing-plans skill using the Skill tool, passing the track's plan.
 
@@ -144,7 +144,7 @@ This is the **phase file list** — all review and fixes are scoped to ONLY thes
 Launch Agent 1 first, then Agent 2 after it finishes. Running sequentially avoids edit conflicts when both agents fix the same file.
 
 **Agent 1 — Code Simplifier:**
-If the `simplify` skill is available, invoke it with the phase file list. Otherwise, launch a general-purpose agent:
+Detect the `simplify` skill using the [multi-signal procedure](../../docs/detecting-optional-skills.md). If found via any signal, invoke it with the phase file list. Otherwise, launch a general-purpose agent:
 
 > Review ONLY the following files from this phase: [phase file list].
 > Check for: unnecessary complexity, duplicated logic across the phase's files, dead code introduced by this phase, inconsistent patterns between tasks in this phase.
