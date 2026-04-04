@@ -23,7 +23,9 @@ Add to your project's `.claude/settings.json` so collaborators get Maestro (and 
   "enabledPlugins": {
     "maestro@maestro-dev": true,
     "superpowers@superpowers-marketplace": true,
-    "elements-of-style@superpowers-marketplace": true
+    "elements-of-style@superpowers-marketplace": true,
+    "code-simplifier@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "maestro-dev": {
@@ -36,6 +38,12 @@ Add to your project's `.claude/settings.json` so collaborators get Maestro (and 
       "source": {
         "source": "github",
         "repo": "obra/superpowers-marketplace"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
       }
     }
   }
