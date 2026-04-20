@@ -7,7 +7,7 @@ Maestro is a cross-harness workflow package for Claude Code and Codex. The repos
 ## Repo Map
 
 - `skills/`: source of truth for workflow behavior. Keep `SKILL.md` frontmatter and any `agents/openai.yaml` metadata aligned.
-- `bin/setup-project`: installs Maestro into another repository via project-scoped symlinks and hooks.
+- `bin/setup-project`: installs Maestro into another repository via project-scoped symlinks or portable copies, plus hooks.
 - `codex/INSTALL.md`: Codex-specific install, compatibility, and behavior notes.
 - `templates/`: generated markdown templates used by the skills.
 - `bin/hooks/` and `hooks/`: hook assets for Claude Code and Codex installs.

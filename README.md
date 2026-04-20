@@ -75,12 +75,17 @@ Add to your project's `.claude/settings.json` so collaborators get Maestro (and 
 ### Project-scoped (manual)
 
 ```bash
-# Both harnesses at once
-./bin/setup-project --both /path/to/your/project
+# Current directory, auto-detect harnesses
+# Defaults to both in a new project
+./bin/setup-project
 
-# With Superpowers (recommended — powers brainstorming, planning, and execution)
-./bin/setup-project --both --with-superpowers /path/to/your/project
+# Portable install: copy skills into the target repo instead of symlinking
+./bin/setup-project --portable /path/to/your/project
 ```
+
+The helper installs Maestro only. Install Superpowers separately via its official installer if you want the full brainstorming, planning, and execution workflow.
+
+The helper also bootstraps `issues/`, installs compatible hook scripts, and creates `.claude/settings.json` with hook config when that file does not already exist.
 
 Full Codex setup and compatibility details: [codex/INSTALL.md](codex/INSTALL.md)
 
@@ -156,7 +161,7 @@ Two lifecycle hooks auto-activate when the Claude plugin is installed (via `hook
 
 ### Codex
 
-Codex hooks are experimental (`codex_hooks = true` in config). The `setup-project --codex` script copies the compatible `session-start-issues.sh` hook to `.agents/hooks/`. The frontmatter validation hook requires Claude Code's richer PostToolUse event and is not available in Codex.
+Codex hooks are experimental (`codex_hooks = true` in config). `setup-project` copies the compatible `session-start-issues.sh` hook to `.agents/hooks/`. The frontmatter validation hook requires Claude Code's richer PostToolUse event and is not available in Codex.
 
 ## Dependencies
 

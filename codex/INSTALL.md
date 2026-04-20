@@ -28,17 +28,22 @@ bunx skills add obra/elements-of-style --agent codex
 ## Install via setup-project
 
 ```bash
-# From the maestro directory:
+# Current directory, auto-detect harnesses
+# Defaults to both in a new project
+./bin/setup-project
+
+# Codex only:
 ./bin/setup-project --codex /path/to/your/project
 
-# With Superpowers (recommended — powers brainstorming + planning + TDD):
-./bin/setup-project --codex --with-superpowers /path/to/your/project
-
-# Both harnesses at once:
-./bin/setup-project --both --with-superpowers /path/to/your/project
+# Portable install: copy skills into the target repo instead of symlinking
+./bin/setup-project --portable --codex /path/to/your/project
 ```
 
-This symlinks skills into your project's `.agents/skills/` directory where Codex discovers them automatically.
+By default this symlinks skills into your project's `.agents/skills/` directory where Codex discovers them automatically. Use `--portable` to copy them into the target repo instead.
+
+The helper also bootstraps `issues/` and copies the compatible Codex hook into `.agents/hooks/`.
+
+Install Superpowers separately via its official installer if you want Maestro's optional brainstorming, planning, and TDD integrations.
 
 ## Install manually (user-scoped, global)
 
