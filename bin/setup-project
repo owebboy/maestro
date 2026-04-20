@@ -90,11 +90,6 @@ if $INSTALL_CODEX; then
 
   for skill_dir in "$SCRIPT_DIR/skills"/*/; do
     skill_name="$(basename "$skill_dir")"
-    # Skip Claude-only skills
-    if [[ "$skill_name" == "workflow-router" || "$skill_name" == "agents-md-sync" ]]; then
-      echo "  skip: $skill_name (Claude-only)"
-      continue
-    fi
     symlink_skill "$skill_dir" "$CODEX_SKILLS" "$skill_name"
   done
 
@@ -237,8 +232,9 @@ fi
 # --- AGENTS.md hint ---
 if $INSTALL_CODEX && [[ ! -f "$TARGET_DIR/AGENTS.md" ]]; then
   echo "=== Codex Tip ==="
-  echo "  No AGENTS.md found. Consider running /agents-md-sync"
-  echo "  from Claude Code to generate one from your CLAUDE.md."
+  echo '  No AGENTS.md found. Consider running $agents-md-sync'
+  echo '  in Codex or /agents-md-sync in Claude Code to generate one'
+  echo '  from your CLAUDE.md.'
   echo ""
   echo "  Or add to .codex/config.toml:"
   echo '  [project]'

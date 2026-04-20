@@ -4,7 +4,29 @@ Complete development workflow for Claude Code and Codex: issue pipeline, tracked
 
 ## Install
 
-### Claude Code plugin (recommended)
+### Codex plugin (repo-local)
+
+If you're working from a checkout of this repository in Codex:
+
+1. Restart Codex so it picks up [`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json)
+2. Open the plugin directory
+3. Choose `Maestro Local Plugins`
+4. Install `maestro`
+
+This uses the Codex plugin manifest at [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json).
+
+### Codex via skills.sh
+
+```bash
+# Maestro
+bunx skills add owebboy/maestro --agent codex
+
+# Recommended dependencies
+bunx skills add obra/superpowers --agent codex
+bunx skills add obra/elements-of-style --agent codex
+```
+
+### Claude Code plugin
 
 ```bash
 # Add as a marketplace source
@@ -14,7 +36,7 @@ claude plugin marketplace add owebboy/maestro
 claude plugin install maestro@maestro-dev
 ```
 
-### Via project settings
+### Claude Code via project settings
 
 Add to your project's `.claude/settings.json` so collaborators get Maestro (and recommended plugins) automatically when they trust the project folder:
 
@@ -60,7 +82,7 @@ Add to your project's `.claude/settings.json` so collaborators get Maestro (and 
 ./bin/setup-project --both --with-superpowers /path/to/your/project
 ```
 
-**Codex:** See [codex/INSTALL.md](codex/INSTALL.md)
+Full Codex setup and compatibility details: [codex/INSTALL.md](codex/INSTALL.md)
 
 ## Architecture
 
@@ -88,44 +110,44 @@ Maestro (WHAT and WHEN)                    Superpowers (HOW)
 
 ### Track Management
 
-| Skill | Command | Purpose |
-|-------|---------|---------|
-| setup | `/setup` | Initialize project context (product, tech stack, workflow) |
-| new-track | `/new-track <type> <name>` | Create spec → brainstorm → plan (via Superpowers) |
-| implement | `/implement [track-id]` | Execute plan with TDD + subagent review (via Superpowers) |
-| status | `/status [track-id]` | Project progress, current focus, next actions |
-| manage | `/manage [--archive\|--restore\|--delete]` | Track lifecycle management |
+| Skill | Invocation | Purpose |
+|-------|------------|---------|
+| setup | `/setup` or `$setup` | Initialize project context (product, tech stack, workflow) |
+| new-track | `/new-track <type> <name>` or `$new-track <type> <name>` | Create spec → brainstorm → plan (via Superpowers) |
+| implement | `/implement [track-id]` or `$implement [track-id]` | Execute plan with TDD + subagent review (via Superpowers) |
+| status | `/status [track-id]` or `$status [track-id]` | Project progress, current focus, next actions |
+| manage | `/manage [--archive\|--restore\|--delete]` or `$manage ...` | Track lifecycle management |
 
 ### Issue Pipeline
 
-| Skill | Command | Purpose |
-|-------|---------|---------|
-| triage | `/triage` | INBOX.md bullets → structured issue files |
-| issue-review | `/issue-review <path>` | 3 parallel agents enrich issue with codebase context |
-| issue-advance | `/issue-advance <path\|all>` | Issue → new track (spec + brainstorm + plan) |
-| issue-close | `/issue-close <path>` | Archive as wont-fix, deferred, or duplicate |
+| Skill | Invocation | Purpose |
+|-------|------------|---------|
+| triage | `/triage` or `$triage` | INBOX.md bullets → structured issue files |
+| issue-review | `/issue-review <path>` or `$issue-review <path>` | 3 parallel agents enrich issue with codebase context |
+| issue-advance | `/issue-advance <path\|all>` or `$issue-advance <path\|all>` | Issue → new track (spec + brainstorm + plan) |
+| issue-close | `/issue-close <path>` or `$issue-close <path>` | Archive as wont-fix, deferred, or duplicate |
 
 **Flow:** `INBOX.md → /triage → /issue-review → /issue-advance → /implement`
 
 ### Quality
 
-| Skill | Command | Purpose |
-|-------|---------|---------|
-| codebase-review | `/codebase-review [scope]` | 6+6 parallel agents: review wave then audit wave |
-| uat-create | `/uat-create` | Completed tracks → UAT checklist |
-| uat-run | `/uat-run [file\|date]` | Interactive UAT proctor with failure capture |
-| session-wrap-up | `/session-wrap-up` | End-of-session: quality review, issue capture, context updates, commit |
+| Skill | Invocation | Purpose |
+|-------|------------|---------|
+| codebase-review | `/codebase-review [scope]` or `$codebase-review [scope]` | 6+6 parallel agents: review wave then audit wave |
+| uat-create | `/uat-create` or `$uat-create` | Completed tracks → UAT checklist |
+| uat-run | `/uat-run [file\|date]` or `$uat-run [file\|date]` | Interactive UAT proctor with failure capture |
+| session-wrap-up | `/session-wrap-up` or `$session-wrap-up` | End-of-session: quality review, issue capture, context updates, commit |
 
 ### Routing & Interop
 
 | Skill | Invocation | Purpose |
 |-------|------------|---------|
-| workflow-router | Auto-activates | Routes to the right skill based on task type |
-| agents-md-sync | `/agents-md-sync` | Generate AGENTS.md from CLAUDE.md for Codex |
+| workflow-router | Auto in Claude, explicit `$workflow-router` in Codex | Routes to the right skill based on task type |
+| agents-md-sync | `/agents-md-sync` or `$agents-md-sync` | Generate AGENTS.md from CLAUDE.md for Codex |
 
 ## Hooks
 
-Two lifecycle hooks auto-activate when the plugin is installed (via `hooks/hooks.json`). No manual `settings.json` configuration needed.
+Two lifecycle hooks auto-activate when the Claude plugin is installed (via `hooks/hooks.json`). No manual `settings.json` configuration needed.
 
 | Hook | Event | What it does |
 |------|-------|-------------|
@@ -180,7 +202,7 @@ claude plugin install claude-md-management@claude-plugins-official
 
 ## Codex Compatibility
 
-13 of 15 skills work in Codex via the shared Agent Skills format. Install with [skills.sh](https://skills.sh/):
+Maestro now ships first-class Codex packaging: a `.codex-plugin/plugin.json` manifest, a repo-local `.agents/plugins/marketplace.json`, and per-skill `agents/openai.yaml` metadata. All 15 skills are packaged for Codex; a few remain partial or explicit-only. Install the skill bundle with [skills.sh](https://skills.sh/) or use the repo-local plugin when working from a checkout of this repository. In Codex, invoke skills with `$setup`, `$new-track`, `$triage`, and the rest of the `$skill-name` set:
 
 ```bash
 # Maestro
@@ -198,14 +220,19 @@ See [codex/INSTALL.md](codex/INSTALL.md) for full setup and compatibility matrix
 ### 1. Install and initialize
 
 ```bash
+# Claude Code
 claude plugin marketplace add owebboy/maestro
 claude plugin install maestro@maestro-dev
 
-# In your project:
+# Codex alternative
+# - install `maestro` from "Maestro Local Plugins" in the plugin directory, or
+# - use: bunx skills add owebboy/maestro --agent codex
+
+# Then in your project:
 /setup
 ```
 
-`/setup` walks you through an interactive Q&A (product, tech stack, workflow preferences) and creates a `conductor/` directory with your project context. Every other skill reads from this.
+`/setup` walks you through an interactive Q&A (product, tech stack, workflow preferences) and creates a `conductor/` directory with your project context. Every other skill reads from this. In Codex, use the same skill names with `$`, for example `$setup`, `$triage`, and `$implement`.
 
 ### 2. Pick your path
 

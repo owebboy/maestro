@@ -25,7 +25,7 @@ Codebase Review Progress:
 
 ## Phase 1: Review Wave
 
-Launch 6 review agents in parallel. In Claude Code, use the Agent tool with `subagent_type=Explore`. In Codex, spawn 6 worker agents explicitly. Each agent has a specific focus area and produces findings as a numbered list.
+Launch 6 review agents in parallel. In Claude Code, use the Agent tool with `subagent_type=Explore`. In Codex, spawn 6 `explorer` agents explicitly for the read-heavy review wave. Each agent has a specific focus area and produces findings as a numbered list.
 
 **Agent 1 — Security:**
 > Review {scope} for security issues. Check for: injection vulnerabilities (SQL, command, XSS), authentication/authorization gaps, secrets in code, insecure deserialization, SSRF, path traversal, timing attacks, missing input validation at system boundaries. For each finding: file, line, severity (critical/high/medium/low), description, suggested fix.

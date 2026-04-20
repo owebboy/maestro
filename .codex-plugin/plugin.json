@@ -1,0 +1,39 @@
+{
+  "name": "maestro",
+  "version": "1.1.0",
+  "description": "Complete development workflow: track management, issue pipeline, UAT, codebase review, and session wrap-up. Uses Superpowers as the execution engine for brainstorming, planning, TDD, and subagent-driven development.",
+  "author": {
+    "name": "Oliver Pope",
+    "url": "https://github.com/owebboy"
+  },
+  "homepage": "https://github.com/owebboy/maestro",
+  "repository": "https://github.com/owebboy/maestro",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "agent-skills",
+    "developer-workflow",
+    "issue-triage",
+    "uat",
+    "claude-code"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Maestro",
+    "shortDescription": "Track-driven development workflow for Claude Code and Codex.",
+    "longDescription": "Complete development workflow with setup, triage, tracked implementation, codebase review, UAT, and session wrap-up.",
+    "developerName": "Oliver Pope",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/owebboy/maestro",
+    "defaultPrompt": [
+      "Use Maestro to set up tracked development for this repository.",
+      "Use Maestro to triage issues and turn them into implementation tracks.",
+      "Use Maestro to review the codebase and capture confirmed findings in INBOX."
+    ],
+    "brandColor": "#0F766E"
+  }
+}

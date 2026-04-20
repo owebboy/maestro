@@ -1,0 +1,20 @@
+{
+  "name": "maestro-local",
+  "interface": {
+    "displayName": "Maestro Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "maestro",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

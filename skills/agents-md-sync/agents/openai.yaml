@@ -1,0 +1,3 @@
+interface:
+  display_name: "AGENTS.md Sync"
+  short_description: "Generate or update AGENTS.md from CLAUDE.md for Codex-compatible project guidance."

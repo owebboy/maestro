@@ -1,0 +1,3 @@
+interface:
+  display_name: "UAT Create"
+  short_description: "Generate a UAT checklist from completed tracks and available validation hooks."

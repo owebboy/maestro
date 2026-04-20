@@ -25,7 +25,7 @@ Fill technical context in a triaged issue file by exploring the codebase.
      - Otherwise, run an inline brainstorming discussion: ask the user to clarify the problem, propose possible causes, and refine acceptance criteria
      - Update the issue file with the refined content, then continue
 
-3. **Explore codebase** — launch 3 parallel agents. In Claude Code, use the Agent tool with `subagent_type=Explore`. In Codex, spawn 3 worker agents explicitly.
+3. **Explore codebase** — launch 3 parallel agents. In Claude Code, use the Agent tool with `subagent_type=Explore`. In Codex, spawn 3 `explorer` agents explicitly because this step is read-heavy.
 
    **Agent 1 — Affected Files:**
    > Find source files related to: "{summary}". Search for relevant keywords, types, functions. List file paths with brief relevance notes.

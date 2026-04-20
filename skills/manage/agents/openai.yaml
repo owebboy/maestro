@@ -1,0 +1,6 @@
+interface:
+  display_name: "Track Manager"
+  short_description: "Archive, restore, delete, rename, or clean up conductor tracks."
+
+policy:
+  allow_implicit_invocation: false

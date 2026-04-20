@@ -1,0 +1,3 @@
+interface:
+  display_name: "New Track"
+  short_description: "Create a new feature, bug, chore, or refactor track with spec and plan."

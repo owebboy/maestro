@@ -1,0 +1,3 @@
+interface:
+  display_name: "Codebase Review"
+  short_description: "Run a parallel multi-area review and audit wave over a codebase or scoped area."

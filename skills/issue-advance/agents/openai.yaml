@@ -1,0 +1,6 @@
+interface:
+  display_name: "Issue Advance"
+  short_description: "Convert a reviewed issue into a conductor track and archive the source issue."
+
+policy:
+  allow_implicit_invocation: false

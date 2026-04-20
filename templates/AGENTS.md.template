@@ -47,7 +47,7 @@ Issues are tracked in `issues/INBOX.md`. The workflow:
 
 ## Codex-Specific Notes
 
-- Multi-agent skills require `features.multi_agent = true` in config.toml
+- Subagents are enabled by default in current Codex releases; tune `[agents]` only if you need different thread or depth limits
 - Hooks are experimental (`codex_hooks = true`): SessionStart, PreToolUse, PostToolUse, UserPromptSubmit, Stop
 - Agent spawning is explicit — ask for agents by name when needed
 - Memory is manual via this file — no auto-memory system

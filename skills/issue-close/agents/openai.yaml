@@ -1,0 +1,6 @@
+interface:
+  display_name: "Issue Close"
+  short_description: "Archive an issue as wont-fix, deferred, or duplicate without creating a track."
+
+policy:
+  allow_implicit_invocation: false

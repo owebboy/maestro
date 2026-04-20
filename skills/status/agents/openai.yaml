@@ -1,0 +1,3 @@
+interface:
+  display_name: "Status"
+  short_description: "Show project progress, active tracks, issue counts, and next actions."

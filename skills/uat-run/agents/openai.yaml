@@ -1,0 +1,6 @@
+interface:
+  display_name: "UAT Run"
+  short_description: "Walk through a UAT checklist, run validations, and capture failures back to INBOX."
+
+policy:
+  allow_implicit_invocation: false

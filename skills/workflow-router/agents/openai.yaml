@@ -1,0 +1,6 @@
+interface:
+  display_name: "Workflow Router"
+  short_description: "Explicit routing helper for choosing the right Maestro workflow for a task."
+
+policy:
+  allow_implicit_invocation: false

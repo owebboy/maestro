@@ -1,8 +1,20 @@
 # Codex Installation
 
-Maestro skills are compatible with OpenAI Codex via the shared Agent Skills format. Track management is built in — no Conductor dependency.
+Maestro now ships both shared Agent Skills content and first-class Codex plugin metadata. Track management is built in — no Conductor dependency.
 
-## Install via skills.sh (recommended)
+## Install via the repo-local plugin
+
+If you are working from a checkout of this repository, Maestro exposes a repo-scoped marketplace at `.agents/plugins/marketplace.json`.
+
+1. Open this repository in Codex.
+2. Restart Codex so it picks up the repo marketplace.
+3. Open the plugin directory, choose `Maestro Local Plugins`, and install `maestro`.
+
+This path uses `.codex-plugin/plugin.json`, keeps plugin metadata in one place, and matches the current Codex plugin guidance.
+
+In Codex, invoke skills with `$setup`, `$new-track`, `$triage`, and the rest of the `$skill-name` set.
+
+## Install via skills.sh
 
 ```bash
 # Maestro
@@ -26,7 +38,7 @@ bunx skills add obra/elements-of-style --agent codex
 ./bin/setup-project --both --with-superpowers /path/to/your/project
 ```
 
-This symlinks skills into your project's `.agents/skills/` directory where Codex discovers them automatically. Claude-only skills (workflow-router, agents-md-sync) are skipped.
+This symlinks skills into your project's `.agents/skills/` directory where Codex discovers them automatically.
 
 ## Install manually (user-scoped, global)
 
@@ -37,20 +49,19 @@ git clone https://github.com/owebboy/maestro.git ~/.codex/maestro
 # Symlink each skill into Codex's global skill discovery path
 for skill in ~/.codex/maestro/skills/*/; do
   name="$(basename "$skill")"
-  [[ "$name" == "workflow-router" || "$name" == "agents-md-sync" ]] && continue
   ln -s "$skill" "$HOME/.agents/skills/$name"
 done
 ```
 
 ## Configuration
 
-Add to `~/.codex/config.toml`:
+Subagents are enabled by default in current Codex releases. Add optional project-scoped config if you want predictable agent fan-out or `CLAUDE.md` fallback behavior:
 
 ```toml
-[features]
-multi_agent = true  # Required for issue-review, codebase-review
+[agents]
+max_threads = 6
+max_depth = 1
 
-# Optional: teach Codex to also read CLAUDE.md files
 [project]
 project_doc_fallback_filenames = ["CLAUDE.md"]
 ```
@@ -65,15 +76,15 @@ project_doc_fallback_filenames = ["CLAUDE.md"]
 | status | Full | Reads markdown files |
 | manage | Full | File operations + git |
 | triage | Full | Pure markdown workflow |
-| issue-review | Full | Needs `multi_agent = true` |
-| issue-advance | Full | Calls `/new-track` (our own skill, not external) |
+| issue-review | Full | Read-heavy review flow; use explicit `explorer` agents in Codex |
+| issue-advance | Full | Calls the `new-track` skill (our own skill, not an external dependency) |
 | issue-close | Full | Pure markdown workflow |
-| codebase-review | Full | Needs `multi_agent = true` |
+| codebase-review | Full | Read-heavy review flow; use explicit `explorer` agents in Codex |
 | uat-create | Partial | MCP tool detection varies |
 | uat-run | Partial | Falls back to manual verification |
 | session-wrap-up | Partial | Some skill invocations are Claude-only |
-| workflow-router | N/A | Uses Claude-only `user-invocable: false` |
-| agents-md-sync | N/A | Purpose is to generate Codex artifacts from Claude |
+| workflow-router | Partial | Explicit-only helper; Codex ignores Claude auto-routing frontmatter |
+| agents-md-sync | Full | Generates `AGENTS.md` from `CLAUDE.md` for dual-harness repos |
 
 ## Dependencies
 
@@ -82,9 +93,9 @@ project_doc_fallback_filenames = ["CLAUDE.md"]
 
 ## Differences from Claude Code
 
-- **Agent spawning**: Codex spawns agents only when explicitly asked. Skills that dispatch parallel agents will work but require explicit invocation via `$skill-name` or `/skills`.
+- **Agent spawning**: Current Codex releases enable subagents by default, but Codex still only spawns them when explicitly asked. Skills that dispatch parallel agents should say which agent type to use and require explicit invocation via `$skill-name` or `/skills`.
 - **Auto-memory**: No equivalent to Claude's `~/.claude/projects/<project>/memory/`. Use `AGENTS.md` for persistent context, or build a memory process using Codex hooks/scripts.
-- **MCP config**: Servers are configured in `config.toml` under `[mcp_servers.<name>]`, not `.mcp.json`.
+- **MCP config**: User-scoped servers still live in `config.toml` under `[mcp_servers.<name>]`, while plugin-bundled servers are packaged via `.mcp.json` and referenced from `.codex-plugin/plugin.json`.
 - **Frontmatter**: Codex ignores Claude-specific frontmatter fields (`user-invocable`, `disable-model-invocation`, `context`). Skills still load — the fields are simply skipped.
 - **Hooks**: Codex has hooks (experimental, `codex_hooks = true`), but only 5 events vs Claude's 26. Maestro ships 1 Codex-compatible hook (`session-start-issues.sh`) and 1 Claude-only hook (`validate-issue-frontmatter.sh` — requires PostToolUse with file path context). The setup script copies the compatible hook to `.agents/hooks/`.
 - **Permissions**: Codex uses `sandbox_mode` + `approval_policy` instead of Claude's per-tool allow/ask/deny rules. Skills that reference `permissionMode` or tool-specific permissions need manual translation to Codex's sandbox/approval model.

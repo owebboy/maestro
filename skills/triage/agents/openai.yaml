@@ -1,0 +1,3 @@
+interface:
+  display_name: "Triage"
+  short_description: "Turn raw INBOX bullets into structured issue files with type and priority."

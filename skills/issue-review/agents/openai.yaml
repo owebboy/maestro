@@ -1,0 +1,3 @@
+interface:
+  display_name: "Issue Review"
+  short_description: "Enrich a triaged issue with affected files, related tests, and similar prior work."

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Setup"
+  short_description: "Initialize conductor project context with product, stack, and workflow guidance."

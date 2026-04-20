@@ -1,0 +1,6 @@
+interface:
+  display_name: "Session Wrap-Up"
+  short_description: "Run an end-of-session review, capture follow-ups, and sync project context."
+
+policy:
+  allow_implicit_invocation: false
