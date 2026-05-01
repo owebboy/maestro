@@ -1,6 +1,7 @@
 interface:
   display_name: "UAT Run"
-  short_description: "Walk through a UAT checklist, run validations, and capture failures back to INBOX."
+  short_description: "Run UAT and capture failures."
+  default_prompt: "Use $uat-run to walk through this UAT checklist and capture failures."
 
 policy:
   allow_implicit_invocation: false

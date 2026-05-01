@@ -1,3 +1,7 @@
 interface:
   display_name: "Issue Review"
-  short_description: "Enrich a triaged issue with affected files, related tests, and similar prior work."
+  short_description: "Add codebase context to a triaged issue."
+  default_prompt: "Use $issue-review to add codebase context to this triaged issue."
+
+policy:
+  allow_implicit_invocation: false

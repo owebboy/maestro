@@ -19,14 +19,14 @@ Parse INBOX.md bullets into structured issue files.
      ```markdown
      # Issue Inbox
 
-     Add issues as bullet points below. Run `/triage` to process them into individual issue files.
+     Add issues as bullet points below. Run `/triage` in Claude Code or `$triage` in Codex to process them into individual issue files.
 
      ## Format
 
      - <description>
      - <description> (type: bug, priority: P1)
 
-     Type and priority are optional — `/triage` will infer them.
+     Type and priority are optional — triage will infer them.
 
      **Types:** bug | feature | refactor | chore
      **Priorities:** P1 (blocking) | P2 (important) | P3 (nice-to-have)
@@ -34,7 +34,7 @@ Parse INBOX.md bullets into structured issue files.
      ## Inbox
 
      ```
-   - Inform the user: "Created issues/INBOX.md. Add bullets under ## Inbox and run /triage again."
+   - Inform the user: "Created issues/INBOX.md. Add bullets under ## Inbox and run /triage in Claude Code or $triage in Codex again."
    - Stop (nothing to triage yet)
 
 2. **Read** `issues/INBOX.md` — extract bullets under `## Inbox`
@@ -54,7 +54,7 @@ Parse INBOX.md bullets into structured issue files.
 5. **Ensure archive directories exist**: create `issues/archived/{tracked,deferred,wont-fix,duplicate}/` if missing (needed by `/issue-advance` and `/issue-close`).
 
 6. **Polish descriptions** — before writing issue files, tighten the expanded Summary and Problem Description for each bullet:
-   - Detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) — check system-reminder, project settings, and project skills directory
+   - Detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md)
    - If found, invoke it on the draft descriptions (batch all bullets in a single invocation)
    - If not available, do a quick inline pass: remove filler words, prefer active voice, keep each description to 1-2 sentences
    - Do not change technical meaning — only improve clarity

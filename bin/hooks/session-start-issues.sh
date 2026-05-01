@@ -11,7 +11,14 @@ ISSUES_DIR="${1:-issues}"
 # Count inbox bullets
 inbox_count=0
 if [[ -f "$ISSUES_DIR/INBOX.md" ]]; then
-  inbox_count=$(grep -c '^- ' "$ISSUES_DIR/INBOX.md" 2>/dev/null || echo 0)
+  inbox_count=$(
+    awk '
+      /^## Inbox$/ { in_inbox=1; next }
+      /^## / && in_inbox { exit }
+      in_inbox && /^- / { count++ }
+      END { print count + 0 }
+    ' "$ISSUES_DIR/INBOX.md" 2>/dev/null
+  )
 fi
 
 # Count open issues by status (from frontmatter)
@@ -35,3 +42,5 @@ echo "ISSUES:"
 [[ $inbox_count -gt 0 ]] && echo "  Inbox: $inbox_count unprocessed → /triage"
 [[ $triaged -gt 0 ]]     && echo "  Triaged: $triaged → /issue-review"
 [[ $reviewed -gt 0 ]]    && echo "  Reviewed: $reviewed → /issue-advance or /issue-close"
+
+exit 0

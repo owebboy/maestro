@@ -27,7 +27,7 @@ New Track Progress:
 
 1. Verify project is initialized:
    - `conductor/product.md`, `conductor/tech-stack.md`, `conductor/workflow.md` must exist
-   - If missing: suggest running `/setup` first
+   - If missing: suggest running `/setup` in Claude Code or `$setup` in Codex first
 2. Load context: read product.md, tech-stack.md, workflow.md for project understanding
 
 ## Step 1: Track Classification
@@ -76,9 +76,9 @@ Show spec to user for review. Wait for approval before proceeding.
 
 ## Step 4: Design via Brainstorming
 
-Detect Superpowers availability using the [detection procedure](../../docs/detecting-optional-skills.md): check system-reminder skill list, then `.claude/settings.json` `enabledPlugins` for `superpowers@superpowers-marketplace`, then `.claude/skills/brainstorming/SKILL.md`. The skill is available if **any** signal is positive.
+Detect `brainstorming` using the [detection procedure](../../docs/detecting-optional-skills.md). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
 
-If available, invoke the brainstorming skill using the Skill tool. Pass the approved spec as context AND instruct it to write its design doc to `conductor/tracks/{trackId}/design.md` instead of the default `docs/superpowers/specs/` location. Example invocation context:
+If available, invoke the brainstorming skill using the detected form. Pass the approved spec as context AND instruct it to write its design doc to `conductor/tracks/{trackId}/design.md` instead of the default `docs/superpowers/specs/` location. Example invocation context:
 
 > Design a solution for the following specification. Write the design document to `conductor/tracks/{trackId}/design.md`.
 >
@@ -94,9 +94,9 @@ If Superpowers is not installed, run an inline design discussion:
 
 ## Step 5: Plan via Writing Plans
 
-Detect Superpowers availability using the [detection procedure](../../docs/detecting-optional-skills.md): check system-reminder skill list, then `.claude/settings.json` `enabledPlugins`, then `.claude/skills/writing-plans/SKILL.md`. Available if **any** signal is positive.
+Detect `writing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
 
-If available, invoke the writing-plans skill using the Skill tool. Instruct it to write the plan to `conductor/tracks/{trackId}/plan.md` instead of the default `docs/superpowers/plans/` location. Example invocation context:
+If available, invoke the writing-plans skill using the detected form. Instruct it to write the plan to `conductor/tracks/{trackId}/plan.md` instead of the default `docs/superpowers/plans/` location. Example invocation context:
 
 > Create an implementation plan based on the approved design at `conductor/tracks/{trackId}/design.md`. Write the plan to `conductor/tracks/{trackId}/plan.md`.
 
@@ -145,5 +145,5 @@ Files:
   plan.md      — implementation plan (from Superpowers)
   metadata.json — progress state
 
-Next: Run /implement {trackId} to start implementation.
+Next: Run /implement {trackId} in Claude Code or $implement {trackId} in Codex to start implementation.
 ```

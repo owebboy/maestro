@@ -1,6 +1,7 @@
 interface:
   display_name: "Workflow Router"
-  short_description: "Explicit routing helper for choosing the right Maestro workflow for a task."
+  short_description: "Choose the right Maestro workflow."
+  default_prompt: "Use $workflow-router to choose the right Maestro workflow for this task."
 
 policy:
   allow_implicit_invocation: false

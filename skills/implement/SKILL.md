@@ -67,7 +67,7 @@ Mark track as in-progress:
 
 ## Execution Mode Selection
 
-Detect Superpowers availability using the procedure in [docs/detecting-optional-skills.md](../../docs/detecting-optional-skills.md): check system-reminder skill list, then `.claude/settings.json` `enabledPlugins` for `superpowers@superpowers-marketplace`, then `.claude/skills/` for project-scoped installs. The skill is available if **any** signal is positive. Check for both `subagent-driven-development` and `executing-plans` (in either plugin-prefixed or bare form).
+Detect `subagent-driven-development` and `executing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
 
 If Superpowers is available, offer the choice:
 
@@ -80,7 +80,7 @@ How should this track be implemented?
 
 ### Subagent-Driven Execution (via Superpowers)
 
-Invoke the subagent-driven-development skill using the Skill tool, passing the track's plan from `conductor/tracks/{trackId}/plan.md`.
+Invoke the subagent-driven-development skill using the detected form, passing the track's plan from `conductor/tracks/{trackId}/plan.md`.
 
 Superpowers handles:
 - Fresh subagent per task (implementer → spec-reviewer → code-quality-reviewer)
@@ -102,9 +102,9 @@ After each task completes, update track metadata:
 
 ### Inline Execution (via Superpowers)
 
-Detect availability using the [detection procedure](../../docs/detecting-optional-skills.md): check system-reminder, project settings, and project skills directory for `executing-plans`. If no signal is positive, fall back to the no-Superpowers path below.
+Detect `executing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md). If no signal is positive, fall back to the no-Superpowers path below.
 
-Invoke the executing-plans skill using the Skill tool, passing the track's plan.
+Invoke the executing-plans skill using the detected form, passing the track's plan.
 
 Same metadata lifecycle: write `current_task` before each task starts, update counters after each task completes. Same output control: instruct Superpowers to write to the track directory, redirect anything that escapes, and handle completion via our Track Completion flow.
 
@@ -239,5 +239,5 @@ Tasks: {M}/{M}
 Commits: {count}
 Tests: all passing
 
-Next: Run /uat-create to generate acceptance testing checklist.
+Next: Run /uat-create in Claude Code or $uat-create in Codex to generate an acceptance testing checklist.
 ```

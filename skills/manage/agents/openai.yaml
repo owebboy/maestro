@@ -1,6 +1,7 @@
 interface:
   display_name: "Track Manager"
-  short_description: "Archive, restore, delete, rename, or clean up conductor tracks."
+  short_description: "Manage conductor track lifecycle."
+  default_prompt: "Use $manage to archive, restore, rename, delete, or clean up Maestro tracks."
 
 policy:
   allow_implicit_invocation: false

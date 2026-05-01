@@ -1,11 +1,11 @@
 ---
 name: session-wrap-up
-description: End-of-session wrap-up that reviews code quality, checks for untracked issues, updates CLAUDE.md and project context files, and commits. Use when finishing a Claude session, wrapping up work, or the user says they're done for now.
+description: End-of-session wrap-up that reviews code quality, checks for untracked issues, updates CLAUDE.md/AGENTS.md and project context files, and commits. Use when finishing a Claude Code or Codex session, wrapping up work, or the user says they're done for now.
 ---
 
 # Session Wrap-Up
 
-Run this at the end of a Claude Code session to close out cleanly. The goal is to leave the codebase, documentation, and project metadata in a state where a future session (or another developer) can pick up seamlessly.
+Run this at the end of a Claude Code or Codex session to close out cleanly. The goal is to leave the codebase, documentation, and project metadata in a state where a future session or another developer can pick up seamlessly.
 
 ## Phase 0: Determine Session Scope
 
@@ -21,7 +21,7 @@ Before any review, establish exactly which files this session touched. Do NOT re
 Launch three agents in parallel. Pass each agent the **session file list** explicitly. Do NOT tell them to use `git diff HEAD` — give them the specific file paths.
 
 ### Agent 1 — Code Simplifier
-Detect the `simplify` skill using the [multi-signal procedure](../../docs/detecting-optional-skills.md) — check system-reminder, `.claude/settings.json` `enabledPlugins` for `code-simplifier@claude-plugins-official`, and `.claude/skills/simplify/SKILL.md`. If found via any signal, use it. Pass it the session file list so it only reviews files from this session. Otherwise, launch a general-purpose agent that reviews for unnecessary complexity, duplication, and dead code.
+Detect the `simplify` skill using the [multi-signal procedure](../../docs/detecting-optional-skills.md). If found via any signal, use the detected invocation form. Pass it the session file list so it only reviews files from this session. Otherwise, launch a general-purpose agent that reviews for unnecessary complexity, duplication, and dead code.
 
 ### Agent 2 — Code Reviewer
 Launch a general-purpose agent with this prompt:
@@ -65,7 +65,7 @@ For each confirmed item, append it as a bullet to `issues/INBOX.md` under the `#
 
 ## Phase 3: Update Project Instructions
 
-Detect `revise-claude-md` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) — check system-reminder, `.claude/settings.json` `enabledPlugins` for `claude-md-management@claude-plugins-official`, and `.claude/skills/revise-claude-md/SKILL.md`. If found via any signal, invoke it. Otherwise, review the session for learnings and propose CLAUDE.md updates directly — ask for approval before making changes.
+Detect `revise-claude-md` using the [multi-signal procedure](../../docs/detecting-optional-skills.md). If found via any signal, use the detected invocation form. Otherwise, review the session for learnings and propose CLAUDE.md updates directly — ask for approval before making changes.
 
 Also check for and offer to update:
 - `AGENTS.md` — if it exists, sync any new conventions, commands, or architecture changes discovered during the session (Codex compatibility)

@@ -1,18 +1,18 @@
 # Detecting Optional Skills
 
-Maestro skills that depend on optional plugins (Superpowers, Elements of Style, code-simplifier, claude-md-management) must detect availability before invoking them. Detection uses multiple signals because no single source is reliable on its own.
+Maestro skills that depend on optional plugins (Superpowers, Elements of Style, code-simplifier, claude-md-management) must detect availability before invoking them. Detection uses multiple signals because Claude Code and Codex expose installed skills differently.
 
 ## Detection Procedure
 
 To check if an optional skill is available, check these three signals **in order** and treat the skill as available if **any** signal is positive:
 
-### 1. System-reminder skill list
+### 1. Available skills list
 
-Scan the `<system-reminder>` block in the current conversation for the skill name. Plugin-installed skills appear with their plugin prefix (e.g., `superpowers:brainstorming`). Project-scoped skills appear bare (e.g., `brainstorming`). Check both forms.
+Scan the available skills listed in the current conversation. In Claude Code this may appear in a system reminder; in Codex it may appear in the skills instructions. Plugin-installed skills often appear with their plugin prefix (e.g., `superpowers:brainstorming`). Project-scoped skills often appear bare (e.g., `brainstorming`). Check both forms.
 
 ### 2. Project settings
 
-Read `.claude/settings.json` in the project root. Check whether `enabledPlugins` contains the plugin identifier:
+Read `.claude/settings.json` in the project root when it exists. Check whether `enabledPlugins` contains the plugin identifier:
 
 | Plugin | `enabledPlugins` key |
 |--------|---------------------|
@@ -21,11 +21,16 @@ Read `.claude/settings.json` in the project root. Check whether `enabledPlugins`
 | code-simplifier | `code-simplifier@claude-plugins-official` |
 | claude-md-management | `claude-md-management@claude-plugins-official` |
 
-If the key exists and its value is `true`, the plugin is enabled and its skills are available.
+If the key exists and its value is `true`, the plugin is enabled and its skills are available. This is a Claude Code signal; Codex installs typically rely on the available skills list or project skill directories instead.
 
-### 3. Project skills directory
+### 3. Project skills directories
 
-Check whether `.claude/skills/{skill-name}/SKILL.md` exists (project-scoped install via `setup-project`).
+Check whether either project-scoped skill path exists:
+
+- Claude Code: `.claude/skills/{skill-name}/SKILL.md`
+- Codex: `.agents/skills/{skill-name}/SKILL.md`
+
+If either file exists, treat the skill as available.
 
 ## Skill Name Reference
 
@@ -43,8 +48,8 @@ Check whether `.claude/skills/{skill-name}/SKILL.md` exists (project-scoped inst
 
 To detect whether Superpowers brainstorming is available:
 
-1. Check if the system-reminder lists `superpowers:brainstorming` or `brainstorming` as an available skill
+1. Check if the available skills list includes `superpowers:brainstorming` or `brainstorming`
 2. Check if `.claude/settings.json` has `"superpowers@superpowers-marketplace": true` in `enabledPlugins`
-3. Check if `.claude/skills/brainstorming/SKILL.md` exists
+3. Check if `.claude/skills/brainstorming/SKILL.md` or `.agents/skills/brainstorming/SKILL.md` exists
 
 If any check is positive, invoke the skill using whichever form was found (prefixed or bare).

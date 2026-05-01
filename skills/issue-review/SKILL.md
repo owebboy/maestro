@@ -21,7 +21,7 @@ Fill technical context in a triaged issue file by exploring the codebase.
    - Specific, searchable problem description?
    - At least one concrete acceptance criterion?
    - If NO to either:
-     - Detect `brainstorming` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) — check system-reminder, project settings, and project skills directory. If found via any signal, invoke it to scope the issue with the user.
+     - Detect `brainstorming` using the [multi-signal procedure](../../docs/detecting-optional-skills.md). If found via any signal, use the detected invocation form to scope the issue with the user.
      - Otherwise, run an inline brainstorming discussion: ask the user to clarify the problem, propose possible causes, and refine acceptance criteria
      - Update the issue file with the refined content, then continue
 

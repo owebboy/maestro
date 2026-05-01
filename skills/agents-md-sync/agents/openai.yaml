@@ -1,3 +1,7 @@
 interface:
   display_name: "AGENTS.md Sync"
-  short_description: "Generate or update AGENTS.md from CLAUDE.md for Codex-compatible project guidance."
+  short_description: "Sync CLAUDE.md guidance into AGENTS.md."
+  default_prompt: "Use $agents-md-sync to generate AGENTS.md from this repository's CLAUDE.md guidance."
+
+policy:
+  allow_implicit_invocation: false

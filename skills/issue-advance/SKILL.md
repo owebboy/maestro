@@ -18,7 +18,7 @@ Convert a reviewed issue file into a conductor track.
 
 2. **Verify project** is initialized:
    - Check that `conductor/` directory exists with `product.md` (or `product-guidelines.md`) and `workflow.md`
-   - If not found — tell the user: "Project is not initialized. Run `/setup` first."
+   - If not found — tell the user: "Project is not initialized. Run `/setup` in Claude Code or `$setup` in Codex first."
    - Stop if not initialized
 
 3. **Batch mode** (`all` argument):
@@ -29,7 +29,7 @@ Convert a reviewed issue file into a conductor track.
 
 ## Process (per issue)
 
-4. **Invoke** `/new-track` using the Skill tool:
+4. **Invoke** `new-track` using the harness form (`/new-track` in Claude Code, `$new-track` in Codex):
    - Pass the issue type and Summary as the argument (e.g., `bug fix timer pause`)
    - **IMPORTANT:** When new-track asks interactive questions, YOU answer them immediately using the issue file data — do NOT re-ask the user. Present each answer for user confirmation.
 

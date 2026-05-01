@@ -19,11 +19,11 @@ This uses the Codex plugin manifest at [`.codex-plugin/plugin.json`](./.codex-pl
 
 ```bash
 # Maestro
-bunx skills add owebboy/maestro --agent codex
+bunx skills add owebboy/maestro --agent codex --yes --global
 
 # Recommended dependencies
-bunx skills add obra/superpowers --agent codex
-bunx skills add obra/elements-of-style --agent codex
+bunx skills add obra/superpowers --agent codex --yes --global
+bunx skills add obra/elements-of-style --agent codex --yes --global
 ```
 
 ### Claude Code plugin
@@ -211,11 +211,11 @@ Maestro now ships first-class Codex packaging: a `.codex-plugin/plugin.json` man
 
 ```bash
 # Maestro
-bunx skills add owebboy/maestro --agent codex
+bunx skills add owebboy/maestro --agent codex --yes --global
 
 # Recommended
-bunx skills add obra/superpowers --agent codex
-bunx skills add obra/elements-of-style --agent codex
+bunx skills add obra/superpowers --agent codex --yes --global
+bunx skills add obra/elements-of-style --agent codex --yes --global
 ```
 
 See [codex/INSTALL.md](codex/INSTALL.md) for full setup and compatibility matrix.
@@ -231,7 +231,7 @@ claude plugin install maestro@maestro-dev
 
 # Codex alternative
 # - install `maestro` from "Maestro Local Plugins" in the plugin directory, or
-# - use: bunx skills add owebboy/maestro --agent codex
+# - use: bunx skills add owebboy/maestro --agent codex --yes --global
 
 # Then in your project:
 /setup

@@ -1,3 +1,4 @@
 interface:
   display_name: "Triage"
-  short_description: "Turn raw INBOX bullets into structured issue files with type and priority."
+  short_description: "Convert INBOX bullets into issues."
+  default_prompt: "Use $triage to convert issues/INBOX.md bullets into structured issue files."

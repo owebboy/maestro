@@ -1,12 +1,12 @@
 ---
 name: workflow-router
-description: Routes to the appropriate workflow engine based on task scope, complexity, and available tools. Activates when the user starts a new task, asks to plan something, or begins a session.
+description: Explicit routing helper for choosing the right Maestro workflow based on task scope, complexity, and available tools. Use when the user asks which Maestro workflow to use or invokes the router directly.
 user-invocable: false
 ---
 
 # Workflow Router
 
-This project uses up to three workflow engines at different scope levels. Pick the right one based on the task.
+This project uses up to three workflow engines at different scope levels. Pick the right one based on the task. Use slash commands in Claude Code and `$skill-name` invocations in Codex.
 
 ## Decision Matrix
 
@@ -30,8 +30,8 @@ This project uses up to three workflow engines at different scope levels. Pick t
 
 Before routing, check what's installed:
 
-- **Plan Mode**: Always available (built into Claude Code). Not available in Codex — use `/new-track` for tracked planning instead.
-- **Superpowers**: Detect using the [multi-signal procedure](../../docs/detecting-optional-skills.md) — check system-reminder skill list, `.claude/settings.json` `enabledPlugins` for `superpowers@superpowers-marketplace`, and `.claude/skills/` for project-scoped installs. Available if **any** signal is positive. If found, `/new-track` and `/implement` use it as the execution engine. If not, they fall back to inline brainstorming and TDD.
+- **Plan Mode**: Always available in Claude Code. In Codex, use a brief inline plan for small work or `$new-track` for tracked planning.
+- **Superpowers**: Detect using the [multi-signal procedure](../../docs/detecting-optional-skills.md). If found, `/new-track` and `/implement` use it as the execution engine. If not, they fall back to inline brainstorming and TDD.
 - **Track system**: Check if `conductor/` directory exists. If not, suggest `/setup` for projects that would benefit from tracked development.
 - **Issue pipeline**: Check if `issues/` directory exists. If not, it can be created on first `/triage`.
 - **Hooks**: Some workflows benefit from hook-driven automation (e.g., SessionStart for context injection). Claude supports 26 lifecycle events; Codex has 5 experimental events. Plan accordingly.

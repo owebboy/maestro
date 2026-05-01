@@ -1,3 +1,4 @@
 interface:
   display_name: "Setup"
-  short_description: "Initialize conductor project context with product, stack, and workflow guidance."
+  short_description: "Initialize conductor project context."
+  default_prompt: "Use $setup to initialize Maestro conductor context for this repository."

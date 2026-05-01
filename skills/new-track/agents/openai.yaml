@@ -1,3 +1,4 @@
 interface:
   display_name: "New Track"
-  short_description: "Create a new feature, bug, chore, or refactor track with spec and plan."
+  short_description: "Create a tracked spec and plan."
+  default_prompt: "Use $new-track to create a Maestro track with a spec and implementation plan."

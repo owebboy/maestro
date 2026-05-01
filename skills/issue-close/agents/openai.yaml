@@ -1,6 +1,7 @@
 interface:
   display_name: "Issue Close"
-  short_description: "Archive an issue as wont-fix, deferred, or duplicate without creating a track."
+  short_description: "Archive an issue without a track."
+  default_prompt: "Use $issue-close to archive this issue without creating a Maestro track."
 
 policy:
   allow_implicit_invocation: false

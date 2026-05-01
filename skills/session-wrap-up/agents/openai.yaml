@@ -1,6 +1,7 @@
 interface:
   display_name: "Session Wrap-Up"
-  short_description: "Run an end-of-session review, capture follow-ups, and sync project context."
+  short_description: "Wrap up session work and context."
+  default_prompt: "Use $session-wrap-up to review session work, capture follow-ups, and prepare commits."
 
 policy:
   allow_implicit_invocation: false

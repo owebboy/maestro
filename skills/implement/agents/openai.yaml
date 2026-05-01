@@ -1,6 +1,7 @@
 interface:
   display_name: "Implement Track"
-  short_description: "Execute a planned conductor track with checkpoints, reviews, and progress updates."
+  short_description: "Execute a planned conductor track."
+  default_prompt: "Use $implement to execute the active Maestro track plan with checkpoints."
 
 policy:
   allow_implicit_invocation: false

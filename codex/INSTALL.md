@@ -18,12 +18,14 @@ In Codex, invoke skills with `$setup`, `$new-track`, `$triage`, and the rest of 
 
 ```bash
 # Maestro
-bunx skills add owebboy/maestro --agent codex
+bunx skills add owebboy/maestro --agent codex --yes --global
 
 # Recommended dependencies
-bunx skills add obra/superpowers --agent codex
-bunx skills add obra/elements-of-style --agent codex
+bunx skills add obra/superpowers --agent codex --yes --global
+bunx skills add obra/elements-of-style --agent codex --yes --global
 ```
+
+`--yes --global` keeps the install non-interactive and user-scoped, which is the most repeatable path for Codex.
 
 ## Install via setup-project
 

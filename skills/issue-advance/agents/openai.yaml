@@ -1,6 +1,7 @@
 interface:
   display_name: "Issue Advance"
-  short_description: "Convert a reviewed issue into a conductor track and archive the source issue."
+  short_description: "Turn a reviewed issue into a track."
+  default_prompt: "Use $issue-advance to convert this reviewed issue into a Maestro track."
 
 policy:
   allow_implicit_invocation: false
