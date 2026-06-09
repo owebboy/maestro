@@ -33,8 +33,8 @@ echo "$frontmatter" | grep -q '^filed:'  || errors="${errors}\n  - missing 'file
 if echo "$frontmatter" | grep -q '^status:'; then
   status=$(echo "$frontmatter" | grep '^status:' | sed 's/^status: *//')
   case "$status" in
-    triaged|reviewed|tracked|wont-fix|deferred|duplicate) ;;
-    *) errors="${errors}\n  - invalid status '$status' (expected: triaged|reviewed|tracked|wont-fix|deferred|duplicate)" ;;
+    triaged|reviewed|tracked|implemented|wont-fix|deferred|duplicate) ;;
+    *) errors="${errors}\n  - invalid status '$status' (expected: triaged|reviewed|tracked|implemented|wont-fix|deferred|duplicate)" ;;
   esac
 fi
 

@@ -14,7 +14,7 @@ Parse INBOX.md bullets into structured issue files.
 
 1. **Bootstrap** — if `issues/` directory or `issues/INBOX.md` does not exist:
    - Create `issues/` directory
-   - Create `issues/archived/{tracked,deferred,wont-fix,duplicate}/`
+   - Create `issues/archived/{tracked,implemented,deferred,wont-fix,duplicate}/`
    - Create `issues/INBOX.md` with this content:
      ```markdown
      # Issue Inbox
@@ -51,7 +51,7 @@ Parse INBOX.md bullets into structured issue files.
    - **Type:** bug | feature | refactor | chore
    - **Priority:** P1 (blocking/critical) | P2 (important) | P3 (nice-to-have)
 
-5. **Ensure archive directories exist**: create `issues/archived/{tracked,deferred,wont-fix,duplicate}/` if missing (needed by `/issue-advance` and `/issue-close`).
+5. **Ensure archive directories exist**: create `issues/archived/{tracked,implemented,deferred,wont-fix,duplicate}/` if missing (needed by `/issue-advance`, `/issue-close`, and `/implement` direct issue mode).
 
 6. **Polish descriptions** — before writing issue files, tighten the expanded Summary and Problem Description for each bullet:
    - Detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md)

@@ -119,7 +119,7 @@ Maestro (WHAT and WHEN)                    Superpowers (HOW)
 |-------|------------|---------|
 | setup | `/setup` or `$setup` | Initialize project context (product, tech stack, workflow) |
 | new-track | `/new-track <type> <name>` or `$new-track <type> <name>` | Create spec → brainstorm → plan (via Superpowers) |
-| implement | `/implement [track-id]` or `$implement [track-id]` | Execute plan with TDD + subagent review (via Superpowers) |
+| implement | `/implement [track-id\|issue-file]` or `$implement [track-id\|issue-file]` | Execute plan with TDD + subagent review (via Superpowers); small issues run directly, no track needed |
 | status | `/status [track-id]` or `$status [track-id]` | Project progress, current focus, next actions |
 | manage | `/manage [--archive\|--restore\|--delete]` or `$manage ...` | Track lifecycle management |
 
@@ -133,6 +133,8 @@ Maestro (WHAT and WHEN)                    Superpowers (HOW)
 | issue-close | `/issue-close <path>` or `$issue-close <path>` | Archive as wont-fix, deferred, or duplicate |
 
 **Flow:** `INBOX.md → /triage → /issue-review → /issue-advance → /implement`
+
+**Shortcut for small issues:** `/implement issues/<file>.md` skips the track ceremony — a simplicity gate sizes the issue (≤3 files, testable criteria, no design decisions), then TDD, one commit, one approval, and the issue archives as `implemented`.
 
 ### Quality
 

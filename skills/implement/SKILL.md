@@ -1,12 +1,12 @@
 ---
 name: implement
-description: Executes tasks from a track's implementation plan using Superpowers' TDD workflow and subagent-driven development. Use when ready to implement a track that has an approved spec and plan.
-argument-hint: "[track-id] [--task X.Y] [--phase N]"
+description: Use when ready to implement a track that has an approved spec and plan, or when a triaged/reviewed issue file is simple enough to fix without track ceremony. Takes a track ID or an issues/*.md path; for a designed track from an issue, use issue-advance instead.
+argument-hint: "[track-id | issue-file-path] [--task X.Y] [--phase N]"
 ---
 
 # Implement Track
 
-Execute a track's plan using Superpowers' execution engine (subagent-driven or inline), with track progress management and phase checkpoints.
+Execute a track's plan using Superpowers' execution engine (subagent-driven or inline), with track progress management and phase checkpoints. Small issues can skip the track entirely: pass an issue file path to use [Direct Issue Mode](#direct-issue-mode).
 
 ## Progress Checklist
 
@@ -28,12 +28,15 @@ Implementation Progress:
 
 ## Pre-flight
 
+0. If the argument is a path to an existing `.md` file under `issues/`, go straight to [Direct Issue Mode](#direct-issue-mode) — it has its own pre-flight and does not require `conductor/`.
 1. Verify project is initialized (conductor/workflow.md exists)
 2. Load workflow config: TDD strictness, commit strategy, verification rules
 
 ## Track Selection
 
-**If argument provided:** validate `conductor/tracks/{argument}/plan.md` exists.
+**If the argument is a path to an existing `.md` file under `issues/`:** skip the track flow entirely and follow [Direct Issue Mode](#direct-issue-mode) below.
+
+**If argument provided (track ID):** validate `conductor/tracks/{argument}/plan.md` exists.
 
 **If no argument:** read `conductor/tracks.md`, show incomplete tracks:
 ```
@@ -241,3 +244,74 @@ Tests: all passing
 
 Next: Run /uat-create in Claude Code or $uat-create in Codex to generate an acceptance testing checklist.
 ```
+
+## Direct Issue Mode
+
+Implement a small issue straight from its file — no spec, no plan, no track. The issue file is the spec; its Acceptance Criteria are the verification contract.
+
+### 1. Read and validate the issue
+
+- If the file does not exist: tell the user and stop.
+- Read frontmatter. Eligible statuses: `reviewed` (preferred) or `triaged`. For `triaged`, tell the user the issue hasn't been through issue-review, and base your sizing on whatever Technical Context actually contains — it may be empty or incomplete.
+- Any other status (tracked, implemented, wont-fix, deferred, duplicate): tell the user the issue already left the pipeline and stop.
+- Malformed or missing frontmatter: show what's wrong, offer to fix it or stop.
+
+### 2. Simplicity gate
+
+Assess the issue against all four criteria and present a one-line verdict for each:
+
+1. **Testable** — acceptance criteria are concrete and verifiable as written
+2. **Small** — expected change surface is ~3 files or fewer (count the actual files in Technical Context's Affected Files, expanding any globs; if absent, scan the codebase)
+3. **No design decisions** — no new architecture, schema/API changes, or new dependencies
+4. **Single session** — completable in one sitting
+
+Then ask the user:
+
+```
+Recommendation: {implement directly | advance to a track}
+
+1. Implement directly
+2. Advance to a track instead (/issue-advance in Claude Code, $issue-advance in Codex)
+3. Cancel
+```
+
+Failing any criterion flips the recommendation to "advance" — but the user decides; honor an override in either direction.
+
+### 3. Execute with TDD
+
+- If `conductor/workflow.md` exists, load TDD strictness and commit strategy from it. Otherwise use defaults — strict TDD, single commit — and say so.
+- Run the RED → GREEN → REFACTOR loop from [Fallback (no Superpowers)](#fallback-no-superpowers) above, driven by the acceptance criteria instead of plan tasks: write a failing test per criterion, make it pass, refactor. Skip that section's plan.md and metadata.json bookkeeping — there is no track.
+- If the project has no test suite, say so and verify each acceptance criterion by inspection instead.
+- If the test suite fails before you change anything: HALT and show the failures — do not build on a broken baseline.
+- **Scope escalation:** if the work exceeds the assessed size (more files than expected, a design decision surfaces), stop and present: continue anyway / escalate to issue-advance / pause. Escalation does not carry work-in-progress.
+- Out-of-scope findings discovered along the way: append to `issues/INBOX.md` as bullets, creating the file with a `## Inbox` heading if missing.
+- Commit once, following the commit strategy; reference the issue file path in the message (e.g., `fix: honor track status on restore (issues/2026-06-09-manage-restore-status.md)`).
+
+### 4. Final gate
+
+Present before archiving:
+
+```
+Issue implemented: {title}
+
+Acceptance criteria: {checklist with pass/fail}
+Tests: {results}
+Changes: {git diff --stat summary}
+Commit: {sha}
+
+Approve to archive the issue?
+1. Yes, archive
+2. No — fix something first
+3. No — revert the work
+```
+
+If the user wants changes: fix, re-present. On revert: undo the commit, leave the issue file untouched.
+
+### 5. Archive as implemented
+
+On approval:
+
+- Get today's date by running `date +%Y-%m-%d` — do not assume you know it.
+- Update frontmatter: `status: implemented`, add `implemented: YYYY-MM-DD` and `commit: <sha>`.
+- Move the file to `issues/archived/implemented/` (create the directory if missing).
+- Confirm: issue title, commit SHA, and archive location.

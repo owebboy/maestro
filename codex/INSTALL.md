@@ -79,7 +79,7 @@ project_doc_fallback_filenames = ["CLAUDE.md"]
 |-------|--------------|-------|
 | setup | Full | Interactive Q&A, creates markdown files |
 | new-track | Full* | *Superpowers brainstorming/planning falls back to inline if not installed |
-| implement | Full* | *Superpowers subagent-driven-dev falls back to inline TDD |
+| implement | Full* | *Superpowers subagent-driven-dev falls back to inline TDD; direct issue mode is fully inline (no subagents needed) |
 | status | Full | Reads markdown files |
 | manage | Full | File operations + git |
 | triage | Full | Pure markdown workflow |
