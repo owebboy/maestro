@@ -1,0 +1,9 @@
+{
+  "status": "complete",
+  "project_type": "brownfield",
+  "current_section": "styleguides",
+  "current_question": 2,
+  "completed_sections": ["product", "guidelines", "tech_stack", "workflow", "styleguides"],
+  "started_at": "2026-06-09T00:00:00Z",
+  "last_updated": "2026-06-09T00:00:00Z"
+}
