@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Initializes project with development context artifacts (product definition, tech stack, workflow preferences, style guides). Use when starting a new project with Maestro or when conductor/ directory doesn't exist yet.
+description: Use when starting a new project with Maestro, or when the conductor/ directory does not exist yet and needs initializing.
 argument-hint: "[--resume]"
 ---
 

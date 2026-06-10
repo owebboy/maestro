@@ -1,6 +1,6 @@
 ---
 name: new-track
-description: Creates a new development track with specification and implementation plan. Wraps Superpowers brainstorming and planning into a tracked, organized workflow. Use when starting a new feature, bug fix, refactor, or chore.
+description: Use when starting a new feature, bug fix, refactor, or chore as a new tracked piece of work. For work that already has a reviewed issue file, use issue-advance instead.
 argument-hint: "<feature|bug|chore|refactor> <name>"
 ---
 

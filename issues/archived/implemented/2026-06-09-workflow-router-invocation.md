@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: bug
 priority: P2
 filed: 2026-06-09
+implemented: 2026-06-10
 ---
 
 # Issue: workflow-router invocation policy is inverted on both platforms
@@ -56,6 +57,8 @@ Loosely related: 2026-06-09-openai-yaml-policy-blocks.md establishes the explici
 ## Out of Scope
 
 ## Notes
+
+**Resolution (2026-06-10):** Made the router fully invocable on both platforms — dropped `user-invocable: false` from `workflow-router/SKILL.md` and set `allow_implicit_invocation: true` in its `agents/openai.yaml`. Reconciled the description, `README.md`, and `codex/INSTALL.md` to state it is both auto/implicit and directly invocable.
 
 Found by the 2026-06-09 cross-LLM review (flagged independently by the workflow-router, packaging, and consistency reviewers).
 

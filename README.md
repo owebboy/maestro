@@ -149,7 +149,7 @@ Maestro (WHAT and WHEN)                    Superpowers (HOW)
 
 | Skill | Invocation | Purpose |
 |-------|------------|---------|
-| workflow-router | Auto in Claude, explicit `$workflow-router` in Codex | Routes to the right skill based on task type |
+| workflow-router | Auto or `/workflow-router` in Claude; auto or `$workflow-router` in Codex | Routes to the right skill based on task type |
 | agents-md-sync | `/agents-md-sync` or `$agents-md-sync` | Generate AGENTS.md from CLAUDE.md for Codex |
 
 ## Hooks

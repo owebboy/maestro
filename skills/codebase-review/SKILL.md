@@ -1,6 +1,6 @@
 ---
 name: codebase-review
-description: Performs a full codebase review using parallel review agents (security, performance, architecture, testing, data-integrity, UX), then parallel audit agents to verify findings. Results go to issues/INBOX.md. Use when a comprehensive codebase health check is needed.
+description: Use when the user asks for a comprehensive codebase health check, full audit, or whole-repo security, performance, or architecture review. Not for single-diff or PR review.
 disable-model-invocation: true
 argument-hint: "[scope — e.g., 'src/', 'api layer', 'recent changes']"
 ---

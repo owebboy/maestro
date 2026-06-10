@@ -2,3 +2,6 @@ interface:
   display_name: "Status"
   short_description: "Show tracks, issues, and next actions."
   default_prompt: "Use $status to show current Maestro track, issue, and workflow status."
+
+policy:
+  allow_implicit_invocation: true

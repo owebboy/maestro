@@ -1,6 +1,6 @@
 ---
 name: issue-review
-description: Enriches a triaged issue file with technical context from codebase exploration, or scopes vague issues via brainstorming. Use when a triaged issue needs codebase context before implementation
+description: Use when a triaged issue needs codebase context or scoping before implementation, or "all" to batch-review triaged issues.
 argument-hint: "<issue-file-path> | all"
 ---
 

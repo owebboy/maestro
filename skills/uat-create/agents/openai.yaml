@@ -2,3 +2,6 @@ interface:
   display_name: "UAT Create"
   short_description: "Create UAT checklists from tracks."
   default_prompt: "Use $uat-create to generate a UAT checklist from completed Maestro tracks."
+
+policy:
+  allow_implicit_invocation: false

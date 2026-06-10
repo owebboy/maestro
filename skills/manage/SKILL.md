@@ -1,6 +1,6 @@
 ---
 name: manage
-description: Manages track lifecycle — archives completed tracks, restores archived tracks, deletes tracks permanently, renames track IDs, or cleans up orphaned artifacts. Use for track housekeeping.
+description: Use when archiving, restoring, deleting, renaming, or cleaning up conductor tracks. Tracks only; for closing an issue use issue-close.
 argument-hint: "[--archive|--restore|--delete|--rename|--cleanup] [track-id]"
 ---
 

@@ -1,6 +1,6 @@
 interface:
   display_name: "Session Wrap-Up"
-  short_description: "Wrap up session work and context."
+  short_description: "Review session work, update CLAUDE.md/AGENTS.md, capture follow-ups, and commit."
   default_prompt: "Use $session-wrap-up to review session work, capture follow-ups, and prepare commits."
 
 policy:

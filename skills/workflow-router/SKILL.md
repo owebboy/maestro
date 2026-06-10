@@ -1,7 +1,6 @@
 ---
 name: workflow-router
-description: Explicit routing helper for choosing the right Maestro workflow based on task scope, complexity, and available tools. Use when the user asks which Maestro workflow to use or invokes the router directly.
-user-invocable: false
+description: Use when the user asks which Maestro workflow fits a task, or invokes the router directly to choose one based on scope, complexity, and available tools.
 ---
 
 # Workflow Router

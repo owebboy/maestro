@@ -1,6 +1,6 @@
 ---
 name: uat-create
-description: Generates a UAT checklist from completed conductor tracks with test sections, validation steps, and results summary. Use when completed tracks need acceptance testing
+description: Use when completed conductor tracks need a UAT acceptance-test checklist. For running an existing checklist, use uat-run.
 argument-hint: "[track-ids...]"
 ---
 

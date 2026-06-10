@@ -1,6 +1,6 @@
 ---
 name: agents-md-sync
-description: Generates or updates an AGENTS.md file from existing CLAUDE.md content for Codex compatibility. Use when setting up dual-harness support or syncing after CLAUDE.md changes.
+description: Use when setting up dual-harness (Claude Code + Codex) support for a repo, or syncing AGENTS.md after CLAUDE.md changes.
 disable-model-invocation: true
 ---
 

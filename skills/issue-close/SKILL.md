@@ -1,6 +1,6 @@
 ---
 name: issue-close
-description: Archives an issue that will not become a conductor track — for issues that are wont-fix, deferred, or duplicates. Use when closing an issue without implementation
+description: Use when closing an issue without implementing it — wont-fix, deferred, or duplicate. Issues only; for archiving tracks use manage.
 argument-hint: "<issue-file-path> [--reason wont-fix|deferred|duplicate]"
 ---
 

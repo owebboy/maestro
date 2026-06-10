@@ -1,6 +1,6 @@
 ---
 name: uat-run
-description: Walks through a UAT checklist as an interactive proctor, runs validations, captures failures to issues/INBOX.md, and updates the checklist. Use when running acceptance tests
+description: Use when running through an existing UAT checklist interactively. For generating the checklist first, use uat-create.
 argument-hint: "[UAT-file-path | date]"
 ---
 

@@ -1,6 +1,6 @@
 interface:
   display_name: "Issue Review"
-  short_description: "Add codebase context to a triaged issue."
+  short_description: "Add codebase context to a triaged issue (one file path, or all)."
   default_prompt: "Use $issue-review to add codebase context to this triaged issue."
 
 policy:

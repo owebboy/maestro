@@ -1,6 +1,6 @@
 ---
 name: status
-description: Displays project status including overall progress, active tracks, current focus, and next actions. Use to get oriented at the start of a session or check progress.
+description: Use when getting oriented at the start of a session, or checking overall progress, active tracks, and next actions.
 argument-hint: "[track-id] [--quick]"
 ---
 

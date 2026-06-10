@@ -1,6 +1,6 @@
 ---
 name: issue-advance
-description: Converts a reviewed issue into a conductor track, creating the track from issue data and archiving the issue file. Use when a reviewed issue is ready for implementation, or "all" to batch-advance.
+description: Use when a reviewed issue is ready to become a conductor track, or "all" to batch-advance. For a track that already has a spec and plan, use implement instead.
 argument-hint: "<issue-file-path> | all"
 ---
 

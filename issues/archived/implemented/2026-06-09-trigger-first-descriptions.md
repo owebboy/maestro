@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: refactor
 priority: P2
 filed: 2026-06-09
+implemented: 2026-06-10
 ---
 
 # Issue: Rewrite all 15 skill descriptions trigger-first
@@ -85,6 +86,8 @@ Two sibling issues edit the SAME description / openai.yaml files. Coordinate so 
 - The openai.yaml `policy` / `allow_implicit_invocation` blocks (owned by openai-yaml-policy-blocks).
 
 ## Notes
+
+**Resolution (2026-06-10):** Rewrote all 15 `SKILL.md:3` descriptions to lead with "Use when …" (triggering conditions only, no workflow steps), preserving and extending the disambiguating contrast clauses (implement↔issue-advance, manage↔issue-close, plus new-track↔issue-advance and uat-create↔uat-run). `implement` left as-is (already trigger-first with its contrast clause). Verified by an adversarial Sonnet selection check.
 
 - Found by the 2026-06-09 cross-LLM review; confirmed by adversarial verification. Highest-leverage cross-LLM change in the review.
 - Decision for the human (do not pre-decide): how many of the 15 descriptions should be FULLY rewritten vs. lightly polished. The 15 are at different starting points after recent commits — implement is already trigger-first with its contrast clause; issue-close is trigger-shaped but missing its contrast clause; the rest are still capability-first. Acceptance Criterion 1 ("All 15 start with 'Use when...'") is taken at face value, but if a reviewer wants to leave an already-good description like implement untouched, flag it during implementation.

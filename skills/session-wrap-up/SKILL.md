@@ -1,6 +1,6 @@
 ---
 name: session-wrap-up
-description: End-of-session wrap-up that reviews code quality, checks for untracked issues, updates CLAUDE.md/AGENTS.md and project context files, and commits. Use when finishing a Claude Code or Codex session, wrapping up work, or the user says they're done for now.
+description: Use when a Claude Code or Codex session is ending, the user is wrapping up, or says they're done for now.
 ---
 
 # Session Wrap-Up

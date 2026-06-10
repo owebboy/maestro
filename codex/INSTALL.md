@@ -96,7 +96,7 @@ This is a fallback only — if `AGENTS.md` exists it always wins and `CLAUDE.md`
 | uat-create | Partial | MCP tool detection varies |
 | uat-run | Partial | Falls back to manual verification |
 | session-wrap-up | Partial | Some skill invocations are Claude-only |
-| workflow-router | Partial | Explicit-only helper; Codex ignores Claude auto-routing frontmatter |
+| workflow-router | Full | Routing helper; auto-loads when you ask which workflow to use, or invoke `$workflow-router` directly |
 | agents-md-sync | Full | Generates `AGENTS.md` from `CLAUDE.md` for dual-harness repos |
 
 ## Dependencies

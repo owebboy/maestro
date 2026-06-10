@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Processes raw issue bullets from issues/INBOX.md into structured issue files with dedup checking, type classification, and priority assignment. Use when INBOX.md has unprocessed items
+description: Use when issues/INBOX.md has unprocessed bullets that need to become structured issue files.
 argument-hint: "[issues-directory]"
 ---
 

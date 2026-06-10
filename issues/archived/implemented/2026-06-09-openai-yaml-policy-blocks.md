@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: chore
 priority: P3
 filed: 2026-06-09
+implemented: 2026-06-10
 ---
 
 # Issue: Five openai.yaml files omit the allow_implicit_invocation policy block
@@ -63,6 +64,8 @@ Cross-reference `issues/2026-06-09-workflow-router-invocation.md`, which propose
 ## Out of Scope
 
 ## Notes
+
+**Resolution (2026-06-10):** All 15 `skills/*/agents/openai.yaml` now carry an explicit `allow_implicit_invocation` — file-writers (new-track, triage, uat-create, setup) set `false`; read-only `status` set `true`; `workflow-router` set `true` (per workflow-router-invocation). Reworded the issue-review and session-wrap-up `short_description`s for accuracy and discovery.
 
 Found by the 2026-06-09 cross-LLM review.
 
