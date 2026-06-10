@@ -10,8 +10,10 @@
 
 | Status | Track ID | Title | Created | Updated |
 | ------ | -------- | ----- | ------- | ------- |
-| [x] | cleanup-fixes_20260610 | Maestro cleanup fixes | 2026-06-10 | 2026-06-10 |
+| _none_ | | | | |
 
 ## Archived Tracks
 
-<!-- Tracks archived via /manage appear here -->
+| Status | Track ID | Title | Created | Archived | Reason |
+| ------ | -------- | ----- | ------- | -------- | ------ |
+| [x] | cleanup-fixes_20260610 | Maestro cleanup fixes | 2026-06-10 | 2026-06-10 | completed |

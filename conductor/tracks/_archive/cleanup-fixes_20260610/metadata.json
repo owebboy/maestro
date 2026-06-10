@@ -8,5 +8,8 @@
   "current_task": null,
   "current_phase": 4,
   "phases": { "total": 4, "completed": 4 },
-  "tasks": { "total": 5, "completed": 5 }
+  "tasks": { "total": 5, "completed": 5 },
+  "archived": true,
+  "archived_at": "2026-06-10T12:44:31Z",
+  "archive_reason": "completed"
 }
