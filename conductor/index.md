@@ -2,6 +2,10 @@
 
 Navigation hub for Maestro's development context. These documents inform every Maestro workflow skill.
 
+## Active Tracks
+
+- [cleanup-fixes_20260610](tracks/cleanup-fixes_20260610/) — Maestro cleanup fixes (chore, pending)
+
 ## Context Documents
 
 - [product.md](product.md) — Vision, problem, target users, goals

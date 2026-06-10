@@ -1,0 +1,10 @@
+{
+  "id": "cleanup-fixes_20260610",
+  "title": "Maestro cleanup fixes",
+  "type": "chore",
+  "status": "pending",
+  "created": "2026-06-10T04:21:38Z",
+  "updated": "2026-06-10T04:21:38Z",
+  "phases": { "total": 4, "completed": 0 },
+  "tasks": { "total": 5, "completed": 0 }
+}
