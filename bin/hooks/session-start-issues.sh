@@ -27,7 +27,7 @@ reviewed=0
 for f in "$ISSUES_DIR"/*.md; do
   [[ -f "$f" ]] || continue
   [[ "$(basename "$f")" == "INBOX.md" ]] && continue
-  status=$(sed -n '/^---$/,/^---$/{ /^status:/{ s/^status: *//; p; } }' "$f" 2>/dev/null)
+  status=$(awk '/^---$/{n++; next} n==1 && $1=="status:"{print $2; exit}' "$f" 2>/dev/null)
   case "$status" in
     triaged)  triaged=$((triaged + 1)) ;;
     reviewed) reviewed=$((reviewed + 1)) ;;

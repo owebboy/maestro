@@ -1,8 +1,9 @@
 ---
-status: triaged
+status: implemented
 type: bug
 priority: P1
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: setup-project writes an invalid Claude Code hook schema

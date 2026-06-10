@@ -303,13 +303,17 @@ write_claude_settings_with_hooks() {
   "hooks": {
     "SessionStart": [
       {
-        "command": ".claude/hooks/session-start-issues.sh"
+        "hooks": [
+          { "type": "command", "command": ".claude/hooks/session-start-issues.sh" }
+        ]
       }
     ],
     "PostToolUse": [
       {
-        "command": ".claude/hooks/validate-issue-frontmatter.sh",
-        "matcher": "Write|Edit"
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": ".claude/hooks/validate-issue-frontmatter.sh" }
+        ]
       }
     ]
   }
@@ -322,8 +326,12 @@ print_claude_hook_snippet() {
   Add to .claude/settings.json:
   {
     "hooks": {
-      "SessionStart": [{ "command": ".claude/hooks/session-start-issues.sh" }],
-      "PostToolUse":  [{ "command": ".claude/hooks/validate-issue-frontmatter.sh", "matcher": "Write|Edit" }]
+      "SessionStart": [
+        { "hooks": [{ "type": "command", "command": ".claude/hooks/session-start-issues.sh" }] }
+      ],
+      "PostToolUse": [
+        { "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": ".claude/hooks/validate-issue-frontmatter.sh" }] }
+      ]
     }
   }
 EOF

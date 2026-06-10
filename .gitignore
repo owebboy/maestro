@@ -1,0 +1,12 @@
+# Personal Claude Code settings (per-machine permission allowlists, etc.)
+.claude/settings.local.json
+
+# Scratch and generated artifacts
+tmp/
+outputs/
+
+# Dependencies
+node_modules/
+
+# macOS
+.DS_Store

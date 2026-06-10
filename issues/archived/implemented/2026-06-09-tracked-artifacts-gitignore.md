@@ -1,8 +1,9 @@
 ---
-status: triaged
+status: implemented
 type: chore
 priority: P2
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: Remove tracked personal artifacts and add a .gitignore

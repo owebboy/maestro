@@ -1,8 +1,9 @@
 ---
-status: triaged
+status: implemented
 type: bug
 priority: P1
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: validate-issue-frontmatter hook feedback never reaches the model
