@@ -1,5 +1,5 @@
 ---
-status: triaged
+status: reviewed
 type: bug
 priority: P2
 filed: 2026-06-09
@@ -25,21 +25,41 @@ The description names two triggers: "the user asks which Maestro workflow to use
 
 ### Affected Files
 
-- skills/workflow-router/SKILL.md:3-4
-- skills/workflow-router/agents/openai.yaml:7
-- README.md:150
-- codex/INSTALL.md:93
+- skills/workflow-router/SKILL.md:3 — description names two triggers: "the user asks which Maestro workflow to use" and "invokes the router directly".
+- skills/workflow-router/SKILL.md:4 — `user-invocable: false`; this is the ONLY skill in the repo with this flag, so it blocks `/workflow-router` direct invocation in Claude Code — contradicting the "invokes the router directly" trigger on line 3.
+- skills/workflow-router/agents/openai.yaml:7 — `allow_implicit_invocation: false`; in Codex the skill never loads when the user merely "asks which workflow to use", killing the other trigger.
+- skills/workflow-router/agents/openai.yaml:4 — `default_prompt` frames the skill as `$workflow-router` explicit-only, reinforcing the Codex explicit-only stance.
+- README.md:152 — "Auto in Claude, explicit `$workflow-router` in Codex" (note: line moved from 150 to 152 since filing); the "Auto in Claude" claim itself sits oddly with `user-invocable: false`.
+- codex/INSTALL.md:93 — "Explicit-only helper; Codex ignores Claude auto-routing frontmatter".
 
 ### Related Tests
 
+No automated test suite (Markdown + Bash repo). Validate manually:
+- Claude Code: after the change, confirm `/workflow-router` appears/works as intended given the chosen `user-invocable` value, and that model-implicit activation on the two triggers still fires.
+- Codex: confirm the skill loads on the "which workflow?" trigger once `allow_implicit_invocation` is set as decided.
+- Sonnet skill verification of workflow-router, since Sonnet is the skills' primary consumer (see MEMORY.md "Verify skills with Sonnet").
+- Grep audit: the three doc statements (SKILL.md description, README.md:152, codex/INSTALL.md:93) must agree after the edit.
+
 ### Similar Patterns
+
+- Invocation-policy convention across the bundle: `grep -rn allow_implicit_invocation skills/*/agents/openai.yaml` — 10 skills set `false`; workflow-router is unusual only in ALSO carrying `user-invocable: false` (the sole skill that does).
+- Sibling issue 2026-06-09-openai-yaml-policy-blocks.md defines the intended plugin-wide policy convention (explicit-only for file-writing skills; advisory/read-only skills may allow implicit). workflow-router is zero-risk read-only advisory, so it should err toward implicit — the opposite of the file-writing skills.
+- skills/agents-md-sync/SKILL.md:32 documents that Codex strips `user-invocable` and other Claude-only frontmatter — useful context for why the two platforms diverge here.
+- Related commit d7b6356 "Harden skills" recently touched these skill files (hence stale line numbers); afba736 "Make Maestro first-class for Codex" introduced the openai.yaml policy blocks.
 
 ## Dependencies
 
-Coordinate with the trigger-first description rewrite (2026-06-09-trigger-first-descriptions.md).
+Coordinate with the trigger-first description rewrite (2026-06-09-trigger-first-descriptions.md) — that issue rewrites all 15 descriptions including this one at SKILL.md:3, and updates openai.yaml short_descriptions. Both issues edit skills/workflow-router/SKILL.md:3 and the same openai.yaml; sequence them so the description and the invocation policy land together and the triggers match what each platform actually permits.
+
+Loosely related: 2026-06-09-openai-yaml-policy-blocks.md establishes the explicit-vs-implicit policy convention this issue's openai.yaml change should follow.
 
 ## Out of Scope
 
 ## Notes
 
 Found by the 2026-06-09 cross-LLM review (flagged independently by the workflow-router, packaging, and consistency reviewers).
+
+DECISION (human): Two related invocation-policy choices must be made and then reflected consistently across the description, README, and INSTALL:
+1. Claude Code — keep `user-invocable: false` (model-implicit only, no `/workflow-router` slash command) or drop it to allow direct invocation? The line-3 description promises "invokes the router directly", which only holds if the flag is dropped.
+2. Codex — flip `allow_implicit_invocation` to `true` (so "asks which workflow?" loads it) or keep it explicit-only via `$workflow-router`? AC#1 leans toward `true` for this zero-risk advisory skill but explicitly allows a documented decision otherwise.
+Whichever way each is decided, README:152 and codex/INSTALL.md:93 must be rewritten to match — they currently disagree with each other and with the frontmatter.
