@@ -10,6 +10,7 @@ Maestro is a cross-harness workflow package for Claude Code and Codex. The repos
 - `bin/setup-project`: installs Maestro into another repository via project-scoped symlinks or portable copies, plus hooks.
 - `codex/INSTALL.md`: Codex-specific install, compatibility, and behavior notes.
 - `bin/hooks/` and `hooks/`: hook assets for Claude Code and Codex installs.
+- `conductor/`, `issues/`: Maestro's own working state (it dogfoods itself) — workflow data, not package content.
 
 ## Edit Rules
 
