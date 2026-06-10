@@ -2,7 +2,7 @@
 status: triaged
 type: bug | feature | refactor | chore
 priority: P1 | P2 | P3
-filed: YYYY-MM-DD
+filed: YYYY-MM-DD # Get today's date by running `date +%Y-%m-%d` — do not assume you know it.
 ---
 
 # Issue: <title>

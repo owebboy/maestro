@@ -10,7 +10,7 @@ Interactive proctor for walking through a UAT checklist. Runs pre-checks, guides
 
 ## Arguments
 
-Optional: UAT file path or date (e.g., `2026-03-11`). If omitted, uses the most recent `conductor/UAT-*.md`.
+Optional: UAT file path or date (e.g., `2026-03-11`). If omitted, uses the most recent `conductor/UAT-*.md` — the one whose filename date (`UAT-YYYY-MM-DD.md`) is newest. If no matching UAT file exists, or a passed path/date resolves to no file, inform the user and stop.
 
 ## Process
 
@@ -68,7 +68,8 @@ When user reports a failure:
    ```
    - <description of failure with specific test reference> (type: <inferred>, priority: <inferred>)
    ```
-4. Show the draft and ask for confirmation before appending to `issues/INBOX.md`
+4. Show the draft and ask for confirmation before appending under the `## Inbox` section of `issues/INBOX.md`
+   - If `issues/INBOX.md` does not exist, create it first: create `issues/INBOX.md` containing a top-level heading `# Issue Inbox`, the line `Add issues as bullet points below. Run `/triage` in Claude Code or `$triage` in Codex to process them.`, and an `## Inbox` section header; also create `issues/archived/{tracked,implemented,deferred,wont-fix,duplicate}/`
 
 **Type inference:** visual/UI issue -> bug; data mismatch -> bug; missing feature -> feature
 **Priority inference:** blocks core workflow -> P1; incorrect results -> P2; cosmetic/minor -> P3
@@ -82,10 +83,10 @@ After each section:
 
 ### 6. Summary
 
-After all sections:
+After all sections — Get today's date by running `date +%Y-%m-%d` — do not assume you know it. The checklist's own date is the `UAT-YYYY-MM-DD.md` filename date; "Run date" below is today's date, which may differ:
 
 ```
-UAT Complete: YYYY-MM-DD
+UAT Run: <today's date> (checklist: UAT-YYYY-MM-DD)
 
 Results: X pass, Y fail, Z blocked out of N total
 - Section A: all pass

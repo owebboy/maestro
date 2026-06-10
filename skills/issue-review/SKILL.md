@@ -13,8 +13,9 @@ Fill technical context in a triaged issue file by exploring the codebase.
 ## Process
 
 1. **Read** the issue file(s)
-   - If argument is `all`: scan `issues/*.md` for files with frontmatter `status: triaged`, sort by priority (P1 first), and process each sequentially through steps 2–6
-   - Verify frontmatter `status` is `triaged` (or `reviewed` for re-review)
+   - If argument is `all`: scan `issues/*.md` for files with frontmatter `status: triaged`, sort by priority (P1 first), and process each sequentially through steps 2–6. If the scan finds no triaged issues, inform the user and stop.
+   - Otherwise, if the named issue file does not exist, inform the user and stop.
+   - Verify frontmatter `status` is `triaged` (or `reviewed` for re-review). If the status is anything else, inform the user and stop.
    - Extract Summary, Problem Description, and Acceptance Criteria
 
 2. **Assess clarity** — does the issue have:
@@ -25,7 +26,7 @@ Fill technical context in a triaged issue file by exploring the codebase.
      - Otherwise, run an inline brainstorming discussion: ask the user to clarify the problem, propose possible causes, and refine acceptance criteria
      - Update the issue file with the refined content, then continue
 
-3. **Explore codebase** — launch 3 parallel agents. In Claude Code, use the Agent tool with `subagent_type=Explore`. In Codex, spawn 3 `explorer` agents explicitly because this step is read-heavy.
+3. **Explore codebase** — launch 3 parallel agents. In Claude Code, use the Agent tool with `subagent_type=Explore`. In Codex, spawn 3 `explorer` agents explicitly because this step is read-heavy. If your harness cannot spawn subagents (e.g. Gemini CLI, Copilot CLI, or plain chat), do this work yourself sequentially, using each agent's brief above as a checklist.
 
    **Agent 1 — Affected Files:**
    > Find source files related to: "{summary}". Search for relevant keywords, types, functions. List file paths with brief relevance notes.
@@ -49,4 +50,8 @@ Fill technical context in a triaged issue file by exploring the codebase.
    - If not available, do a quick inline pass: remove filler words, prefer active voice, ensure each acceptance criterion is a single testable statement
    - Do not change technical meaning — only improve clarity
 
-6. **Display summary** of findings for user review
+6. **Display summary** of findings for user review. For each issue reviewed, print one row:
+
+   | File | Affected Files | Tests | Status |
+   |------|----------------|-------|--------|
+   | 2026-02-24-timer-pause.md | 3 files | 1 test, gaps noted | reviewed |

@@ -25,7 +25,7 @@ Codebase Review Progress:
 
 ## Phase 1: Review Wave
 
-Launch 6 review agents in parallel. In Claude Code, use the Agent tool with `subagent_type=Explore`. In Codex, spawn 6 `explorer` agents explicitly for the read-heavy review wave. Each agent has a specific focus area and produces findings as a numbered list.
+Launch 6 review agents in parallel. In Claude Code, use the Agent tool with `subagent_type=Explore`. In Codex, spawn 6 `explorer` agents explicitly for the read-heavy review wave. Each agent has a specific focus area and produces findings as a numbered list. If your harness cannot spawn subagents (e.g. Gemini CLI, Copilot CLI, or plain chat), do this work yourself sequentially, using each agent's brief above as a checklist.
 
 **Agent 1 — Security:**
 > Review {scope} for security issues. Check for: injection vulnerabilities (SQL, command, XSS), authentication/authorization gaps, secrets in code, insecure deserialization, SSRF, path traversal, timing attacks, missing input validation at system boundaries. For each finding: file, line, severity (critical/high/medium/low), description, suggested fix.
@@ -49,7 +49,7 @@ Collect all findings into a consolidated list, deduplicating across agents.
 
 ## Phase 2: Audit Wave
 
-Launch audit agents in parallel — one per review agent that produced findings. Skip agents that found nothing.
+Launch audit agents in parallel — one per review agent that produced findings. Skip agents that found nothing. If your harness cannot spawn subagents (e.g. Gemini CLI, Copilot CLI, or plain chat), do this work yourself sequentially, using each agent's brief above as a checklist.
 
 Each audit agent receives the findings from its corresponding review agent:
 
@@ -75,7 +75,7 @@ Each audit agent receives the findings from its corresponding review agent:
 
 ## Phase 4: File to INBOX
 
-For each confirmed finding, append a bullet to `issues/INBOX.md`:
+For each confirmed finding, append a bullet to `issues/INBOX.md`. Get today's date by running `date +%Y-%m-%d` — do not assume you know it — and use it for the source tag:
 
 ```
 - **<brief description>.** <details>. <severity> priority. Source: codebase-review_YYYYMMDD.
@@ -83,4 +83,4 @@ For each confirmed finding, append a bullet to `issues/INBOX.md`:
 
 If `issues/INBOX.md` does not exist, create the full issues directory structure and INBOX.md template (same as `/triage` bootstrap — see that skill for the exact template), then append findings.
 
-Suggest running `/triage` next to process the new INBOX items.
+Suggest running `/triage` in Claude Code or `$triage` in Codex next to process the new INBOX items.

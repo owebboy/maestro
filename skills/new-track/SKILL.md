@@ -51,9 +51,10 @@ Ask ONE question per turn (max 6, tailored by type):
 ## Step 3: Track ID & Spec Generation
 
 Generate track ID: `{shortname}_{YYYYMMDD}` (e.g., `user-auth_20260403`)
+- Get today's date by running `date +%Y-%m-%d` — do not assume you know it.
 - Validate uniqueness against `conductor/tracks.md`
 
-Create `conductor/tracks/{trackId}/spec.md`:
+Create `conductor/tracks/{trackId}/spec.md` (get today's date by running `date +%Y-%m-%d` — do not assume you know it):
 
 ```markdown
 # Specification: {Title}
@@ -111,7 +112,7 @@ If Superpowers is not installed, generate a phased plan inline:
 
 After plan is in `conductor/tracks/{trackId}/plan.md`:
 
-1. Create `conductor/tracks/{trackId}/metadata.json`:
+1. Create `conductor/tracks/{trackId}/metadata.json` (get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it):
    ```json
    {
      "id": "{trackId}",
@@ -124,7 +125,7 @@ After plan is in `conductor/tracks/{trackId}/plan.md`:
      "tasks": { "total": M, "completed": 0 }
    }
    ```
-2. Register in `conductor/tracks.md`: add row `| [ ] | {trackId} | {title} | {date} | {date} |`
+2. Register in `conductor/tracks.md`: add row `| [ ] | {trackId} | {title} | {date} | {date} |` (get today's date by running `date +%Y-%m-%d` — do not assume you know it)
 3. Update `conductor/index.md`: add to Active Tracks
 
 ## Error Handling

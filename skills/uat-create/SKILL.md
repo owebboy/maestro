@@ -37,7 +37,7 @@ Generate a UAT checklist from completed tracks not yet covered by existing UAT f
    - Cross-reference prerequisites from prior UAT files for recurring dependencies
 
 5. **Write the checklist**
-   - File: `conductor/UAT-YYYY-MM-DD.md` (today's date)
+   - File: `conductor/UAT-YYYY-MM-DD.md`. Get today's date by running `date +%Y-%m-%d` — do not assume you know it.
    - Format:
      - Header with track list and "Any failures should go through `issues/INBOX.md` for triage"
      - Prerequisites section

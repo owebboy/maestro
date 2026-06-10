@@ -72,7 +72,7 @@ After Q&A, generate these files populated with answers:
 
 ## State Management
 
-Track progress in `conductor/setup_state.json`:
+Track progress in `conductor/setup_state.json`. Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it.
 ```json
 {
   "status": "in_progress|complete",
@@ -87,7 +87,7 @@ Track progress in `conductor/setup_state.json`:
 
 ## tracks.md Format (CRITICAL)
 
-The generated `conductor/tracks.md` MUST use this exact format. Downstream skills (`/new-track`, `/status`, `/manage`, `/implement`, `/uat-create`) parse this table by convention:
+The generated `conductor/tracks.md` MUST use this exact format. Downstream skills (`/new-track` in Claude Code or `$new-track` in Codex, and likewise `/status`, `/manage`, `/implement`, `/uat-create`) parse this table by convention:
 
 ```markdown
 # Tracks Registry
@@ -105,7 +105,7 @@ The generated `conductor/tracks.md` MUST use this exact format. Downstream skill
 
 ## Archived Tracks
 
-<!-- Tracks archived via /manage appear here -->
+<!-- Tracks archived via /manage in Claude Code or $manage in Codex appear here -->
 ```
 
 Do NOT deviate from this table structure. The status column uses checkbox markers (`[ ]`, `[~]`, `[x]`). The Track ID column must match directory names under `conductor/tracks/`.
@@ -118,7 +118,7 @@ Setup complete!
 Created: conductor/{index,product,product-guidelines,tech-stack,workflow,tracks}.md
          conductor/code_styleguides/
 
-Next: Run /new-track to create your first track.
+Next: Run /new-track in Claude Code or $new-track in Codex to create your first track.
 ```
 
 ## Resume

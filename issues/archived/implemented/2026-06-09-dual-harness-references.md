@@ -1,8 +1,9 @@
 ---
-status: triaged
+status: implemented
 type: refactor
 priority: P2
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: Use dual-harness syntax in cross-skill references; inline the INBOX bootstrap

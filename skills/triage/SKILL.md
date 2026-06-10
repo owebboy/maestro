@@ -62,7 +62,7 @@ Parse INBOX.md bullets into structured issue files.
 7. **Create issue file** for each bullet using the template:
    - Filename: `issues/YYYY-MM-DD-<slug>.md`
    - Slug: 2-4 lowercase hyphenated words from the description
-   - Date: today
+   - Date: today — Get today's date by running `date +%Y-%m-%d` — do not assume you know it.
 
 8. **Display summary table:**
 

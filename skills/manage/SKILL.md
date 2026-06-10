@@ -23,7 +23,7 @@ Manage the complete track lifecycle.
 
 ## Pre-flight
 
-Verify `conductor/tracks.md` and `conductor/tracks/` exist. Create `conductor/tracks/_archive/` if needed.
+If conductor/ does not exist, inform the user and stop. Verify `conductor/tracks.md` and `conductor/tracks/` exist. Create `conductor/tracks/_archive/` if needed.
 
 ## Archive
 
@@ -31,7 +31,7 @@ Verify `conductor/tracks.md` and `conductor/tracks/` exist. Create `conductor/tr
 2. Ask archive reason: completed / superseded / abandoned / other
 3. Confirm with 'YES'
 4. Move `conductor/tracks/{id}/` to `conductor/tracks/_archive/{id}/`
-5. Update metadata.json with `archived: true`, `archived_at`, `archive_reason`
+5. Update metadata.json with `archived: true`, `archived_at`, `archive_reason`. Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it.
 6. Update `conductor/tracks.md`: move entry to Archived section
 7. Git commit
 
@@ -68,7 +68,7 @@ Scan for and fix:
 - **Directory orphans**: tracks/ dirs not in tracks.md — offer to register
 - **Registry orphans**: tracks.md entries without directories — offer to remove
 - **Incomplete tracks**: missing spec.md/plan.md/metadata.json — offer to create from templates
-- **Stale in-progress**: status `[~]` with metadata.json `updated` timestamp >7 days old — offer to archive. Note: this uses the `updated` field which is written on task completion, so a track being actively debugged without completing tasks could appear stale. Always ask the user before archiving; never auto-archive.
+- **Stale in-progress**: status `[~]` with metadata.json `updated` timestamp >7 days old — offer to archive. Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it — then compute staleness against the `updated` field. Note: this uses the `updated` field which is written on task completion, so a track being actively debugged without completing tasks could appear stale. Always ask the user before archiving; never auto-archive.
 
 Present findings, let user choose which to fix, single git commit.
 

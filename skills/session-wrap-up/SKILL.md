@@ -49,6 +49,8 @@ To determine which track to review: check your conversation history for which tr
 >
 > If no active conductor track was worked on this session, skip this review and say so.
 
+If your harness cannot spawn subagents (e.g. Gemini CLI, Copilot CLI, or plain chat), do this work yourself sequentially, using each agent's brief above as a checklist.
+
 Wait for all agents to complete. Apply any fixes from the code reviewer that are critical or warning severity (ask before applying nits). Report a brief summary of all reviews.
 
 **CRITICAL: If a reviewer flags issues in files outside the session file list, discard those findings. File issues to INBOX instead of fixing them — they belong to a different session's work.**
@@ -61,7 +63,7 @@ Two things happen here:
 
 2. **Scan the conversation** for unresolved items — look for phrases like "TODO", "we should", "out of scope", "later", "hack", "workaround", "skip for now", or anything that sounds like deferred work. Present any findings to the user for confirmation.
 
-For each confirmed item, append it as a bullet to `issues/INBOX.md` under the `## Inbox` heading. If `issues/INBOX.md` does not exist, create the full issues directory structure and INBOX.md template (same as `/triage` bootstrap — see that skill for the exact template). Use the format: `- <brief description of the issue>`.
+For each confirmed item, append it as a bullet to `issues/INBOX.md` under the `## Inbox` heading. If `issues/INBOX.md` does not exist, create it containing a top-level heading `# Issue Inbox`, the line `Add issues as bullet points below. Run `/triage` in Claude Code or `$triage` in Codex to process them.`, and an `## Inbox` section header; also create `issues/archived/{tracked,implemented,deferred,wont-fix,duplicate}/`. Use the format: `- <brief description of the issue>`.
 
 ## Phase 3: Update Project Instructions
 

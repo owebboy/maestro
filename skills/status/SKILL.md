@@ -11,8 +11,8 @@ Display current status of the project: overall progress, track summary, current 
 ## Pre-flight
 
 1. Verify `conductor/product.md` and `conductor/tracks.md` exist
-   - If missing: suggest running `/setup` first
-2. If no tracks registered: show setup-complete message, suggest `/new-track`
+   - If missing: suggest running `/setup` in Claude Code or `$setup` in Codex first
+2. If no tracks registered: show setup-complete message, suggest `/new-track` in Claude Code or `$new-track` in Codex
 
 ## Data Collection
 
@@ -26,6 +26,7 @@ Display current status of the project: overall progress, track summary, current 
 5. **Issues overview** (if `issues/` exists):
    - Count bullets in `issues/INBOX.md` under `## Inbox`
    - Scan `issues/*.md` files (excluding INBOX.md) — read each file's frontmatter for `status` and `priority`
+   - If an issue file has malformed or missing frontmatter, skip that file and note it in the output.
    - Group counts by status: triaged, reviewed
    - Sort issue lists by priority (P1 first)
 
@@ -60,7 +61,7 @@ Inbox: {inbox_count} unprocessed
 | P1 | reviewed | 2026-04-03-auth-bug.md | Auth token not refreshing |
 | P2 | triaged | 2026-04-03-nav-layout.md | Nav collapses on mobile |
 
-Commands: /implement {trackId} | /new-track | /manage | /triage | /issue-review
+Commands (in Claude Code, or $command in Codex): /implement {trackId} | /new-track | /manage | /triage | /issue-review
 ```
 
 ## Output: Single Track (with track-id)
@@ -76,7 +77,8 @@ Active: {trackId} — Task {X.Y}
 
 ## Empty States
 
-- No tracks: "No tracks yet. Run /new-track to create one."
+- No tracks: "No tracks yet. Run /new-track in Claude Code or $new-track in Codex to create one."
 - Track not found: list available tracks with suggestion
 - No issues directory: omit ISSUES section entirely
 - Issues directory exists but no open issues: "ISSUES: None open (inbox empty)"
+- Multiple in-progress tracks: choose the most recently updated one as the single `Active` track in CURRENT FOCUS, and list the others under TRACKS.

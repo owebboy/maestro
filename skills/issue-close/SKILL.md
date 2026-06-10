@@ -13,6 +13,9 @@ Archive an issue without creating a track.
 ## Process
 
 1. **Read** the issue file
+   - If the issue file does not exist, inform the user and stop.
+   - If the issue's `status` is already `implemented`, `wont-fix`, `deferred`, or `duplicate`, the issue is already closed — inform the user and stop.
+   - If the issue file has no `status` field, inform the user and stop.
 
 2. **Get reason** if not provided as argument — ask:
    ```
@@ -26,8 +29,8 @@ Archive an issue without creating a track.
 
 4. **Update issue file frontmatter:**
    - Update `status` to the reason (wont-fix | deferred | duplicate)
-   - Add `closed: YYYY-MM-DD`
-   - If duplicate: add `duplicate-of: <reference>`
+   - Get today's date by running `date +%Y-%m-%d` — do not assume you know it. Add `closed: YYYY-MM-DD`
+   - If duplicate: add `duplicate-of: <issue-filename-or-track-id>`
    - Add a brief closing note under `## Notes` if user provides one
 
 5. **Move** to `issues/archived/<reason>/`

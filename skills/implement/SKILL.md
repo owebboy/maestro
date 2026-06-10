@@ -29,7 +29,7 @@ Implementation Progress:
 ## Pre-flight
 
 0. If the argument is a path to an existing `.md` file under `issues/`, go straight to [Direct Issue Mode](#direct-issue-mode) — it has its own pre-flight and does not require `conductor/`.
-1. Verify project is initialized (conductor/workflow.md exists)
+1. Verify project is initialized (conductor/workflow.md exists). If conductor/workflow.md does not exist, inform the user and stop (suggest setup).
 2. Load workflow config: TDD strictness, commit strategy, verification rules
 
 ## Track Selection
@@ -137,7 +137,9 @@ Build the list of files this phase touched:
 
 **Fallback (always run as supplement):** The plan.md list misses new files created during tasks and files touched incidentally. Always supplement with git:
 - Find the phase's first task commit in `git log` (match by task ID or commit message convention from workflow.md)
+- Get its parent SHA with `git rev-parse {first-task-commit}^`
 - Diff from its parent: `git diff --name-only {parent-sha}..HEAD`
+- If no task commit is found, skip the git supplement and use the plan.md file list only
 - Union with any files found in plan.md
 
 This is the **phase file list** — all review and fixes are scoped to ONLY these files.
@@ -169,6 +171,8 @@ Launch after Agent 1 completes so it reviews the already-simplified code:
 > - **In-scope** (file is in the phase file list): Apply the fix directly, regardless of severity. Fix everything — critical, warning, and nit.
 > - **Out-of-scope** (file is NOT in the phase file list but you noticed an issue while reviewing code that calls into it): Do NOT fix. Return as a separate out-of-scope list.
 
+If your harness cannot spawn subagents (e.g. Gemini CLI, Copilot CLI, or plain chat), do this work yourself sequentially, using each agent's brief above as a checklist.
+
 **After both agents finish:**
 
 1. If either agent made changes, commit following the commit strategy in workflow.md (e.g., `refactor: phase {N} code review fixes`). If neither agent made changes, skip the commit.
@@ -176,7 +180,15 @@ Launch after Agent 1 completes so it reviews the already-simplified code:
    ```
    - {description} in {file}:{line} ({severity}). Source: phase {N} review of {trackId}.
    ```
-   If `issues/INBOX.md` does not exist, create the issues directory structure first (same as `/triage` bootstrap).
+   If `issues/INBOX.md` does not exist, create it first with this content, then append the bullet under `## Inbox`:
+   ```markdown
+   # Issue Inbox
+
+   Add issues as bullet points below. Run `/triage` in Claude Code or `$triage` in Codex to process them.
+
+   ## Inbox
+   ```
+   Also create `issues/archived/{tracked,implemented,deferred,wont-fix,duplicate}/`.
 
 ### 3. Run Verification
 

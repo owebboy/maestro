@@ -1,8 +1,9 @@
 ---
-status: triaged
+status: implemented
 type: refactor
 priority: P3
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: Add missing edge-case handling across pipeline skills

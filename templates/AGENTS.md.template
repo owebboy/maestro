@@ -31,7 +31,7 @@ Issues are tracked in `issues/INBOX.md`. The workflow:
 
 1. Add raw bullets to `issues/INBOX.md`
 2. Run triage (`$triage`) to create structured issue files
-3. Run issue-review (`$issue-review <path>`) to add codebase context (3 parallel agents)
+3. Run issue-review (`$issue-review <path>`) to add codebase context (parallel where supported, otherwise sequential)
 4. Run issue-advance (`$issue-advance <path>`) to convert reviewed issues into conductor tracks
 5. Implement via conductor track workflow (TDD, phase checkpoints)
 6. Run UAT (`$uat-create` then `$uat-run`) to validate completed tracks
