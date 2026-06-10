@@ -32,6 +32,14 @@ Check whether either project-scoped skill path exists:
 
 If either file exists, treat the skill as available.
 
+### No signal positive
+
+If none of the three signals is positive, treat the skill as **unavailable**. Use the calling skill's inline fallback for that step — do not install the plugin or invoke the skill speculatively.
+
+### Other harnesses
+
+On harnesses other than Claude Code or Codex, map these signals to the platform's equivalents — its available-skills or tools listing, its project configuration, and its on-disk skills directory. If none map, treat the skill as unavailable and use the inline fallback.
+
 ## Skill Name Reference
 
 | Plugin | Skills provided | Plugin-installed form | Project-scoped form |

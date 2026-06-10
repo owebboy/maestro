@@ -22,7 +22,7 @@ Fill technical context in a triaged issue file by exploring the codebase.
    - Specific, searchable problem description?
    - At least one concrete acceptance criterion?
    - If NO to either:
-     - Detect `brainstorming` using the [multi-signal procedure](../../docs/detecting-optional-skills.md). If found via any signal, use the detected invocation form to scope the issue with the user.
+     - Detect `brainstorming` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). If found via any signal, use the detected invocation form to scope the issue with the user.
      - Otherwise, run an inline brainstorming discussion: ask the user to clarify the problem, propose possible causes, and refine acceptance criteria
      - Update the issue file with the refined content, then continue
 
@@ -45,7 +45,7 @@ Fill technical context in a triaged issue file by exploring the codebase.
    - Refine `## Acceptance Criteria` if exploration revealed new requirements
    - Update frontmatter `status` to `reviewed`
 
-5. **Polish writing** — detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md).
+5. **Polish writing** — detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory).
    - If found, invoke it against the issue file to tighten the Summary, Problem Description, and Acceptance Criteria
    - If not available, do a quick inline pass: remove filler words, prefer active voice, ensure each acceptance criterion is a single testable statement
    - Do not change technical meaning — only improve clarity

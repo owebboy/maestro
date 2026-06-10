@@ -32,7 +32,7 @@ This project uses up to three workflow engines at different scope levels. Pick t
 Before routing, check what's installed:
 
 - **Plan Mode**: Always available in Claude Code. In Codex, use a brief inline plan for small work or `$new-track` for tracked planning.
-- **Superpowers**: Detect using the [multi-signal procedure](../../docs/detecting-optional-skills.md). If found, `/new-track` and `/implement` use it as the execution engine. If not, they fall back to inline brainstorming and TDD.
+- **Superpowers**: Detect using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). If found, `/new-track` and `/implement` use it as the execution engine. If not, they fall back to inline brainstorming and TDD.
 - **Track system**: Check if `conductor/` directory exists. If not, suggest `/setup` for projects that would benefit from tracked development.
 - **Issue pipeline**: Check if `issues/` directory exists. If not, it can be created on first `/triage`.
 - **Hooks**: Some workflows benefit from hook-driven automation (e.g., SessionStart for context injection). Claude supports 26 lifecycle events; Codex has 5 experimental events. Plan accordingly.

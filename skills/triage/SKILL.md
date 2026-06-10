@@ -54,7 +54,7 @@ Parse INBOX.md bullets into structured issue files.
 5. **Ensure archive directories exist**: create `issues/archived/{tracked,implemented,deferred,wont-fix,duplicate}/` if missing (needed by `/issue-advance`, `/issue-close`, and `/implement` direct issue mode).
 
 6. **Polish descriptions** — before writing issue files, tighten the expanded Summary and Problem Description for each bullet:
-   - Detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md)
+   - Detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory)
    - If found, invoke it on the draft descriptions (batch all bullets in a single invocation)
    - If not available, do a quick inline pass: remove filler words, prefer active voice, keep each description to 1-2 sentences
    - Do not change technical meaning — only improve clarity

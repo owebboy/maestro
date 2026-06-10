@@ -31,7 +31,7 @@ If conductor/ does not exist, inform the user and stop. Verify `conductor/tracks
 2. Ask archive reason: completed / superseded / abandoned / other
 3. Confirm with 'YES'
 4. Move `conductor/tracks/{id}/` to `conductor/tracks/_archive/{id}/`
-5. Update metadata.json with `archived: true`, `archived_at`, `archive_reason`. Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it.
+5. Update metadata.json with `archived: true`, `archived_at`, `archive_reason`, and `status_at_archive` (the track's current `status` value, captured before archiving so Restore can reinstate it). Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it.
 6. Update `conductor/tracks.md`: move entry to Archived section
 7. Git commit
 
@@ -42,7 +42,7 @@ If conductor/ does not exist, inform the user and stop. Verify `conductor/tracks
 1. Validate track exists in `_archive/`, check no ID conflict with active tracks
 2. Confirm with 'YES'
 3. Move back to `conductor/tracks/{id}/`
-4. Update metadata.json: `archived: false`, `status: "completed"`
+4. Update metadata.json: `archived: false`, and restore `status` to the recorded `status_at_archive` value. If `status_at_archive` is absent (an older archive predating this field), prompt the user to choose the correct status from a choice-list of valid values — `pending` / `in_progress` / `complete` — rather than free text, so the metadata stays schema-valid.
 5. Update `conductor/tracks.md`
 6. Git commit
 
@@ -71,6 +71,18 @@ Scan for and fix:
 - **Stale in-progress**: status `[~]` with metadata.json `updated` timestamp >7 days old — offer to archive. Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it — then compute staleness against the `updated` field. Note: this uses the `updated` field which is written on task completion, so a track being actively debugged without completing tasks could appear stale. Always ask the user before archiving; never auto-archive.
 
 Present findings, let user choose which to fix, single git commit.
+
+## List
+
+Read-only — shows all tracks and makes no metadata or registry changes. With an optional `[filter]` argument (`active` / `completed` / `archived`), restrict output to that group.
+
+1. Read `conductor/tracks.md` and each track's `metadata.json` (active tracks under `conductor/tracks/`, archived under `conductor/tracks/_archive/`).
+2. Group tracks by state:
+   - **Active** — `status` `pending` or `in_progress`
+   - **Completed** — `status` `complete`, not archived
+   - **Archived** — under `_archive/`
+3. Render each non-empty group as a table: `| Track ID | Title | Status | Updated |`.
+4. End with the summary line: `{N} active, {M} completed, {P} archived`.
 
 ## Interactive Mode (no arguments)
 

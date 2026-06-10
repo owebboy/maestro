@@ -51,6 +51,7 @@ Ask ONE question per turn (max 6, tailored by type):
 ## Step 3: Track ID & Spec Generation
 
 Generate track ID: `{shortname}_{YYYYMMDD}` (e.g., `user-auth_20260403`)
+- Derive `{shortname}`: 2-3 lowercase hyphenated words from the track name, max 20 chars (single-word IDs allowed when natural). E.g. "navigation fix" → `nav-fix` → `nav-fix_20260402`.
 - Get today's date by running `date +%Y-%m-%d` — do not assume you know it.
 - Validate uniqueness against `conductor/tracks.md`
 
@@ -77,7 +78,7 @@ Show spec to user for review. Wait for approval before proceeding.
 
 ## Step 4: Design via Brainstorming
 
-Detect `brainstorming` using the [detection procedure](../../docs/detecting-optional-skills.md). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
+Detect `brainstorming` using the [detection procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
 
 If available, invoke the brainstorming skill using the detected form. Pass the approved spec as context AND instruct it to write its design doc to `conductor/tracks/{trackId}/design.md` instead of the default `docs/superpowers/specs/` location. Example invocation context:
 
@@ -95,7 +96,7 @@ If Superpowers is not installed, run an inline design discussion:
 
 ## Step 5: Plan via Writing Plans
 
-Detect `writing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
+Detect `writing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
 
 If available, invoke the writing-plans skill using the detected form. Instruct it to write the plan to `conductor/tracks/{trackId}/plan.md` instead of the default `docs/superpowers/plans/` location. Example invocation context:
 
@@ -143,7 +144,7 @@ Location: conductor/tracks/{trackId}/
 
 Files:
   spec.md      — requirements
-  plan.md      — implementation plan (from Superpowers)
+  plan.md      — implementation plan (from {writing-plans skill, or generated inline if Superpowers absent})
   metadata.json — progress state
 
 Next: Run /implement {trackId} in Claude Code or $implement {trackId} in Codex to start implementation.

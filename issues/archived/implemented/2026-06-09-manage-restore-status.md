@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: bug
 priority: P2
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: manage restore corrupts status for non-completed tracks; --list has no body
@@ -58,6 +59,8 @@ None. Self-contained within the `manage` skill. Part of the same 2026-06-09 cros
 - Bulk restore (only `--archive --bulk` exists today; Restore is single-track).
 
 ## Notes
+
+**Resolution (2026-06-09):** Archive now records `status_at_archive`; Restore reinstates it (and prompts from a choice-list — `pending`/`in_progress`/`complete` — when absent) instead of hardcoding `status: "completed"`. Added a `## List` section defining its table output, and updated `agents/openai.yaml` to advertise the list mode.
 
 Found by the 2026-06-09 cross-LLM review.
 

@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: bug
 priority: P3
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: new-track never defines how to derive {shortname} for track IDs
@@ -56,6 +57,8 @@ None. `skills/issue-advance/SKILL.md` consumes new-track's ID generation but req
 - Editing downstream consumers (`manage`, `status`, `implement`, `issue-advance`) — they already match by full ID and need no change.
 
 ## Notes
+
+**Resolution (2026-06-09):** Added a normative `{shortname}` derivation rule to Step 3 (2-3 lowercase hyphenated words from the track name, ≤20 chars, single-word IDs allowed) and changed the completion message to reflect the actual plan engine (writing-plans skill vs. inline fallback) instead of the hardcoded "(from Superpowers)".
 
 Found by the 2026-06-09 cross-LLM review.
 

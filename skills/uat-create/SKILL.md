@@ -36,15 +36,18 @@ Generate a UAT checklist from completed tracks not yet covered by existing UAT f
    - If a track depends on deployment or other tracks, add `**Blocked by:**` annotation
    - Cross-reference prerequisites from prior UAT files for recurring dependencies
 
-5. **Write the checklist**
-   - File: `conductor/UAT-YYYY-MM-DD.md`. Get today's date by running `date +%Y-%m-%d` — do not assume you know it.
-   - Format:
+5. **Draft the checklist** (in memory — do not write the file yet)
+   - Target file will be `conductor/UAT-YYYY-MM-DD.md`. Get today's date by running `date +%Y-%m-%d` — do not assume you know it.
+   - Draft the full content using the Format Reference below:
      - Header with track list and "Any failures should go through `issues/INBOX.md` for triage"
      - Prerequisites section
      - Numbered test sections with `---` separators
      - Results summary table at the bottom
 
-6. **Present** the generated checklist for review before saving
+6. **Present, approve, then write**
+   - Present the drafted checklist to the user for review.
+   - Wait for explicit approval before writing. Use `AskUserQuestion` if available; otherwise ask in plain text and stop until the user approves.
+   - After approval, write the checklist to `conductor/UAT-YYYY-MM-DD.md`.
 
 ## Format Reference
 

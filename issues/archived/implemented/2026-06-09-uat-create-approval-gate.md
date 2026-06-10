@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: bug
 priority: P2
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: uat-create writes the checklist before its own approval gate
@@ -49,6 +50,8 @@ None. Self-contained edit to one skill file; no cross-issue coordination require
 ## Out of Scope
 
 ## Notes
+
+**Resolution (2026-06-09):** Reordered uat-create Steps 5–6 — Step 5 drafts the checklist in memory (no write); Step 6 presents the draft, waits for explicit approval (`AskUserQuestion` or plain-text stop), then writes `conductor/UAT-YYYY-MM-DD.md`.
 
 Found by the 2026-06-09 cross-LLM review; confirmed by adversarial verification.
 

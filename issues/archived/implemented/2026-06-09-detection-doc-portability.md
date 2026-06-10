@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: bug
 priority: P2
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: Detection-procedure links break in installed layouts; doc has two gaps
@@ -62,6 +63,8 @@ None. Self-contained within this repo. No coordination with other open issues id
 ## Out of Scope
 
 ## Notes
+
+**Resolution (2026-06-09):** Implemented Option A — inlined the three-signal summary at all 11 caller sites (issue-review, triage, workflow-router, implement, new-track, session-wrap-up), so the doc is now an enhancement rather than required reading. Added the doc's terminal "No signal positive" state and an "Other harnesses" note. Option B (shipping docs/ via setup-project) was not chosen.
 
 Found by the 2026-06-09 cross-LLM review (issue-review, triage, workflow-router, and templates-docs reviewers independently).
 
