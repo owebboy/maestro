@@ -34,7 +34,7 @@ Before routing, check what's installed:
 - **Superpowers**: Detect using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). If found, `/new-track` and `/implement` use it as the execution engine. If not, they fall back to inline brainstorming and TDD.
 - **Track system**: Check if `conductor/` directory exists. If not, suggest `/setup` for projects that would benefit from tracked development.
 - **Issue pipeline**: Check if `issues/` directory exists. If not, it can be created on first `/triage`.
-- **Hooks**: Some workflows benefit from hook-driven automation (e.g., SessionStart for context injection). Claude supports 26 lifecycle events; Codex has 5 experimental events. Plan accordingly.
+- **Hooks**: Some workflows benefit from hook-driven automation (e.g., SessionStart for context injection). Both harnesses support lifecycle hooks using the same nested schema; Codex hooks are on by default (disable with `[features] hooks = false`). Codex covers 5 events (SessionStart, PreToolUse, PostToolUse, UserPromptSubmit, Stop); Claude adds SessionEnd, SubagentStop, PreCompact, and Notification. Plan accordingly.
 
 ## When Multiple Skills Compose
 

@@ -264,6 +264,7 @@ ensure_issues_scaffold() {
   section "Issues Directory"
   ensure_directory "$issues_dir" "issues/"
   ensure_directory "$issues_dir/archived/tracked" "issues/archived/tracked/"
+  ensure_directory "$issues_dir/archived/implemented" "issues/archived/implemented/"
   ensure_directory "$issues_dir/archived/deferred" "issues/archived/deferred/"
   ensure_directory "$issues_dir/archived/wont-fix" "issues/archived/wont-fix/"
   ensure_directory "$issues_dir/archived/duplicate" "issues/archived/duplicate/"

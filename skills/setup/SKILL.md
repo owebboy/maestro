@@ -19,7 +19,7 @@ Initialize project context through interactive Q&A. Creates the `conductor/` dir
 
 ## Interactive Q&A
 
-**Rules:** Ask ONE question per turn. Wait for response. Offer 2-3 suggested answers plus "Type your own." Maximum 5 questions per section. Save progress to `conductor/setup_state.json` after each step.
+**Rules:** Ask ONE question per turn. Wait for response. Offer 2-3 suggested answers plus "Type your own." Ask no more than 5 questions per section; some sections cap lower, as noted in each section heading. Save progress to `conductor/setup_state.json` after each step.
 
 ### Section 1: Product (max 5 questions)
 
@@ -156,4 +156,4 @@ Next: Run /new-track in Claude Code or $new-track in Codex to create your first 
 
 ## Resume
 
-If `--resume` or resuming from state: skip completed sections, resume from `current_section` + `current_question`, verify previously created files still exist.
+If `--resume` or resuming from state: skip completed sections, resume from `current_section` + `current_question`, and verify previously created files still exist. If a file from a completed section is missing, warn the user and re-run that section to regenerate it before continuing.

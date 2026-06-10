@@ -1,6 +1,6 @@
 # Maestro Cleanup Fixes Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Land four small, independent documentation/scaffold fixes in the Maestro plugin (the `implemented/` scaffold bucket, two `setup` skill clarifications, and the stale `workflow-router` Codex hooks claim).
 
@@ -19,12 +19,12 @@
 **Files:**
 - Modify: `bin/setup-project` (in `ensure_issues_scaffold`, after the `tracked` line, ~line 266)
 
-- [ ] **Step 1: Read the current block to confirm exact text**
+- [x] **Step 1: Read the current block to confirm exact text**
 
 Run: `sed -n '266,269p' bin/setup-project`
 Expected: the four `ensure_directory` lines for tracked/deferred/wont-fix/duplicate.
 
-- [ ] **Step 2: Insert the `implemented` line in canonical order**
+- [x] **Step 2: Insert the `implemented` line in canonical order**
 
 Insert a new line immediately after the `tracked` line so the block reads:
 
@@ -36,12 +36,12 @@ Insert a new line immediately after the `tracked` line so the block reads:
   ensure_directory "$issues_dir/archived/duplicate" "issues/archived/duplicate/"
 ```
 
-- [ ] **Step 3: Syntax check**
+- [x] **Step 3: Syntax check**
 
 Run: `bash -n bin/setup-project`
 Expected: no output, exit 0.
 
-- [ ] **Step 4: Functional check against a throwaway dir**
+- [x] **Step 4: Functional check against a throwaway dir**
 
 Run:
 ```bash
@@ -63,7 +63,7 @@ Expected: one match inside `ensure_issues_scaffold`.
 **Files:**
 - Modify: `skills/setup/SKILL.md:22`
 
-- [ ] **Step 1: Replace the global rule sentence**
+- [x] **Step 1: Replace the global rule sentence**
 
 Before (line 22):
 > **Rules:** Ask ONE question per turn. Wait for response. Offer 2-3 suggested answers plus "Type your own." Maximum 5 questions per section. Save progress to `conductor/setup_state.json` after each step.
@@ -73,7 +73,7 @@ After:
 
 Change only the one sentence — leave the rest of line 22 intact. Do NOT touch the per-section caps on lines 24/32/37/47/54.
 
-- [ ] **Step 2: Confirm the edit and that per-section caps are untouched**
+- [x] **Step 2: Confirm the edit and that per-section caps are untouched**
 
 Run: `grep -n 'no more than 5 questions' skills/setup/SKILL.md && grep -n 'max [0-9] questions\|max [0-9] question' skills/setup/SKILL.md`
 Expected: the reworded rule on line 22; the five section caps (5/3/5/4/2) still present.
@@ -83,7 +83,7 @@ Expected: the reworded rule on line 22; the five section caps (5/3/5/4/2) still 
 **Files:**
 - Modify: `skills/setup/SKILL.md:159`
 
-- [ ] **Step 1: Replace the Resume sentence**
+- [x] **Step 1: Replace the Resume sentence**
 
 Before (line 159):
 > If `--resume` or resuming from state: skip completed sections, resume from `current_section` + `current_question`, verify previously created files still exist.
@@ -91,7 +91,7 @@ Before (line 159):
 After:
 > If `--resume` or resuming from state: skip completed sections, resume from `current_section` + `current_question`, and verify previously created files still exist. If a file from a completed section is missing, warn the user and re-run that section to regenerate it before continuing.
 
-- [ ] **Step 2: Confirm the edit**
+- [x] **Step 2: Confirm the edit**
 
 Run: `grep -n 'warn the user and re-run that section' skills/setup/SKILL.md`
 Expected: one match on the Resume line.
@@ -103,7 +103,7 @@ Expected: one match on the Resume line.
 **Files:**
 - Modify: `skills/workflow-router/SKILL.md:37`
 
-- [ ] **Step 1: Replace the Hooks bullet**
+- [x] **Step 1: Replace the Hooks bullet**
 
 Before (line 37):
 > - **Hooks**: Some workflows benefit from hook-driven automation (e.g., SessionStart for context injection). Claude supports 26 lifecycle events; Codex has 5 experimental events. Plan accordingly.
@@ -111,12 +111,12 @@ Before (line 37):
 After:
 > - **Hooks**: Some workflows benefit from hook-driven automation (e.g., SessionStart for context injection). Both harnesses support lifecycle hooks using the same nested schema; Codex hooks are on by default (disable with `[features] hooks = false`). Codex covers 5 events (SessionStart, PreToolUse, PostToolUse, UserPromptSubmit, Stop); Claude adds SessionEnd, SubagentStop, PreCompact, and Notification. Plan accordingly.
 
-- [ ] **Step 2: Confirm no stale strings remain**
+- [x] **Step 2: Confirm no stale strings remain**
 
 Run: `grep -rn 'experimental events\|26 lifecycle' skills/workflow-router/SKILL.md`
 Expected: no matches.
 
-- [ ] **Step 3: Confirm consistency with the canonical source**
+- [x] **Step 3: Confirm consistency with the canonical source**
 
 Run: `grep -n 'on by default' skills/workflow-router/SKILL.md README.md skills/agents-md-sync/SKILL.md`
 Expected: workflow-router:37 now matches the README:166 / agents-md-sync:31 framing.
@@ -127,7 +127,7 @@ Expected: workflow-router:37 now matches the README:166 / agents-md-sync:31 fram
 
 **Files:** none (verification + commit only)
 
-- [ ] **Step 1: Run the repo validation gate**
+- [x] **Step 1: Run the repo validation gate**
 
 Run:
 ```bash
@@ -139,12 +139,12 @@ python3 -m json.tool .agents/plugins/marketplace.json >/dev/null
 ```
 Expected: all commands exit 0, no output.
 
-- [ ] **Step 2: Review the diff**
+- [x] **Step 2: Review the diff**
 
 Run: `git diff --stat && git diff`
 Expected: changes only in `bin/setup-project`, `skills/setup/SKILL.md`, `skills/workflow-router/SKILL.md` (plus the track/issue bookkeeping files).
 
-- [ ] **Step 3: Commit (sandbox disabled — submodule)**
+- [x] **Step 3: Commit (sandbox disabled — submodule)**
 
 ```bash
 git add bin/setup-project skills/setup/SKILL.md skills/workflow-router/SKILL.md
