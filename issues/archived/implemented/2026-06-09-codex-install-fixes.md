@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: bug
 priority: P3
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: codex/INSTALL.md manual install fails on fresh machines; .mcp.json claim is false
@@ -54,6 +55,8 @@ No automated test suite (Markdown/Bash repo). Validate by:
 - Refactoring the other install methods (skills.sh, setup-project, repo-local plugin).
 
 ## Notes
+
+**Resolution (2026-06-09):** Added `mkdir -p "$HOME/.agents/skills"` before the manual symlink loop in `codex/INSTALL.md`, and rewrote the "MCP config" bullet to drop the false `.mcp.json` packaging claim (Maestro ships no MCP server) — keeping only the accurate `[mcp_servers.<name>]` half.
 
 Found by the 2026-06-09 cross-LLM review.
 

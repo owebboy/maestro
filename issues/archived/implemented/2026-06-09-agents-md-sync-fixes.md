@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: bug
 priority: P2
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: agents-md-sync relays a wrong Codex config snippet and lacks edge guards
@@ -58,6 +59,8 @@ Part of the Codex-accuracy cluster. Coordinate with:
 ## Out of Scope
 
 ## Notes
+
+**Resolution (2026-06-09):** All four defects fixed. Step 7 config snippet now shows the top-level `project_doc_fallback_filenames` key in the global `~/.codex/config.toml` (kept identical in `codex/INSTALL.md` and `bin/setup-project`'s tip); added a missing-CLAUDE.md stop-and-tell-user guard to Step 1; Steps 5–6 now merge (preserve AGENTS.md-only sections, explicitly flag removals) instead of regenerating; corrected the fabricated Claude hook events (`FileChanged`/`TaskCompleted`) on line 30.
 
 Found by the 2026-06-09 cross-LLM review.
 

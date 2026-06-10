@@ -364,16 +364,56 @@ install_claude_hooks() {
   echo ""
 }
 
+write_codex_hooks_json() {
+  local hooks_json_path="$1"
+
+  cat > "$hooks_json_path" <<'EOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": ".codex/hooks/session-start-issues.sh" }
+        ]
+      }
+    ]
+  }
+}
+EOF
+}
+
+print_codex_hook_snippet() {
+  cat <<'EOF'
+  Add to .codex/hooks.json:
+  {
+    "hooks": {
+      "SessionStart": [
+        { "hooks": [{ "type": "command", "command": ".codex/hooks/session-start-issues.sh" }] }
+      ]
+    }
+  }
+EOF
+}
+
 install_codex_hooks() {
   local hooks_src="$SCRIPT_DIR/bin/hooks"
-  local hooks_dest="$TARGET_DIR/.agents/hooks"
+  local hooks_dest="$TARGET_DIR/.codex/hooks"
+  local hooks_json="$TARGET_DIR/.codex/hooks.json"
   local session_start_hook="$hooks_src/session-start-issues.sh"
 
   [[ -f "$session_start_hook" ]] || return
 
   section "Codex Hooks"
   copy_hook_script "$session_start_hook" "$hooks_dest"
-  note "note: enable Codex hooks in your config if they are not already on"
+
+  if [[ -f "$hooks_json" ]]; then
+    note "skip: .codex/hooks.json already exists"
+    print_codex_hook_snippet
+  else
+    write_codex_hooks_json "$hooks_json"
+    note "created: .codex/hooks.json (session-start hook registered)"
+  fi
+  note "note: Codex hooks are on by default; disable with [features] hooks = false"
   echo ""
 }
 
@@ -401,8 +441,7 @@ print_codex_tip() {
   note 'Run $agents-md-sync in Codex or /agents-md-sync in Claude Code'
   note 'to generate one from your CLAUDE.md'
   echo ""
-  note "Optional .codex/config.toml fallback:"
-  note '[project]'
+  note "Optional ~/.codex/config.toml fallback (global, top-level key):"
   note 'project_doc_fallback_filenames = ["CLAUDE.md"]'
   echo ""
 }

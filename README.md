@@ -163,7 +163,7 @@ Two lifecycle hooks auto-activate when the Claude plugin is installed (via `hook
 
 ### Codex
 
-Codex hooks are experimental (`codex_hooks = true` in config). `setup-project` copies the compatible `session-start-issues.sh` hook to `.agents/hooks/`. The frontmatter validation hook requires Claude Code's richer PostToolUse event and is not available in Codex.
+Codex supports lifecycle hooks (on by default; disable with `[features] hooks = false`) using the same nested schema as Claude. Hooks must be registered in a `hooks.json` beside an active config layer, so `setup-project --codex` writes `<repo>/.codex/hooks.json` registering `session-start-issues.sh` (a script merely placed in `.agents/hooks/` is not auto-run). The frontmatter validation hook requires Claude Code's PostToolUse file-path context and is not available in Codex.
 
 ## Dependencies
 

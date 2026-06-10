@@ -43,7 +43,7 @@ bunx skills add obra/elements-of-style --agent codex --yes --global
 
 By default this symlinks skills into your project's `.agents/skills/` directory where Codex discovers them automatically. Use `--portable` to copy them into the target repo instead.
 
-The helper also bootstraps `issues/` and copies the compatible Codex hook into `.agents/hooks/`.
+The helper also bootstraps `issues/` and registers the compatible Codex session-start hook by writing `<repo>/.codex/hooks.json`.
 
 Install Superpowers separately via its official installer if you want Maestro's optional brainstorming, planning, and TDD integrations.
 
@@ -54,6 +54,7 @@ Install Superpowers separately via its official installer if you want Maestro's 
 git clone https://github.com/owebboy/maestro.git ~/.codex/maestro
 
 # Symlink each skill into Codex's global skill discovery path
+mkdir -p "$HOME/.agents/skills"
 for skill in ~/.codex/maestro/skills/*/; do
   name="$(basename "$skill")"
   ln -s "$skill" "$HOME/.agents/skills/$name"
@@ -62,16 +63,21 @@ done
 
 ## Configuration
 
-Subagents are enabled by default in current Codex releases. Add optional project-scoped config if you want predictable agent fan-out or `CLAUDE.md` fallback behavior:
+Subagents are enabled by default in current Codex releases. Add optional project-scoped config (`.codex/config.toml` in the project) if you want predictable agent fan-out:
 
 ```toml
 [agents]
 max_threads = 6
 max_depth = 1
+```
 
-[project]
+To read `CLAUDE.md` as a fallback when a directory has no `AGENTS.md`, add this **top-level** key to your **global** `~/.codex/config.toml` — it is not a `[project]` table key, and not project-local:
+
+```toml
 project_doc_fallback_filenames = ["CLAUDE.md"]
 ```
+
+This is a fallback only — if `AGENTS.md` exists it always wins and `CLAUDE.md` is ignored.
 
 ## Skill Compatibility
 
@@ -102,7 +108,7 @@ project_doc_fallback_filenames = ["CLAUDE.md"]
 
 - **Agent spawning**: Current Codex releases enable subagents by default, but Codex still only spawns them when explicitly asked. Skills that dispatch parallel agents should say which agent type to use and require explicit invocation via `$skill-name` or `/skills`.
 - **Auto-memory**: No equivalent to Claude's `~/.claude/projects/<project>/memory/`. Use `AGENTS.md` for persistent context, or build a memory process using Codex hooks/scripts.
-- **MCP config**: User-scoped servers still live in `config.toml` under `[mcp_servers.<name>]`, while plugin-bundled servers are packaged via `.mcp.json` and referenced from `.codex-plugin/plugin.json`.
+- **MCP config**: User-scoped servers live in `config.toml` under `[mcp_servers.<name>]`. (Maestro itself ships no MCP server.)
 - **Frontmatter**: Codex ignores Claude-specific frontmatter fields (`user-invocable`, `disable-model-invocation`, `context`). Skills still load — the fields are simply skipped.
-- **Hooks**: Codex has hooks (experimental, `codex_hooks = true`), but only 5 events vs Claude's 26. Maestro ships 1 Codex-compatible hook (`session-start-issues.sh`) and 1 Claude-only hook (`validate-issue-frontmatter.sh` — requires PostToolUse with file path context). The setup script copies the compatible hook to `.agents/hooks/`.
+- **Hooks**: Codex supports lifecycle hooks (on by default; disable with `[features] hooks = false`), using the same nested `{matcher, hooks: [...]}` schema as Claude. Hooks must be registered in a `hooks.json` (or `[hooks]` table) beside an active config layer — e.g. `<repo>/.codex/hooks.json`; a script merely placed in `.agents/hooks/` is not auto-run. Maestro ships 1 Codex-compatible hook (`session-start-issues.sh`); `validate-issue-frontmatter.sh` is Claude-only (it needs PostToolUse file-path context). `setup-project --codex` registers the session-start hook by writing `<repo>/.codex/hooks.json`.
 - **Permissions**: Codex uses `sandbox_mode` + `approval_policy` instead of Claude's per-tool allow/ask/deny rules. Skills that reference `permissionMode` or tool-specific permissions need manual translation to Codex's sandbox/approval model.

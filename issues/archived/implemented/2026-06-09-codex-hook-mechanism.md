@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: chore
 priority: P3
 filed: 2026-06-09
+implemented: 2026-06-09
 ---
 
 # Issue: Codex hook support is claimed but no executing mechanism is documented
@@ -58,6 +59,8 @@ Part of the Codex-accuracy cluster. Coordinate wording/verification with:
 - Changing the Claude hook registration path (`install_claude_hooks`, `hooks/hooks.json`).
 
 ## Notes
+
+**Resolution (2026-06-09):** Research confirmed Codex hooks are on by default and require explicit registration via `hooks.json` (a bare `.agents/hooks/` copy is not auto-run). `bin/setup-project`'s Codex path now copies the script to `.codex/hooks/` and writes `<repo>/.codex/hooks.json` registering the SessionStart hook (nested schema, matching `hooks/hooks.json` and the Claude path). README and `codex/INSTALL.md` corrected (`codex_hooks = true` → on-by-default / `[features] hooks = false`; registration via `hooks.json`). Smoke-tested: valid JSON, command path resolves to the copied executable script.
 
 Found by the 2026-06-09 cross-LLM review.
 
