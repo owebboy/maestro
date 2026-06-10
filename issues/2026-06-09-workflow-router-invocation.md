@@ -17,7 +17,7 @@ The description names two triggers: "the user asks which Maestro workflow to use
 
 ## Acceptance Criteria
 
-- [ ] `allow_implicit_invocation: true` in agents/openai.yaml (or a deliberate decision documented otherwise)
+- [ ] `allow_implicit_invocation: true` in agents/openai.yaml (or a deliberate decision documented otherwise) (resolved: set to TRUE; `user-invocable: false` to be removed)
 - [ ] Description triggers match what each platform actually permits
 - [ ] README:150, codex/INSTALL.md:93, and the skill frontmatter tell the same story
 
@@ -63,3 +63,5 @@ DECISION (human): Two related invocation-policy choices must be made and then re
 1. Claude Code — keep `user-invocable: false` (model-implicit only, no `/workflow-router` slash command) or drop it to allow direct invocation? The line-3 description promises "invokes the router directly", which only holds if the flag is dropped.
 2. Codex — flip `allow_implicit_invocation` to `true` (so "asks which workflow?" loads it) or keep it explicit-only via `$workflow-router`? AC#1 leans toward `true` for this zero-risk advisory skill but explicitly allows a documented decision otherwise.
 Whichever way each is decided, README:152 and codex/INSTALL.md:93 must be rewritten to match — they currently disagree with each other and with the frontmatter.
+
+**Decision (approved 2026-06-09):** APPROVED: make the router fully invocable on both platforms (zero-risk read-only advisory) — DROP `user-invocable: false` in workflow-router/SKILL.md AND set `allow_implicit_invocation: true` in its agents/openai.yaml. Reconcile README:152, codex/INSTALL.md:93, and the frontmatter to consistently state it is both auto/implicit AND directly invocable. Coordinate with trigger-first-descriptions (shared description) and openai-yaml-policy-blocks (sets this skill's policy value to true).

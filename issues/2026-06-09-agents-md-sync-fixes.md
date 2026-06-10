@@ -17,7 +17,7 @@ Three defects: (1) SKILL.md:67-72 and codex/INSTALL.md:70-74 both show the wrong
 
 ## Acceptance Criteria
 
-- [ ] Config snippet shows the top-level key in `~/.codex/config.toml`, verified against current Codex docs; INSTALL.md matches
+- [ ] Config snippet shows the top-level key in `~/.codex/config.toml`, verified against current Codex docs; INSTALL.md matches (verified 2026-06-09 — satisfied; write the top-level `~/.codex/config.toml` form: `project_doc_fallback_filenames = ["CLAUDE.md"]`)
 - [ ] Missing/empty CLAUDE.md case has an explicit stop-and-tell-user path
 - [ ] Step 5 preserves AGENTS.md-only sections and flags removals explicitly in the diff
 - [ ] Hook event names corrected or dropped
@@ -64,3 +64,5 @@ Found by the 2026-06-09 cross-LLM review.
 ### EXTERNAL RESEARCH DEPENDENCY (defect #1 — must verify before fixing)
 
 The issue Summary asserts the correct form is a TOP-LEVEL `project_doc_fallback_filenames` key in `~/.codex/config.toml` (user-scoped), and that placing it under a `[project]` table makes it `project.project_doc_fallback_filenames`, which Codex ignores. This MUST be settled against CURRENT Codex documentation before editing — do not guess the key name, the TOML table, or the file location. Specifically confirm: (a) the exact key name (`project_doc_fallback_filenames` vs any rename), (b) whether it is a top-level key or belongs under a table, and (c) whether it lives in `~/.codex/config.toml` (global) or a project-local `.codex/config.toml`. The same verified snippet must then be applied identically to both `skills/agents-md-sync/SKILL.md:69-71` and `codex/INSTALL.md:72-73`.
+
+**Research (verified 2026-06-09):** Verified against current Codex docs (https://developers.openai.com/codex/guides/agents-md): the correct setting is the TOP-LEVEL key `project_doc_fallback_filenames` in the GLOBAL `~/.codex/config.toml` — NOT under a `[project]` table and NOT a project-local `.codex/config.toml`. Example: `project_doc_fallback_filenames = ["CLAUDE.md"]`. It is a FALLBACK consulted only when AGENTS.md is ABSENT in a directory (lookup order: AGENTS.override.md -> AGENTS.md -> fallbacks); if AGENTS.md exists it wins and CLAUDE.md is ignored. Defect #1 CONFIRMED: SKILL.md and codex/INSTALL.md must show the top-level key in ~/.codex/config.toml. Research dependency RESOLVED — issue is now implementable.

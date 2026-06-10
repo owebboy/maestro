@@ -17,7 +17,7 @@ Grep confirms nothing references templates/issue-file.md, issues-setup.md, or AG
 
 ## Acceptance Criteria
 
-- [ ] Either delete templates/ and fix AGENTS.md:12, or make templates/ canonical: skills say "copy templates/X" and setup-project ships the files
+- [ ] Either delete templates/ and fix AGENTS.md:12, or make templates/ canonical: skills say "copy templates/X" and setup-project ships the files (resolved 2026-06-09: DELETE templates/ and fix AGENTS.md:12 + conductor/tech-stack.md:26; make-canonical path dropped)
 - [ ] No remaining drift between template copies and skill-embedded copies
 
 ## Technical Context
@@ -72,3 +72,5 @@ DRIFT EVIDENCE (verified) — three independent definitions of the issues archiv
 - `skills/triage/SKILL.md:17` → tracked, **implemented**, deferred, wont-fix, duplicate (adds `implemented/`)
 - `bin/setup-project:266-269` → tracked / deferred / wont-fix / duplicate (no `implemented/`)
 The live archive currently contains `issues/archived/implemented/`, so triage is the de-facto correct list and both other definitions are stale.
+
+**Decision (approved 2026-06-09):** DELETE templates/ (option A). Rationale: nothing in skills/ or bin/ references templates/ (grep-confirmed); the live copies are embedded in triage/SKILL.md and agents-md-sync/SKILL.md; AGENTS.md already bans Codex-only forks. Also fix the false 'generated templates used by skills' claims at AGENTS.md:12 and conductor/tech-stack.md:26. Consequence for setup-artifact-templates: artifact templates live embedded in setup/SKILL.md, not in templates/.

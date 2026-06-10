@@ -20,7 +20,7 @@ Note: the canonical metadata.json `status` value for a finished track is `"compl
 ## Acceptance Criteria
 
 - [ ] Archive records the pre-archive status (e.g., `status_at_archive` in metadata.json)
-- [ ] Restore reinstates that status, asking the user when it is absent
+- [ ] Restore reinstates that status, asking the user when it is absent (approved: prompt with a constrained choice-list of valid statuses — `pending` / `in_progress` / `complete` — not free text)
 - [ ] A `--list` section defines its output format
 
 ## Technical Context
@@ -62,3 +62,5 @@ None. Self-contained within the `manage` skill. Part of the same 2026-06-09 cros
 Found by the 2026-06-09 cross-LLM review.
 
 DECISION FOR HUMAN (does not block the fix): when `status_at_archive` is absent on an older archive, the issue specifies "ask the user." Confirm the intended fallback prompt — e.g. offer the user a choice among the known status values (`pending` / `in_progress` / `complete`) rather than free text, so the restored metadata stays schema-valid.
+
+**Decision (approved 2026-06-09):** APPROVED: when `status_at_archive` is absent on an older archive, Restore prompts the user to pick from a CHOICE-LIST of valid status values (not free text), so restored metadata stays schema-valid. Core fix unchanged: Archive records `status_at_archive` (the pre-archive status); Restore reinstates it; add a `--list` section defining its output.

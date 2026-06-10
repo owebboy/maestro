@@ -19,10 +19,10 @@ The doc itself has two gaps: it never says what to do when all three signals are
 
 ## Acceptance Criteria
 
-- [ ] Each detection reference inlines a one-line summary of the three signals so the doc is an enhancement, not required reading
+- [ ] Each detection reference inlines a one-line summary of the three signals so the doc is an enhancement, not required reading (chosen path: Option A — inline summaries)
 - [ ] The doc gains a terminal state: "If no signal is positive, treat the skill as unavailable — use the calling skill's inline fallback; do not install or invoke speculatively"
 - [ ] The doc gains one sentence covering harnesses that are neither Claude Code nor Codex
-- [ ] Alternatively or additionally: setup-project ships docs/ alongside skills
+- [ ] Alternatively or additionally: setup-project ships docs/ alongside skills (deferred — Option B not chosen; see Decision note)
 
 ## Technical Context
 
@@ -72,3 +72,5 @@ OPEN DECISION (for the human — do not let implementation pick silently): two v
 - Combining both (A for portability + B for richer reference) is permitted by the criteria. Recommend the human pick before implementation; both are recorded so the implementer does not choose unilaterally.
 
 The doc-content gaps (terminal "no signal positive" state + non-Claude/non-Codex harness sentence) are independent of the A/B decision and required by Acceptance Criteria 2 and 3 regardless.
+
+**Decision (approved 2026-06-09):** APPROVED: Option A — inline a one-line signal-detection summary at each of the ~11 caller link sites (so docs/detecting-optional-skills.md becomes enhancement, not required reading); add the doc's terminal 'if no signal is positive, treat the skill as unavailable; use the caller's inline fallback' state and one sentence for harnesses that are neither Claude Code nor Codex. Do NOT ship docs/ via setup-project (option B) for now.

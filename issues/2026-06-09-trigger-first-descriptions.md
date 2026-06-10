@@ -19,9 +19,9 @@ Overlapping triggers compound the problem: implement and issue-advance both key 
 
 ## Acceptance Criteria
 
-- [ ] All 15 descriptions start with "Use when..." and state triggering conditions only — no workflow steps
-- [ ] Contrast clauses disambiguate implement/issue-advance and manage/issue-close
-- [ ] agents/openai.yaml short_descriptions stay consistent with the new descriptions
+- [ ] All 15 descriptions start with "Use when..." and state triggering conditions only — no workflow steps (No criterion change; approval recorded — approved path: rewrite all 15; already-trigger-first skills like implement need only a missing contrast clause)
+- [ ] Contrast clauses disambiguate implement/issue-advance and manage/issue-close (No criterion change; approval recorded — preserve and extend the existing contrast clauses)
+- [ ] agents/openai.yaml short_descriptions stay consistent with the new descriptions (No criterion change; approval recorded — keep consistent; coordinate with openai-yaml-policy-blocks and workflow-router-invocation on shared files)
 
 ## Technical Context
 
@@ -89,3 +89,5 @@ Two sibling issues edit the SAME description / openai.yaml files. Coordinate so 
 - Found by the 2026-06-09 cross-LLM review; confirmed by adversarial verification. Highest-leverage cross-LLM change in the review.
 - Decision for the human (do not pre-decide): how many of the 15 descriptions should be FULLY rewritten vs. lightly polished. The 15 are at different starting points after recent commits — implement is already trigger-first with its contrast clause; issue-close is trigger-shaped but missing its contrast clause; the rest are still capability-first. Acceptance Criterion 1 ("All 15 start with 'Use when...'") is taken at face value, but if a reviewer wants to leave an already-good description like implement untouched, flag it during implementation.
 - The openai.yaml short_descriptions are already terse and non-workflow-summarizing (cleaned in 33cf87a / afba736), so Criterion 3 is largely a verification step, not a bulk rewrite — see Affected Files.
+
+**Decision (approved 2026-06-09):** APPROVED: rewrite all 15 SKILL.md descriptions to lead with 'Use when...' (triggering conditions only, no workflow steps); preserve and extend the disambiguating contrast clauses (implement<->issue-advance, manage<->issue-close). Skills already trigger-first (e.g. implement) need only any missing contrast clause. Keep agents/openai.yaml short_descriptions consistent. Coordinate with openai-yaml-policy-blocks and workflow-router-invocation (same files).

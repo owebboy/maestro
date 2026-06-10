@@ -17,7 +17,7 @@ Track IDs use `{shortname}_{YYYYMMDD}` but the skill never specifies how to deri
 
 ## Acceptance Criteria
 
-- [ ] A normative derivation rule (e.g., "2-3 lowercase hyphenated words from the track name, max 20 chars") with one example
+- [ ] A normative derivation rule (e.g., "2-3 lowercase hyphenated words from the track name, max 20 chars") with one example (resolved 2026-06-09: 2-3 lowercase hyphenated words from the track name, max 20 chars, single-word IDs allowed when natural, e.g. 'navigation fix' -> nav-fix -> nav-fix_20260402)
 - [ ] Completion message reflects which engine actually produced the plan
 
 ## Technical Context
@@ -60,3 +60,5 @@ None. `skills/issue-advance/SKILL.md` consumes new-track's ID generation but req
 Found by the 2026-06-09 cross-LLM review.
 
 Open decision for the human (do not pre-decide): the exact derivation rule wording is a judgment call. The Acceptance Criteria proposes "2-3 lowercase hyphenated words from the track name, max 20 chars" as an example; in-repo precedent supports lowercase-hyphenated but also includes 1-word IDs (`auth_…`), so the implementer should confirm the final min/max word count and character cap with the human before locking it in.
+
+**Decision (approved 2026-06-09):** APPROVED derivation rule: {shortname} = 2-3 lowercase hyphenated words from the track name, max 20 chars (single-word IDs allowed when natural), e.g. 'navigation fix' -> nav-fix -> nav-fix_20260402. Also fix the completion message to reflect which engine actually produced the plan rather than a hardcoded '(from Superpowers)'.

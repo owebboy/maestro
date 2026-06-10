@@ -18,7 +18,7 @@ Ten skills set an explicit policy; five rely on the Codex default. For file-writ
 ## Acceptance Criteria
 
 - [ ] All 15 agents/openai.yaml files carry an explicit `policy: allow_implicit_invocation` value
-- [ ] File-writing skills are explicit-only unless deliberately decided otherwise
+- [ ] File-writing skills are explicit-only unless deliberately decided otherwise (resolved: file-writers false, read-only status true, router true)
 - [ ] short_descriptions reviewed for accuracy alongside the policy pass
 
 ## Technical Context
@@ -73,3 +73,5 @@ The documented convention (`AGENTS.md:37`) is explicit-only for "routing-only, d
 - `status` — read-only display. `true` is the safe-and-convenient choice, but confirm.
 
 Pick one value for each of the 5 and add the `policy` block; the goal is that all 15 files state the value explicitly, not that they all share the same value.
+
+**Decision (approved 2026-06-09):** APPROVED: every one of the 15 skills/*/agents/openai.yaml carries an EXPLICIT `allow_implicit_invocation` value (no reliance on the Codex default). For the file-writers currently missing it — new-track, triage, uat-create, setup -> set `false` (explicit-only, matching issue-close's caution). Read-only `status` -> `true`. workflow-router -> `true` (per workflow-router-invocation). Also fix the issue-review and session-wrap-up short_descriptions. Coordinate with trigger-first-descriptions (same files).

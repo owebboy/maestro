@@ -26,7 +26,7 @@ Verified details from current exploration:
 ## Acceptance Criteria
 
 - [ ] Each generated artifact has a content template or explicit section list
-- [ ] The index.md structure is specified and matches what new-track appends
+- [ ] The index.md structure is specified and matches what new-track appends (resolved per option (b): new-track no longer touches index.md, so no "Active Tracks" append target is required)
 - [ ] new-track pre-flight verifies (or creates) tracks.md and index.md before mutating them
 
 ## Technical Context
@@ -75,3 +75,5 @@ Found by the 2026-06-09 cross-LLM review.
 OPEN DECISION (for the human): The index.md "Active Tracks" contract is currently inconsistent two ways — new-track step 6 appends to an "Active Tracks" section, but generated index.md files (including this repo's own) have no such section. Resolve by EITHER (a) adding an "Active Tracks" section to the formalized index.md template so new-track has a real append target, OR (b) changing new-track step 6 to stop touching index.md (tracks.md is already the registry; index.md may not need per-track rows). Pick one before implementing; do not implement both.
 
 This issue is blocked on the orphaned-templates-dir decision (see Dependencies) for template placement only — the index.md contract decision above is independent and can be settled here.
+
+**Decision (approved 2026-06-09):** Option (b): stop new-track from touching conductor/index.md — tracks.md is the registry, so no index.md 'Active Tracks' contract is needed. Remove the index.md append from new-track step 6. Still in scope: give setup content templates/section-lists for the other generated artifacts (product.md, tech-stack.md, workflow.md, code_styleguides/), and add a new-track pre-flight check that tracks.md exists before mutating it. Per orphaned-templates-dir = DELETE, these templates live in setup/SKILL.md, not templates/.

@@ -18,7 +18,7 @@ The hook header (bin/hooks/session-start-issues.sh:4) and setup-project's Codex 
 ## Acceptance Criteria
 
 - [ ] Verify against current Codex documentation whether and how `.agents/hooks/` scripts execute
-- [ ] If a registration step exists, setup-project performs or prints it; if not, README/INSTALL stop claiming the hook works on Codex and setup-project stops copying it (or labels it manual)
+- [ ] If a registration step exists, setup-project performs or prints it; if not, README/INSTALL stop claiming the hook works on Codex and setup-project stops copying it (or labels it manual) (Chosen AC branch: a registration step EXISTS; setup-project should perform it (write .codex/hooks.json) and stop relying on a bare .agents/hooks/ copy.)
 
 ## Technical Context
 
@@ -62,3 +62,5 @@ Part of the Codex-accuracy cluster. Coordinate wording/verification with:
 Found by the 2026-06-09 cross-LLM review.
 
 EXTERNAL RESEARCH (human/Codex-docs verification required — do not assert either way): Confirm against CURRENT Codex documentation whether a script placed in `.agents/hooks/` is auto-discovered and executed, and if so by which event/trigger and whether `codex_hooks = true` (or any registration config) is required. The repo contains no Codex registration manifest, only a copied script and a passive note, so today's behavior is unverified. The chosen Acceptance Criteria branch (register vs. stop-claiming/label-manual) depends entirely on this answer — record the finding here before implementation.
+
+**Research (verified 2026-06-09):** Verified against current Codex docs (https://developers.openai.com/codex/hooks): Codex DOES support lifecycle hooks (incl. SessionStart and PostToolUse), enabled by DEFAULT (disable via `[features] hooks = false` — so the README's `codex_hooks = true` flag is inaccurate). Hooks must be REGISTERED explicitly via a `hooks.json` file or an inline `[hooks]` table, discovered next to active config layers: `~/.codex/hooks.json`, `~/.codex/config.toml`, `<repo>/.codex/hooks.json`, `<repo>/.codex/config.toml` (plugins may bundle `hooks/hooks.json`). Placing a script in `.agents/hooks/` does NOT auto-run it — CONFIRMED, so the current Codex path is broken. The schema is the SAME nested `{matcher, hooks:[{type:"command", command}]}` form as Claude Code and this repo's hooks/hooks.json. RESOLUTION (AC branch: a registration step exists): setup-project's Codex path should write a `<repo>/.codex/hooks.json` registering the session-start hook (correct schema + path) instead of copying to `.agents/hooks/`, and README/INSTALL should correct `codex_hooks = true` to 'hooks on by default; disable with [features] hooks = false'. Research RESOLVED — now an implementable bug fix. Related: agents-md-sync-fixes (Codex-doc accuracy).
