@@ -110,6 +110,39 @@ The generated `conductor/tracks.md` MUST use this exact format. Downstream skill
 
 Do NOT deviate from this table structure. The status column uses checkbox markers (`[ ]`, `[~]`, `[x]`). The Track ID column must match directory names under `conductor/tracks/`.
 
+## Artifact Templates
+
+`tracks.md` uses the strict format above (it is parsed by convention). The other artifacts are not parsed, so each only needs the section structure below — populate every section from the Q&A answers, and keep them terse and scannable (tables, bullets, and checklists over prose).
+
+### index.md
+
+A static navigation hub — no per-track rows (the track registry is `tracks.md`). Sections:
+
+- `# Conductor Index` and a one-line intro
+- `## Context Documents` — a bullet link to each of `product.md`, `product-guidelines.md`, `tech-stack.md`, `workflow.md`, `tracks.md`, and `code_styleguides/`, each with a one-line purpose
+- `## Related (outside conductor/)` — links to `../README.md` and `../issues/`
+- `## Quick Commands` — a table of common skills and what each does
+
+### product.md
+
+`## Name` · `## Description` · `## Problem Statement` · `## Target Users` · `## Key Goals`
+
+### product-guidelines.md
+
+`## Voice & Tone` · `## Design Principles` · `## Applying These`
+
+### tech-stack.md
+
+`## Primary Languages` · `## Frontend / Backend / Database` · `## Distribution & Infrastructure` · `## Key Layout` · `## Dependencies` · `## Validation Commands`
+
+### workflow.md
+
+`## TDD / Verification Discipline` · `## Commit Strategy` · `## Code Review` · `## Verification Checkpoints` · `## Track Lifecycle`
+
+### code_styleguides/
+
+One file per language chosen in Section 5 (e.g. `markdown.md`, `bash.md`, `json.md`). Each file: a one-line intro plus `## Formatting`, `## Conventions`, and `## Anti-patterns` sections with project-specific rules.
+
 ## Completion
 
 ```

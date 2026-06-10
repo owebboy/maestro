@@ -23,7 +23,6 @@ Maestro ships as a plugin for two harnesses from one source tree:
 ## Key Layout
 
 - `skills/` — source of truth for workflow behavior.
-- `templates/` — generated Markdown templates used by skills.
 - `bin/`, `hooks/`, `bin/hooks/` — install tooling and harness hook assets.
 - `codex/INSTALL.md` — Codex-specific install, compatibility, and behavior notes.
 

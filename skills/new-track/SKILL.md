@@ -27,6 +27,7 @@ New Track Progress:
 
 1. Verify project is initialized:
    - `conductor/product.md`, `conductor/tech-stack.md`, `conductor/workflow.md` must exist
+   - `conductor/tracks.md` must also exist — Step 3 reads it for track-ID uniqueness and Step 6 appends the new track row; do not mutate it until it exists
    - If missing: suggest running `/setup` in Claude Code or `$setup` in Codex first
 2. Load context: read product.md, tech-stack.md, workflow.md for project understanding
 
@@ -127,7 +128,6 @@ After plan is in `conductor/tracks/{trackId}/plan.md`:
    }
    ```
 2. Register in `conductor/tracks.md`: add row `| [ ] | {trackId} | {title} | {date} | {date} |` (get today's date by running `date +%Y-%m-%d` — do not assume you know it)
-3. Update `conductor/index.md`: add to Active Tracks
 
 ## Error Handling
 

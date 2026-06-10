@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: chore
 priority: P3
 filed: 2026-06-09
+implemented: 2026-06-10
 ---
 
 # Issue: templates/ directory is orphaned and drifting from skill-embedded copies
@@ -59,6 +60,8 @@ No automated test suite (Markdown + Bash repo). Validate by:
 - Resolving the three-way archive-directory drift itself (the `implemented/` mismatch) is a separate correctness bug — note it here but track/fix independently if it predates this cleanup.
 
 ## Notes
+
+**Resolution (2026-06-10):** Deleted the orphaned `templates/` directory (AGENTS.md.template, issue-file.md, issues-setup.md — all unreferenced; live copies stay embedded in triage/SKILL.md and agents-md-sync/SKILL.md). Removed the false "generated markdown templates used by the skills" claims from `AGENTS.md` Repo Map and `conductor/tech-stack.md` Key Layout. No functional reference to `templates/` remains; validation suite passes.
 
 Found by the 2026-06-09 cross-LLM review.
 

@@ -1,8 +1,9 @@
 ---
-status: reviewed
+status: implemented
 type: refactor
 priority: P3
 filed: 2026-06-09
+implemented: 2026-06-10
 ---
 
 # Issue: setup defines templates for one of seven artifacts; index.md contract undocumented
@@ -69,6 +70,8 @@ This repo has NO automated test suite (Markdown skills + Bash). Validate by:
 - Rewriting the Q&A flow or changing which artifacts setup generates; this issue only adds the missing templates/section lists, documents the index.md contract, and adds the pre-flight guards.
 
 ## Notes
+
+**Resolution (2026-06-10):** Implemented option (b). Added a `## Artifact Templates` section to setup/SKILL.md giving an explicit section list for the six artifacts that lacked one (index.md, product.md, product-guidelines.md, tech-stack.md, workflow.md, code_styleguides/), embedded inline per the orphaned-templates-dir DELETE decision. The index.md template is a static navigation hub with no per-track rows. new-track Step 6 no longer touches `conductor/index.md` (tracks.md is the registry), and its Pre-flight now verifies `conductor/tracks.md` exists before Step 3 reads it and Step 6 appends to it. Question-count and resume edge cases were left out of scope per the approved decision.
 
 Found by the 2026-06-09 cross-LLM review.
 
