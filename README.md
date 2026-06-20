@@ -85,7 +85,7 @@ Add to your project's `.claude/settings.json` so collaborators get Maestro (and 
 
 The helper installs Maestro only. Install Superpowers separately via its official installer if you want the full brainstorming, planning, and execution workflow.
 
-The helper also bootstraps `issues/`, installs compatible hook scripts, and creates `.claude/settings.json` with hook config when that file does not already exist.
+The helper bootstraps a `.maestro/` directory (layout: `config.json` plus the package-managed `CONTRACT.md` and `adapters/`, then `context/`, `work/`, `items/`, `inbox.md`), installs compatible hook scripts, and creates `.claude/settings.json` with hook config when that file does not already exist.
 
 Full Codex setup and compatibility details: [codex/INSTALL.md](codex/INSTALL.md)
 
@@ -132,9 +132,9 @@ Maestro (WHAT and WHEN)                    Superpowers (HOW)
 | issue-advance | `/issue-advance <path\|all>` or `$issue-advance <path\|all>` | Issue → new track (spec + brainstorm + plan) |
 | issue-close | `/issue-close <path>` or `$issue-close <path>` | Archive as wont-fix, deferred, or duplicate |
 
-**Flow:** `INBOX.md → /triage → /issue-review → /issue-advance → /implement`
+**Flow:** `.maestro/inbox.md → /triage → /issue-review → /issue-advance → /implement`
 
-**Shortcut for small issues:** `/implement issues/<file>.md` skips the track ceremony — a simplicity gate sizes the issue (≤3 files, testable criteria, no design decisions), then TDD, one commit, one approval, and the issue archives as `implemented`.
+**Shortcut for small issues:** `/implement .maestro/items/<file>.md` skips the track ceremony — a simplicity gate sizes the issue (≤3 files, testable criteria, no design decisions), then TDD, one commit, one approval, and the issue archives as `done`.
 
 ### Quality
 
@@ -158,12 +158,12 @@ Two lifecycle hooks auto-activate when the Claude plugin is installed (via `hook
 
 | Hook | Event | What it does |
 |------|-------|-------------|
-| `session-start-issues.sh` | SessionStart | Shows inbox/triaged/reviewed counts at session start |
-| `validate-issue-frontmatter.sh` | PostToolUse (Write/Edit) | Validates issue file frontmatter (status, type, priority, filed) |
+| `session-start-maestro.sh` | SessionStart | Summarizes `.maestro/` work items (inbox, in-progress, done counts) at session start |
+| `validate-item-frontmatter.sh` | PostToolUse (Write/Edit) | Validates `.maestro/items/` frontmatter (id, title, type, priority, status, weight) |
 
 ### Codex
 
-Codex supports lifecycle hooks (on by default; disable with `[features] hooks = false`) using the same nested schema as Claude. Hooks must be registered in a `hooks.json` beside an active config layer, so `setup-project --codex` writes `<repo>/.codex/hooks.json` registering `session-start-issues.sh` (a script merely placed in `.agents/hooks/` is not auto-run). The frontmatter validation hook requires Claude Code's PostToolUse file-path context and is not available in Codex.
+Codex supports lifecycle hooks (on by default; disable with `[features] hooks = false`) using the same nested schema as Claude. Hooks must be registered in a `hooks.json` beside an active config layer, so `setup-project --codex` writes `<repo>/.codex/hooks.json` registering `session-start-maestro.sh` (a script merely placed in `.agents/hooks/` is not auto-run). The item frontmatter validation hook requires Claude Code's PostToolUse file-path context and is not available in Codex.
 
 ## Dependencies
 
@@ -239,7 +239,7 @@ claude plugin install maestro@maestro-dev
 /setup
 ```
 
-`/setup` walks you through an interactive Q&A (product, tech stack, workflow preferences) and creates a `conductor/` directory with your project context. Every other skill reads from this. In Codex, use the same skill names with `$`, for example `$setup`, `$triage`, and `$implement`.
+`/setup` walks you through an interactive Q&A (product, tech stack, workflow preferences) and creates a `.maestro/` directory with your project context (under `.maestro/context/`). Every other skill reads from this. In Codex, use the same skill names with `$`, for example `$setup`, `$triage`, and `$implement`.
 
 ### 2. Pick your path
 
@@ -249,13 +249,13 @@ claude plugin install maestro@maestro-dev
 /new-track feature user-authentication
 ```
 
-Maestro gathers a spec (interactive Q&A), runs brainstorming for the design, then generates a phased implementation plan. All artifacts land in `conductor/tracks/{trackId}/`.
+Maestro gathers a spec (interactive Q&A), runs brainstorming for the design, then generates a phased implementation plan. Prose artifacts (spec, design, plan) land in `.maestro/work/{trackId}/`; the item record lands in `.maestro/items/{id}.md`.
 
 ```
 /implement
 ```
 
-Executes the plan task-by-task with TDD (red-green-refactor), commits per task, and runs parallel code review at each phase checkpoint. Out-of-scope findings get filed to `issues/INBOX.md` automatically.
+Executes the plan task-by-task with TDD (red-green-refactor), commits per task, and runs parallel code review at each phase checkpoint. Out-of-scope findings get filed to `.maestro/inbox.md` automatically.
 
 **Path B: Issue pipeline** — you have a pile of bugs, ideas, or review findings.
 
@@ -263,7 +263,7 @@ Executes the plan task-by-task with TDD (red-green-refactor), commits per task, 
 /triage
 ```
 
-Parses raw bullets from `issues/INBOX.md` into structured issue files with type/priority classification.
+Parses raw bullets from `.maestro/inbox.md` into structured item records under `.maestro/items/` with type/priority classification.
 
 ```
 /issue-review all
@@ -283,7 +283,7 @@ Converts reviewed issues into tracks (invokes `/new-track` under the hood, auto-
 /codebase-review
 ```
 
-Six review agents (security, performance, architecture, testing, data integrity, UX) run in parallel, then six audit agents verify the findings. Confirmed issues go to `issues/INBOX.md` for triage.
+Six review agents (security, performance, architecture, testing, data integrity, UX) run in parallel, then six audit agents verify the findings. Confirmed issues go to `.maestro/inbox.md` for triage.
 
 ### 3. Validate and ship
 
@@ -298,7 +298,7 @@ Six review agents (security, performance, architecture, testing, data integrity,
 /session-wrap-up
 ```
 
-Parallel quality review (code simplifier + code reviewer + spec reviewer), captures any untracked issues to INBOX, updates CLAUDE.md and project context, commits session work.
+Parallel quality review (code simplifier + code reviewer + spec reviewer), captures any untracked issues to `.maestro/inbox.md`, updates CLAUDE.md and project context, commits session work.
 
 ### 5. Housekeeping
 
@@ -306,7 +306,7 @@ Parallel quality review (code simplifier + code reviewer + spec reviewer), captu
 /manage                      # interactive menu: archive, restore, delete, rename, cleanup
 /manage --archive auth_20260403   # archive a completed track
 /manage --cleanup            # find orphaned artifacts, stale in-progress tracks
-/issue-close issues/2026-04-03-old-bug.md   # close an issue as wont-fix, deferred, or duplicate
+/issue-close .maestro/items/0042-old-bug.md   # close an item as wont-fix, deferred, or duplicate
 ```
 
 ### 6. Check in anytime
@@ -325,6 +325,25 @@ Parallel quality review (code simplifier + code reviewer + spec reviewer), captu
                           ↑
               /codebase-review
 ```
+
+## Upgrading from the legacy `conductor` + `issues` layout
+
+If your project was set up with the old two-directory model (a `conductor` directory for tracks and an `issues` directory for the issue pipeline), migrate it to the unified `.maestro/` layout in two steps:
+
+```bash
+# Step 1: dry run — preview what will move, no writes
+bin/migrate-to-maestro --path /path/to/your/project
+
+# Step 2: apply — write .maestro/, rename old dirs to .conductor.bak and .issues.bak
+bin/migrate-to-maestro --path /path/to/your/project --apply
+
+# Optional: once you've verified the result, remove the legacy backups
+bin/migrate-to-maestro --path /path/to/your/project --apply --remove-legacy
+```
+
+The migrator is safe to re-run: the dry run is read-only, `--apply` only writes when it will not overwrite existing `.maestro/` content, and the legacy directories are renamed (not deleted) unless you pass `--remove-legacy`. Every item gets a canonical `status` (mapped from old track and issue statuses), and provenance (old IDs, prior links) is preserved in each item's `## Notes` block.
+
+After migration, re-run `bin/setup-project` to refresh hooks to `session-start-maestro.sh` and `validate-item-frontmatter.sh`.
 
 ## Acknowledgements
 

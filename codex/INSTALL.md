@@ -43,7 +43,7 @@ bunx skills add obra/elements-of-style --agent codex --yes --global
 
 By default this symlinks skills into your project's `.agents/skills/` directory where Codex discovers them automatically. Use `--portable` to copy them into the target repo instead.
 
-The helper also bootstraps `issues/` and registers the compatible Codex session-start hook by writing `<repo>/.codex/hooks.json`.
+The helper bootstraps a `.maestro/` directory (layout: `context/`, `work/`, `items/`, `inbox.md`, `config.json`) and registers the compatible Codex session-start hook by writing `<repo>/.codex/hooks.json`.
 
 Install Superpowers separately via its official installer if you want Maestro's optional brainstorming, planning, and TDD integrations.
 
@@ -79,6 +79,37 @@ project_doc_fallback_filenames = ["CLAUDE.md"]
 
 This is a fallback only — if `AGENTS.md` exists it always wins and `CLAUDE.md` is ignored.
 
+## Work Item Layout
+
+Maestro uses a unified `.maestro/` directory for all workflow data — context, work artifacts, and item records:
+
+```
+.maestro/
+  config.json      # adapter choice + options (project-owned, committed)
+  CONTRACT.md      # the 12-op adapter contract (package-managed, copied at setup)
+  adapters/        # adapter profiles, e.g. files.md (package-managed, copied at setup)
+  context/         # product.md, tech-stack.md, workflow.md, guidelines.md
+  work/            # <id>/spec.md, design.md, plan.md  (prose artifacts)
+  items/           # <id>.md item records + archived/<status>/<id>.md
+  inbox.md         # pre-triage scratch
+```
+
+Skills read from and write to `.maestro/`. The SessionStart hook (`session-start-maestro.sh`) summarizes work items at the start of each Codex session.
+
+### Migrating from the legacy layout
+
+If your project used the old two-directory model (a `conductor` directory for tracks plus an `issues` directory for the pipeline), run the bundled migrator:
+
+```bash
+# Dry run first (default — read-only, no writes)
+bin/migrate-to-maestro --path /path/to/your/project
+
+# Apply: write .maestro/, rename old dirs to .conductor.bak and .issues.bak
+bin/migrate-to-maestro --path /path/to/your/project --apply
+```
+
+After migration, re-run `bin/setup-project --codex` to register the updated hooks.
+
 ## Skill Compatibility
 
 | Skill | Codex Support | Notes |
@@ -110,5 +141,5 @@ This is a fallback only — if `AGENTS.md` exists it always wins and `CLAUDE.md`
 - **Auto-memory**: No equivalent to Claude's `~/.claude/projects/<project>/memory/`. Use `AGENTS.md` for persistent context, or build a memory process using Codex hooks/scripts.
 - **MCP config**: User-scoped servers live in `config.toml` under `[mcp_servers.<name>]`. (Maestro itself ships no MCP server.)
 - **Frontmatter**: Codex ignores Claude-specific frontmatter fields (`user-invocable`, `disable-model-invocation`, `context`). Skills still load — the fields are simply skipped.
-- **Hooks**: Codex supports lifecycle hooks (on by default; disable with `[features] hooks = false`), using the same nested `{matcher, hooks: [...]}` schema as Claude. Hooks must be registered in a `hooks.json` (or `[hooks]` table) beside an active config layer — e.g. `<repo>/.codex/hooks.json`; a script merely placed in `.agents/hooks/` is not auto-run. Maestro ships 1 Codex-compatible hook (`session-start-issues.sh`); `validate-issue-frontmatter.sh` is Claude-only (it needs PostToolUse file-path context). `setup-project --codex` registers the session-start hook by writing `<repo>/.codex/hooks.json`.
+- **Hooks**: Codex supports lifecycle hooks (on by default; disable with `[features] hooks = false`), using the same nested `{matcher, hooks: [...]}` schema as Claude. Hooks must be registered in a `hooks.json` (or `[hooks]` table) beside an active config layer — e.g. `<repo>/.codex/hooks.json`; a script merely placed in `.agents/hooks/` is not auto-run. Maestro ships 1 Codex-compatible hook (`session-start-maestro.sh`), which summarizes `.maestro/` work items at session start; `validate-item-frontmatter.sh` is Claude-only (it needs PostToolUse file-path context). `setup-project --codex` registers the session-start hook by writing `<repo>/.codex/hooks.json`.
 - **Permissions**: Codex uses `sandbox_mode` + `approval_policy` instead of Claude's per-tool allow/ask/deny rules. Skills that reference `permissionMode` or tool-specific permissions need manual translation to Codex's sandbox/approval model.

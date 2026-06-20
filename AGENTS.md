@@ -10,7 +10,9 @@ Maestro is a cross-harness workflow package for Claude Code and Codex. The repos
 - `bin/setup-project`: installs Maestro into another repository via project-scoped symlinks or portable copies, plus hooks.
 - `codex/INSTALL.md`: Codex-specific install, compatibility, and behavior notes.
 - `bin/hooks/` and `hooks/`: hook assets for Claude Code and Codex installs.
-- `conductor/`, `issues/`: Maestro's own working state (it dogfoods itself) — workflow data, not package content.
+- `.maestro/`: Maestro's own dogfood working state (it uses itself) — workflow data, not package content. Layout: `config.json` (project-owned) plus `CONTRACT.md` and `adapters/` (package-managed copies refreshed by `bin/setup-project`), `context/`, `work/`, `items/`, `inbox.md`.
+- `assets/maestro/`: package-managed adapter templates (`CONTRACT.md`, `adapters/files.md`, `config.template.json`) — the canonical source the installer copies into a target `.maestro/`.
+- `bin/migrate-to-maestro`: one-shot Python 3 migrator that converts the legacy `conductor` + `issues` layout into `.maestro/`. Dry-run by default; pass `--apply` to write.
 
 ## Edit Rules
 
@@ -18,6 +20,7 @@ Maestro is a cross-harness workflow package for Claude Code and Codex. The repos
 - Keep `.agents/plugins/marketplace.json` pointing at the repo-root plugin path (`./`).
 - Prefer improving shared `skills/` content instead of creating Codex-only forks.
 - When adding, renaming, or re-scoping a skill, update `README.md`, `codex/INSTALL.md`, `bin/setup-project`, and that skill's `agents/openai.yaml`.
+- When modifying or adding adapter behavior, consult the adapter contract at `assets/maestro/CONTRACT.md`. Adapter templates live in `assets/maestro/` (LD-2); the installer copies them into the target `.maestro/` — do not edit `.maestro/` templates directly.
 - When writing subagent instructions, be explicit about when Codex should use `explorer` for read-heavy work versus `worker` for implementation.
 
 ## Validation
@@ -28,6 +31,8 @@ python3 -m json.tool .claude-plugin/plugin.json >/dev/null
 python3 -m json.tool .claude-plugin/marketplace.json >/dev/null
 python3 -m json.tool .codex-plugin/plugin.json >/dev/null
 python3 -m json.tool .agents/plugins/marketplace.json >/dev/null
+python3 -m unittest discover -s tests -v
+python3 -m py_compile bin/migrate-to-maestro
 ```
 
 ## Codex Notes
