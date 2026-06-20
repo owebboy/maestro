@@ -151,3 +151,8 @@ Net: a minimal backend (the 5 core) is usable; tracked features and niceties lay
 - captureMode: local | backend
 - transport: mcp | cli | api   (optional; pins transport, overrides detection)
 - artifactsDir: .maestro/work
+
+### Adapter-name resolution
+- adapter `files` -> adapters/files.md
+- adapter `gitea|github|gitlab` -> adapters/<name>.md
+- adapter `linear|jira` -> adapters/linear-jira.md (profile branches on the name)
