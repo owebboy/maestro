@@ -108,7 +108,7 @@ Skills only ever read this shape. The adapter translates in and out.
 
 Example (gitea profile header):
 ```jsonc
-{ "supports": ["labels", "subissues", "relations"], "scoped_labels": false }
+{ "supports": ["labels", "relations", "subtasks-as-tasklist"], "scoped_labels": false, "transports": ["mcp","cli","api"] }
 ```
 
 `set_status(id, "reviewed")` rendered three ways from the same skill call:
@@ -169,9 +169,10 @@ Capability flags (profile header `supports`) drive behavior. Rules:
    - search: if no native search -> list_items + case-insensitive local match.
    - relate: if no native relations -> a comment ("duplicate-of #X") + set_status(duplicate) for duplicates.
 3. set_subtasks/set_subtask_state for a TRACKED item:
-   - prefer native sub-issues (supports: subissues); else a `- [ ]` task-list in the body (supports:
-     subtasks-as-tasklist); if NEITHER is possible, STOP and tell the user this backend cannot track
-     plan progress natively — offer to keep the item `light` (steps live only in .maestro/work/<id>/plan.md).
+   - prefer native sub-issues (supports: subissues); else a native subtask store (supports: subtasks —
+     e.g. the files adapter's `## Tasks` checklist); else a `- [ ]` task-list in the issue body
+     (supports: subtasks-as-tasklist); if NONE is possible, STOP and tell the user this backend cannot
+     track plan progress natively — offer to keep the item `light` (steps live only in .maestro/work/<id>/plan.md).
 4. No transport available (detection yields none): STOP. Print which of MCP/CLI/API to configure and the
    one-line auth command for each. NEVER fall back to the files adapter silently.
 5. Unmapped native status (linear/jira read path): report `inbox` + warn; prompt to add to config.statusMap.

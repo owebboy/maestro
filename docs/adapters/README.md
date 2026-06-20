@@ -12,7 +12,7 @@ There are six adapter choices. Two of them (`linear` and `jira`) share one profi
 
 | Adapter | Transports | Scoped labels | Subtasks | Relations | Native search | captureMode: backend |
 |---------|-----------|--------------|----------|-----------|--------------|---------------------|
-| `files` | files (local) | — | task-list (`## Tasks`) | yes (frontmatter `links:`) | substring match | yes (creates local item) |
+| `files` | files (local) | — | task-list (`## Tasks`) | yes (frontmatter `links:`) | substring match | n/a (always appends to `inbox.md`) |
 | `gitea` | mcp, cli, api | no (plain `status:*`) | task-list in body | yes (comment fallback) | yes (native) | yes |
 | `github` | mcp, cli, api | no (plain `status:*`) | task-list in body | yes (comment fallback) | yes (native) | yes |
 | `gitlab` | mcp, cli, api | yes (`status::*`) | task-list in body | yes (note fallback) | yes (native) | yes |
@@ -33,8 +33,10 @@ There are six adapter choices. Two of them (`linear` and `jira`) share one profi
   frontmatter as a fallback (CONTRACT §Degradation rule 2). Linear/Jira have typed native
   relations.
 - **captureMode: backend** — when `config.captureMode == "backend"`, `capture_raw` creates a real
-  issue in the backend rather than appending to `.maestro/inbox.md`. All adapters support this;
-  the fallback (local file) triggers only if the backend is unreachable.
+  issue in the forge/native backend rather than appending to `.maestro/inbox.md`; the fallback
+  (local file) triggers only if the backend is unreachable. For the `files` adapter this mode is
+  moot — `capture_raw` always appends to `.maestro/inbox.md` regardless, since there is no remote
+  backend to target.
 
 ## When to choose each adapter
 

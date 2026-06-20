@@ -206,9 +206,11 @@ python3 bin/validate-maestro .
 Expected output: `maestro validation ok` with exit code 0.
 
 The validator checks:
-- Required JSON manifests are present and parseable.
-- Lifecycle skills do not reference any backend name directly (backend-abstraction check).
-- Profile files in `assets/maestro/adapters/` are well-formed Markdown.
+- `CONTRACT.md` names all 12 ops, all 10 canonical statuses, and the `## Degradation` + `## Config keys` sections.
+- Each adapter profile under `assets/maestro/adapters/` (except `files`, which uses a simpler shape) contains the required shape sections and mentions all 12 ops.
+- The lifecycle skills do not reference any backend tool or name directly (backend-abstraction check; `setup` is excluded because it is the connection entry point).
+
+(JSON-manifest validity is checked separately by the `python3 -m json.tool` lines in the `AGENTS.md` validation block, not by `bin/validate-maestro`.)
 
 Fix any errors it reports before wiring in the new adapter name.
 
