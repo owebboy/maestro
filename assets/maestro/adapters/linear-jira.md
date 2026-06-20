@@ -50,7 +50,7 @@ Unlike the git-forge adapters, Linear and Jira use **native workflow states** �
 
 1. **Tier 1 — statusMap:** if `config.statusMap[<canonical>]` is set, use that native state name exactly. This always wins.
 2. **Tier 2 — default table:** else look up the backend-specific default in the table below.
-3. **Tier 3 — fuzzy match:** else case-insensitively match `<canonical>` (and common synonyms: `reviewed` ↔ {Selected, Ready, Selected for Development}; `in-progress` ↔ {In Progress, Doing, Active}; `done` ↔ {Done, Closed, Complete, Finished}) against the team's discovered states (cached at setup).
+3. **Tier 3 — fuzzy match:** else case-insensitively match `<canonical>` (and common synonyms: `reviewed` ↔ {Selected, Ready}; `in-progress` ↔ {In Progress, Doing}; `done` ↔ {Done, Closed, Complete}) against the team's discovered states (cached at setup).
 4. **Tier 4 — ask:** if no match, STOP and ask the user which native state corresponds to `<canonical>`; offer to persist their answer into `config.statusMap` so it never asks again.
 
 **Read path (native → canonical, used by `get_item`/`list_items`):**
@@ -59,6 +59,8 @@ Unlike the git-forge adapters, Linear and Jira use **native workflow states** �
 2. Else invert the default table for this backend.
 3. Else fuzzy/synonym match (same synonyms as write path).
 4. Else report status as `inbox` and warn that the native state is unmapped; prompt the user to add it to `config.statusMap`.
+
+**Tie-break note (read path):** inverting the default table is ambiguous when multiple canonical statuses map to the same native state (e.g. Linear "Backlog" ← both `triaged` and `deferred`; "Todo" ← `reviewed` and `planned`). Resolve by preferring the **first matching row top-to-bottom** in the default table. A per-team `config.statusMap` is the authoritative disambiguator and always wins over this tie-break.
 
 ### Default canonical → native state table (tier-2; per-team overridable via statusMap)
 
@@ -85,8 +87,8 @@ Native trackers support first-class priority, type, and weight fields — do NOT
 
 Map Maestro `priority` → native priority field:
 
-- **Linear:** `priority` property on the issue. Values: `0=No priority`, `1=Urgent`, `2=High`, `3=Medium`, `4=Low`. Maestro mapping: P1 → Urgent (1), P2 → High (2), P3 → Medium (3).
-- **Jira:** `priority` field on the issue. Default scheme values: `Highest`, `High`, `Medium`, `Low`, `Lowest`. Maestro mapping: P1 → Highest, P2 → High, P3 → Medium. If `config.fieldMap.priority` is set, use those mappings instead.
+- **Linear:** `priority` property on the issue. Values: `0=No priority`, `1=Urgent`, `2=High`, `3=Medium`, `4=Low`. Maestro mapping: P1 → Urgent (1), P2 → High (2), P3 → Low (4).
+- **Jira:** `priority` field on the issue. Default scheme values: `Highest`, `High`, `Medium`, `Low`, `Lowest`. Maestro mapping: P1 → Highest, P2 → High, P3 → Low. If `config.fieldMap.priority` is set, use those mappings instead.
 
 Read path (native → canonical): invert the map; if no match, default to P3.
 
@@ -108,7 +110,7 @@ Read path (native → canonical): invert the map; default to `feature` if unmapp
 
 All 12 ops are required. Each subsection shows the per-backend rendering. "MCP" means the MCP tool call; "API" means Linear GraphQL or Jira REST; "CLI" means `jira` CLI (Jira only — Linear has no CLI).
 
-Variable conventions: `<team>` = Linear team ID from `config.backend.project_id`; `<project>` = Jira project key from `config.backend.project_id`; `<id>` = native issue ID/key.
+Variable conventions: `<team>` = Linear team KEY from `config.backend.team`; `<project>` = Jira project KEY from `config.backend.project`; `<id>` = native issue ID/key.
 
 ### create_item
 
@@ -155,17 +157,17 @@ Update title, type, priority, weight, or body on an existing item.
 
 Transition an item to a new canonical status, resolving the native state via the four-tier rule.
 
-1. Resolve target native state name using the four-tier write path from `## Status mapping`.
+1. Resolve the target native state **name** using the four-tier write path from `## Status mapping`.
 2. Apply the state transition:
 
 **Linear:**
-- **MCP:** `mcp__linear__update_issue` with `id=<id>`, `stateId=<resolved state ID>`. Resolve state ID by looking up team workflow states (cached at setup via `## State setup`).
-- **API:** GraphQL `updateIssue(id: "<id>", input: { stateId: "<stateId>" })`. Look up state ID from team workflow states.
+- **MCP:** Resolve the native state name (step 1) to a `stateId` via `config.backend.stateCache`. Then call `mcp__linear__update_issue` with `id=<id>`, `stateId=<resolved stateId>`.
+- **API:** Resolve the native state name to a `stateId` via `config.backend.stateCache`. Then GraphQL `updateIssue(id: "<id>", input: { stateId: "<stateId>" })`.
 
 **Jira:**
-- **MCP:** `mcp__atlassian__transition_issue` (or `mcp__jira__transition_issue`) with `issueKey=<id>`, `transition=<native state name or transition ID>`. Fetch available transitions first if transition ID is needed.
-- **CLI:** `jira issue transition "<native state name>" <id>`
-- **API:** `GET <url>/rest/api/3/issue/<id>/transitions` to find transition ID matching native state name; then `POST <url>/rest/api/3/issue/<id>/transitions { "transition": {"id":"<tid>"} }`.
+- **MCP:** Using the native state name from step 1 as the target status: call `GET <url>/rest/api/3/issue/<id>/transitions` (or MCP equivalent) to fetch available transitions; select the transition whose target status name equals the resolved native state name; then call `mcp__atlassian__transition_issue` (or `mcp__jira__transition_issue`) with `issueKey=<id>`, `transitionId=<tid>`.
+- **CLI:** `jira issue transition "<native state name>" <id>` (the CLI takes the target state name directly, so no transition-ID lookup is needed).
+- **API:** `GET <url>/rest/api/3/issue/<id>/transitions` to fetch available transitions; find the transition whose `to.name` equals the resolved native state name; then `POST <url>/rest/api/3/issue/<id>/transitions { "transition": {"id":"<tid>"} }`.
 
 No separate open/close call. Native state change is the only action.
 
@@ -174,15 +176,15 @@ No separate open/close call. Native state change is the only action.
 List work items filtered by status, type, priority, and/or weight.
 
 **Linear:**
-- **MCP:** `mcp__linear__list_issues` (or `mcp__linear__search_issues`) with filter params including `teamId=<team>` and state/label filters derived from the filter args.
-- **API:** GraphQL query `issues(filter: { team: { id: { eq: "<team>" } }, state: { name: { in: [<native states>] } }, priority: { in: [<priorities>] } }) { nodes { <normalized fields> } }`. Translate canonical status filter → native state names via four-tier read path.
+- **MCP:** `mcp__linear__list_issues` (or `mcp__linear__search_issues`) with filter params including `teamId=<team>` and state/label filters. Translate any canonical status filter → native state names via the four-tier **write** path before passing them to the filter.
+- **API:** Translate canonical status filter → native state names via the four-tier **write** path. Then: GraphQL query `issues(filter: { team: { id: { eq: "<team>" } }, state: { name: { in: [<native states>] } }, priority: { in: [<priorities>] } }) { nodes { <normalized fields> } }`.
 
 **Jira:**
-- **MCP:** `mcp__atlassian__search_issues` (or `mcp__jira__search_issues`) with JQL constructed from filter args: `project = <project> AND status IN ("<native states>") AND priority IN ("<priorities>")`.
-- **CLI:** `jira issue list --project <project> --status "<native state>" --priority "<priority>"` (repeat or chain as needed).
-- **API:** `GET <url>/rest/api/3/search?jql=project+%3D+<project>+AND+status+IN+(<states>)&fields=summary,status,priority,issuetype,subtasks,created,updated`
+- **MCP:** Translate any canonical status filter → native state names via the four-tier **write** path. Then: `mcp__atlassian__search_issues` (or `mcp__jira__search_issues`) with JQL: `project = <project> AND status IN ("<native states>") AND priority IN ("<priorities>")`.
+- **CLI:** Translate canonical status filter → native state names via the four-tier **write** path. Then: `jira issue list --project <project> --status "<native state>" --priority "<priority>"` (repeat or chain as needed).
+- **API:** Translate canonical status filter → native state names via the four-tier **write** path. Then: `GET <url>/rest/api/3/search?jql=project+%3D+<project>+AND+status+IN+(<states>)&fields=summary,status,priority,issuetype,subtasks,created,updated`
 
-Map each result through the four-tier read path and return normalized records.
+Map each result's status back through the four-tier **read** path and return normalized records.
 
 ### set_subtasks
 
@@ -201,16 +203,16 @@ Replace the sub-issue list on a tracked item. Idempotent: add missing, remove st
 
 Transition a single sub-issue to a new state (todo | doing | done).
 
-Map state: `todo` → Tier-2 default for `reviewed`; `doing` → `in-progress`; `done` → `done`. Then apply `set_status` logic on the sub-issue ref.
+Map subtask state to canonical: `todo` → `planned`; `doing` → `in-progress`; `done` → `done`. Then resolve the canonical status to a native state name via the four-tier **write** path and apply `set_status` logic on the sub-issue ref. (Using `planned` for `todo` gives "To Do" on Jira rather than "Selected for Development", which is the appropriate anchor for ready/to-do sub-tasks.)
 
 **Linear:**
-- **MCP:** `mcp__linear__update_issue` with `id=<ref>`, `stateId=<resolved state ID>`.
-- **API:** GraphQL `updateIssue(id: "<ref>", input: { stateId: "<stateId>" })`.
+- **MCP:** Resolve the mapped canonical status to a `stateId` via the four-tier write path + `config.backend.stateCache`. Then `mcp__linear__update_issue` with `id=<ref>`, `stateId=<resolved stateId>`.
+- **API:** Resolve the mapped canonical status to a `stateId` via the four-tier write path + `config.backend.stateCache`. Then GraphQL `updateIssue(id: "<ref>", input: { stateId: "<stateId>" })`.
 
 **Jira:**
-- **MCP:** `mcp__atlassian__transition_issue` with `issueKey=<ref>`, `transition=<native state>`.
-- **CLI:** `jira issue transition "<native state>" <ref>`
-- **API:** `POST <url>/rest/api/3/issue/<ref>/transitions { "transition": {"id":"<tid>"} }`.
+- **MCP:** Resolve the mapped canonical status to a native state name via the four-tier write path. Fetch available transitions for `<ref>`; select the transition whose target status equals the resolved native state name; then `mcp__atlassian__transition_issue` with `issueKey=<ref>`, `transitionId=<tid>`.
+- **CLI:** Resolve the mapped canonical status to a native state name via the four-tier write path. Then `jira issue transition "<native state name>" <ref>`.
+- **API:** Resolve the mapped canonical status to a native state name via the four-tier write path. `GET <url>/rest/api/3/issue/<ref>/transitions` to find transition ID matching native state name; then `POST <url>/rest/api/3/issue/<ref>/transitions { "transition": {"id":"<tid>"} }`.
 
 ### link_artifact
 
@@ -243,13 +245,15 @@ Post a comment on a work item. Fallback: append to body.
 Capture unstructured text as a new inbox item. Fallback: write to local `.maestro/inbox.md`.
 
 **Linear:**
-- **MCP:** `mcp__linear__create_issue` with `teamId=<team>`, `title` = first line of `<text>` (truncated to 80 chars), `description=<text>`, state = Triage (inbox tier-2 default). Return `id`.
-- **API:** GraphQL `createIssue(input: { teamId: "<team>", title: "<first line>", description: "<text>", stateId: "<triage state id>" })`.
+- Resolve the `inbox` canonical status to its native state name via the four-tier write path, then look up the corresponding `stateId` in `config.backend.stateCache`.
+- **MCP:** `mcp__linear__create_issue` with `teamId=<team>`, `title` = first line of `<text>` (truncated to 80 chars), `description=<text>`, `stateId=<resolved stateId>`. Return `id`.
+- **API:** GraphQL `createIssue(input: { teamId: "<team>", title: "<first line>", description: "<text>", stateId: "<resolved stateId>" })`.
 
 **Jira:**
-- **MCP:** `mcp__atlassian__create_issue` with `project=<project>`, `summary=<first line>`, `description=<text>`, `issuetype=Task`, status = Backlog (inbox tier-2 default).
-- **CLI:** `jira issue create --project <project> --summary "<first line>" --body "<text>" --type Task`
-- **API:** `POST <url>/rest/api/3/issue { "fields": { "project":{"key":"<project>"}, "summary":"<first line>", "description":{ADF}, "issuetype":{"name":"Task"} } }`.
+- Resolve the `inbox` canonical status to its native state name via the four-tier write path. On create, Jira sets the initial status implicitly by the workflow default; create the issue with `issuetype=Task` and immediately transition it (via `set_status` logic) to the resolved native state if it differs from the workflow default.
+- **MCP:** `mcp__atlassian__create_issue` with `project=<project>`, `summary=<first line>`, `description=<text>`, `issuetype=Task`. Then apply `set_status` to the new issue to reach the resolved `inbox` native state.
+- **CLI:** `jira issue create --project <project> --summary "<first line>" --body "<text>" --type Task` then `jira issue transition "<resolved inbox native state>" <new-id>`.
+- **API:** `POST <url>/rest/api/3/issue { "fields": { "project":{"key":"<project>"}, "summary":"<first line>", "description":{ADF}, "issuetype":{"name":"Task"} } }`. Then apply `set_status` transition to reach the resolved `inbox` native state.
 
 Fallback (if transport unavailable): append raw text block to `.maestro/inbox.md` with timestamp.
 
@@ -292,7 +296,7 @@ This section is the native-tracker analogue of the forge `## Label bootstrap`. I
 On first connection (or when `maestro setup` runs for this backend), the agent must:
 
 1. **Enumerate workflow states:** fetch all native states for the configured team/project.
-   - **Linear:** GraphQL `team(id: "<team>") { states { nodes { id, name, type } } }` — or via MCP if available.
+   - **Linear:** GraphQL `workflowStates(filter: { team: { key: { eq: "<team>" } } }) { nodes { id name type } }` — or via MCP if available.
    - **Jira:** `GET <url>/rest/api/3/project/<project>/statuses` or JQL `project = <project>` to extract distinct status values — or via MCP.
 
 2. **Build the statusMap skeleton:** present the default tier-2 canonical→native table to the user, alongside the team's actual native states. For each canonical status, confirm the mapping or let the user override it. Write confirmed overrides into `config.statusMap`.
@@ -309,9 +313,10 @@ On first connection (or when `maestro setup` runs for this backend), the agent m
 
 After discovery, `/setup` updates `.maestro/config.json` with:
 - `adapter: "linear"` or `adapter: "jira"`
-- `backend.url` (Jira only), `backend.token`, `backend.project_id`, `backend.email` (Jira only)
+- Linear: `backend.team` (team KEY, e.g. "ENG"), `backend.token`
+- Jira: `backend.url`, `backend.project` (project KEY), `backend.email`, `backend.token`
+- `backend.stateCache` — Linear: `stateId → name` map for fast lookups; Jira: transition IDs per issue-type
 - `statusMap` (only entries that differ from tier-2 defaults, or all if the team provided them)
 - `fieldMap.priority` and `fieldMap.type` (only if non-default)
-- `backend.stateCache` (Linear) or equivalent (Jira) for fast state lookups
 
 No lifecycle skill needs to change when switching between `linear` and `jira`. All branching is in this profile.

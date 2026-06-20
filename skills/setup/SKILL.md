@@ -200,7 +200,7 @@ If `jira` was chosen:
 
 4. **Credentials** (only if MCP is not available) — ask:
 
-   > Provide your Jira email and API token (Jira → Account Settings → Security → API tokens), separated by a newline, or leave blank if you will use the `jira` CLI (which handles auth separately) or set `JIRA_EMAIL` + `JIRA_TOKEN` as environment variables.
+   > Provide your Jira email and API token (Jira → Account Settings → Security → API tokens), separated by a newline, or leave blank if you will use the `jira` CLI (which handles auth separately) or set `JIRA_USER_EMAIL` + `JIRA_API_TOKEN` as environment variables.
 
    Write `config.backend.email` and `config.backend.token` if provided.
 
@@ -214,8 +214,8 @@ If `jira` was chosen:
    1. If `config.transport` is already set, use it (skip detection).
    2. **MCP:** if my available tools include `mcp__atlassian__*` or `mcp__jira__*` → resolved = `mcp`.
    3. **CLI:** else if `command -v jira` succeeds AND `jira me` returns a valid user → resolved = `cli`.
-   4. **API:** else if `config.backend.token` or `$JIRA_TOKEN` is set → resolved = `api` (Jira REST at `<url>/rest/api/3`).
-   5. **None:** STOP. Tell the user to set up one of: Jira MCP server, `jira` CLI (ankitpokhrel/jira-cli), or Jira API token. Never fall back to `files`.
+   4. **API:** else if `config.backend.token` or `$JIRA_API_TOKEN` is set → resolved = `api` (Jira REST at `<url>/rest/api/3`).
+   5. **None:** STOP. Tell the user to set up one of: Jira MCP server, `jira` CLI (ankitpokhrel/jira-cli), or Jira API token (`$JIRA_API_TOKEN`). Never fall back to `files`.
 
 7. **Pin transport (optional)** — offer to pin via `config.transport`. If declined, leave unset.
 
@@ -247,7 +247,7 @@ Instead of label bootstrap, perform state discovery and build `config.statusMap`
 
 #### E.1 Discover native workflow states
 
-- **Linear:** call `mcp__linear__list_issue_statuses` (MCP) or query `workflowStates(filter:{team:{key:{eq:"<team>"}}}){nodes{name,type}}` via the Linear GraphQL API.
+- **Linear:** call `mcp__linear__list_issue_statuses` (MCP) or query `workflowStates(filter: { team: { key: { eq: "<team>" } } }) { nodes { id name type } }` via the Linear GraphQL API.
 - **Jira:** call the Jira MCP list-statuses tool (MCP), or run `jira project list-statuses <project>` (CLI), or GET `<url>/rest/api/3/project/<project>/statuses` (API). Extract the unique status names from all issue types.
 
 Collect the full list of native state names and display them to the user:
@@ -311,12 +311,12 @@ For each unmapped status, wait for the user's choice and record it in `config.st
 **Priority discovery:**
 
 - **Linear:** native priorities are fixed (0 = No Priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low).
-- **Jira:** call the Jira MCP priorities tool (MCP), or `jira project list-priorities` (CLI), or GET `<url>/rest/api/3/priority` (API). Display the discovered priority names.
+- **Jira:** call the Jira MCP priorities tool (MCP), or GET `<url>/rest/api/3/priority` (API). Display the discovered priority names.
 
 **Issue type discovery:**
 
 - **Linear:** issue types are not distinct in Linear (all issues are the same type); set `config.fieldMap.type = null`.
-- **Jira:** call the Jira MCP issue-types tool (MCP), or `jira issue list-types` (CLI), or GET `<url>/rest/api/3/project/<key>/statuses` (API, issue types embedded in response). Display the discovered types.
+- **Jira:** call the Jira MCP issue-types tool (MCP), or `jira issue list-types` (CLI), or GET `<url>/rest/api/3/project/<key>/issuetypes` (Jira Cloud; or `<url>/rest/api/3/issuetype` as the server fallback) (API). Display the discovered types.
 
 Propose `config.fieldMap`:
 
@@ -336,6 +336,21 @@ Ask:
 > Does this fieldMap look correct? Reply with any corrections, or press Enter to accept.
 
 Apply corrections and persist as `config.fieldMap` in `config.json`.
+
+#### E.5 Persist stateCache
+
+After confirming the statusMap (E.2/E.3) and fieldMap (E.4), write `config.backend.stateCache` to `.maestro/config.json`:
+
+- **Linear:** a map of state name → `{ "id": "<state id>", "type": "<state type>" }` for every discovered state. Example:
+  ```json
+  { "In Progress": { "id": "abc123", "type": "started" }, "Done": { "id": "def456", "type": "completed" } }
+  ```
+- **Jira:** a map of status name → `{ "id": "<status id>", "transitionId": "<transition id>" }` for each reachable status on the project. To get transition IDs, issue `GET <url>/rest/api/3/issue/<sample-issue-key>/transitions` (using any existing issue) or the equivalent MCP/CLI call; if no issues exist yet, store the status IDs from the statuses endpoint and leave `transitionId` as `null` (it will be resolved on first use). Example:
+  ```json
+  { "In Progress": { "id": "3", "transitionId": "21" }, "Done": { "id": "10001", "transitionId": "31" } }
+  ```
+
+The adapter profile's `set_status` op reads `config.backend.stateCache` to resolve the correct native state ID and Jira transition ID without re-querying the API on every status change.
 
 ### Step F: Capture mode
 
@@ -432,14 +447,14 @@ For a **native-tracker** backend (`linear` / `jira`), print:
 Setup complete!
 
 Created: .maestro/CONTRACT.md
-         .maestro/adapters/  (files.md + all profiles, including linear-jira.md)
+         .maestro/adapters/  (files.md + all adapter profiles)
          .maestro/config.json  (adapter: <linear|jira>, team/project: <key>, captureMode: <chosen>)
          .maestro/context/{product,guidelines,tech-stack,workflow}.md
          .maestro/context/styleguides/
          .maestro/work/
          .maestro/inbox.md
 
-Discovery: <N> native states discovered (transport: <mcp|api|cli>)
+Discovery: <N> native states discovered (transport: <mcp|cli|api>)
            statusMap: <N> canonical statuses mapped, <N> unmapped
            fieldMap: priority (P1/P2/P3 → native), type: <type or null>
 
