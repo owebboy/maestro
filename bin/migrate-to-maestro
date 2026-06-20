@@ -47,6 +47,84 @@ def parse_plan_tasks(plan_md):
     return tasks
 
 
+_TRACK_STATUS = {"pending": "planned", "in_progress": "in-progress", "complete": "done"}
+_DATE_SUFFIX = re.compile(r"[-_]?\d{8}$")
+_TODAY = None  # injected by main(); tests may pass created/updated through metadata
+
+
+def sanitize_slug(old_id):
+    s = _DATE_SUFFIX.sub("", old_id).lower()
+    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+    return s or "item"
+
+
+def _task_lines(tasks):
+    mark = {"todo": " ", "doing": "~", "done": "x"}
+    return "\n".join(f"- [{mark[t['state']]}] {t['ref']} — {t['title']}" for t in tasks)
+
+
+def _render_record(new_id, title, type_, priority, status, weight, created, updated,
+                   body, tasks=None, artifacts=None, note=None):
+    arts = artifacts or []
+    lines = ["---", f"id: {new_id}", f"title: {title}", f"type: {type_}",
+             f"priority: {priority}", f"status: {status}", f"weight: {weight}",
+             f"created: {created}", f"updated: {updated}"]
+    if arts:
+        lines.append("artifacts:")
+        lines += [f"  - {{ kind: {a['kind']}, ref: {a['ref']} }}" for a in arts]
+    lines.append("---")
+    out = "\n".join(lines) + f"\n\n# {title}\n\n" + (body.strip() + "\n" if body.strip() else "")
+    if note:
+        out += f"\n## Notes\n\n> {note}\n"
+    if tasks:
+        out += "\n## Tasks\n\n" + _task_lines(tasks) + "\n"
+    return out
+
+
+def _iter_track_dirs(conductor_dir):
+    base = pathlib.Path(conductor_dir) / "tracks"
+    for d in sorted(base.glob("*")) if base.is_dir() else []:
+        if d.is_dir() and d.name != "_archive":
+            yield d, False
+    arch = base / "_archive"
+    for d in sorted(arch.glob("*")) if arch.is_dir() else []:
+        if d.is_dir():
+            yield d, True
+
+
+def plan_tracks(conductor_dir, seq_start):
+    plans, seq = [], seq_start
+    for d, archived in _iter_track_dirs(conductor_dir):
+        meta = {}
+        mf = d / "metadata.json"
+        if mf.exists():
+            meta = parse_metadata_json(mf.read_text())
+        old_id = meta.get("id", d.name)
+        new_id = f"{seq:04d}-{sanitize_slug(old_id)}"
+        seq += 1
+        status = "done" if archived else _TRACK_STATUS.get(meta.get("status", "pending"), "planned")
+        created = (meta.get("created", "") or "")[:10] or "1970-01-01"
+        updated = (meta.get("updated", "") or "")[:10] or created
+        tasks = []
+        plan_md = d / "plan.md"
+        if plan_md.exists():
+            tasks = parse_plan_tasks(plan_md.read_text())
+        arts = [{"kind": k, "ref": f".maestro/work/{new_id}/{k}.md"}
+                for k in ("spec", "design", "plan") if (d / f"{k}.md").exists()]
+        record_text = _render_record(
+            new_id, meta.get("title", old_id), meta.get("type", "chore"),
+            meta.get("priority", "P3"), status, "tracked", created, updated,
+            body="", tasks=tasks, artifacts=arts,
+            note=f"Migrated from conductor track `{old_id}`.")
+        sub = "archived/done/" if archived else ""
+        work_pairs = [{"src": str(d / f"{k}.md"), "dst": f".maestro/work/{new_id}/{k}.md"}
+                      for k in ("spec", "design", "plan") if (d / f"{k}.md").exists()]
+        plans.append({"old_id": old_id, "new_id": new_id,
+                      "record_path": f".maestro/items/{sub}{new_id}.md",
+                      "record_text": record_text, "work_pairs": work_pairs, "status": status})
+    return plans
+
+
 _CONTEXT_RENAME = {"product-guidelines.md": "guidelines.md"}
 _CONTEXT_PASS = {"product.md", "tech-stack.md", "workflow.md"}
 

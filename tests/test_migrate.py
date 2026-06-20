@@ -51,5 +51,30 @@ class TestContext(unittest.TestCase):
         self.assertFalse(any("tracks.md" in d for d in dsts))         # dropped
 
 
+class TestTracks(unittest.TestCase):
+    def setUp(self):
+        self.plans = migrate.plan_tracks(ROOT / "tests/fixtures/legacy/conductor", 1)
+
+    def test_one_track_planned(self):
+        self.assertEqual(len(self.plans), 1)
+        tp = self.plans[0]
+        self.assertEqual(tp["old_id"], "0001-sample")
+        self.assertTrue(tp["new_id"].endswith("-sample"))
+        self.assertEqual(tp["status"], "in-progress")        # in_progress -> in-progress
+
+    def test_record_has_weight_and_tasks(self):
+        rt = self.plans[0]["record_text"]
+        self.assertIn("weight: tracked", rt)
+        self.assertIn("## Tasks", rt)
+        self.assertIn("[x] 1.1", rt)                         # done task mirrored
+        self.assertIn("[ ] 1.2", rt)
+
+    def test_work_prose_pairs(self):
+        dsts = {p["dst"] for p in self.plans[0]["work_pairs"]}
+        nid = self.plans[0]["new_id"]
+        self.assertIn(f".maestro/work/{nid}/spec.md", dsts)
+        self.assertIn(f".maestro/work/{nid}/plan.md", dsts)
+
+
 if __name__ == "__main__":
     unittest.main()
