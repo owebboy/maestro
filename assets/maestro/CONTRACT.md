@@ -142,3 +142,12 @@ Each profile carries a transport block per op (or a shared one where the mapping
   - `relate` fallback: a `comment` (e.g. "duplicate of #X")
 
 Net: a minimal backend (the 5 core) is usable; tracked features and niceties layer on as the backend supports them.
+
+## Config keys (.maestro/config.json)
+- adapter: files | gitea | github | gitlab | linear-jira
+- backend: { repo?, url?, token? }  (forge/native connection)
+- statusMap: { <canonical>: <native name> }   (remap escape hatch)
+- fieldMap: { priority: {...}, type: {...} }
+- captureMode: local | backend
+- transport: mcp | cli | api   (optional; pins transport, overrides detection)
+- artifactsDir: .maestro/work
