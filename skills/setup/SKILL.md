@@ -412,7 +412,7 @@ For the **files** backend, print:
 Setup complete!
 
 Created: .maestro/CONTRACT.md
-         .maestro/adapters/  (files.md + all forge profiles)
+         .maestro/adapters/  (files.md + all adapter profiles)
          .maestro/config.json  (adapter: files, captureMode: <chosen>)
          .maestro/context/{product,guidelines,tech-stack,workflow}.md
          .maestro/context/styleguides/
@@ -429,7 +429,7 @@ For a **forge** backend (`gitea` / `github` / `gitlab`), print:
 Setup complete!
 
 Created: .maestro/CONTRACT.md
-         .maestro/adapters/  (files.md + all forge profiles)
+         .maestro/adapters/  (files.md + all adapter profiles)
          .maestro/config.json  (adapter: <chosen>, repo: <owner/name>, captureMode: <chosen>)
          .maestro/context/{product,guidelines,tech-stack,workflow}.md
          .maestro/context/styleguides/

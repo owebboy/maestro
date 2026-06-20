@@ -17,7 +17,7 @@ State machine:
 |---|---|---|---|---|
 | `inbox`      | INBOX scratch / `status: inbox`      | open + `status:inbox`                | Triage    | Backlog                    |
 | `triaged`    | `status: triaged`                    | open + `status:triaged`              | Backlog   | To Do                      |
-| `reviewed`   | `status: reviewed`                   | open + `status:reviewed`             | Todo      | Selected                   |
+| `reviewed`   | `status: reviewed`                   | open + `status:reviewed`             | Todo      | Selected for Development    |
 | `planned`    | `status: planned`                    | open + `status:planned`              | Todo      | To Do                      |
 | `in-progress`| `status: in-progress`               | open + `status:in-progress`          | In Progress | In Progress              |
 | `in-review`  | `status: in-review`                 | open + `status:in-review` (or PR open) | In Review | In Review               |
@@ -145,7 +145,7 @@ Net: a minimal backend (the 5 core) is usable; tracked features and niceties lay
 
 ## Config keys (.maestro/config.json)
 - adapter: files | gitea | github | gitlab | linear | jira
-- backend: { repo?, url?, token?, project_id?, team?, project?, email?, stateCache? }  (forge/native connection. repo: github/gitea owner/name. project_id: GitLab project numeric id or path (gitlab MCP/REST). team: Linear team key. project: Jira project key. email: Jira account email. stateCache: linear/jira discovered native states + Jira transition ids, written by /setup and read by set_status/set_subtask_state)
+- backend: { kind?, repo?, url?, token?, project_id?, team?, project?, email?, stateCache? }  (forge/native connection. kind: linear|jira (same value as adapter; the linear-jira profile branches on it). repo: github/gitea owner/name. project_id: GitLab project numeric id or path (gitlab MCP/REST). team: Linear team key. project: Jira project key. email: Jira account email. stateCache: linear/jira discovered native states + Jira transition ids, written by /setup and read by set_status/set_subtask_state)
 - statusMap: { <canonical>: <native name> }   (remap escape hatch)
 - fieldMap: { priority: {...}, type: {...} }
 - captureMode: local | backend

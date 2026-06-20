@@ -330,7 +330,7 @@ After discovery, `/setup` updates `.maestro/config.json` with:
 - `adapter: "linear"` or `adapter: "jira"`
 - Linear: `backend.team` (team KEY, e.g. "ENG"), `backend.token`
 - Jira: `backend.url`, `backend.project` (project KEY), `backend.email`, `backend.token`
-- `backend.stateCache` — Linear: `stateId → name` map for fast lookups; Jira: transition IDs per issue-type
+- `backend.stateCache` — Linear: `name → { id, type }` map (keyed by native state name, as written by `/setup` E.5); Jira: `name → { id, transitionId }` per state. `set_status`/`set_subtask_state` look up by native state name.
 - `statusMap` (only entries that differ from tier-2 defaults, or all if the team provided them)
 - `fieldMap.priority` and `fieldMap.type` (only if non-default)
 

@@ -9,6 +9,8 @@ Every forge adapter profile MUST contain these sections, in order:
 5. `## Operations` — one subsection per op (all 12), each showing the MCP, CLI, and API rendering.
 6. `## Label bootstrap` — idempotent creation of status:*/type:*/priority:* (and maestro:tracked).
 
+**Native-tracker variant:** profiles for backends with native workflow states (e.g. `linear-jira.md`, serving `linear`/`jira`) follow sections 1–5 but substitute a `## State setup` section for section 6's `## Label bootstrap` — there are no labels to create; instead `/setup` discovers the team's native states and writes a `config.statusMap`. Such profiles also branch their per-op renderings on the active adapter name.
+
 ## Shared transport-detection recipe (MCP > CLI > API)
 
 Run once per session, before the first op:
