@@ -154,5 +154,100 @@ class TestPlanAndApply(unittest.TestCase):
         self.assertTrue(items)
 
 
+class TestUnmatchedDeduplicate(unittest.TestCase):
+    """Regression tests for C1: two same-slug unmatched advanced issues must get unique ids."""
+
+    def _make_orphan_issue(self, directory, filename, advanced_to="nonexistent-track-xyz"):
+        """Write a tracked issue file (status: tracked) that will become unmatched."""
+        content = (
+            "---\n"
+            "status: tracked\n"
+            "type: chore\n"
+            "priority: P3\n"
+            "filed: 2026-06-01\n"
+            f"advanced-to: {advanced_to}\n"
+            "---\n\n"
+            "# Orphan issue\n\nBody text.\n"
+        )
+        (directory / filename).write_text(content)
+
+    def setUp(self):
+        self.tmp = pathlib.Path(tempfile.mkdtemp())
+        # Minimal conductor: needs tracks dir (even if empty) so build_plan runs without error
+        (self.tmp / "conductor" / "tracks").mkdir(parents=True)
+        # issues dir with two files whose stems sanitize to the SAME slug
+        # 'feature--cache.md' and 'feature-cache.md' both produce slug 'feature-cache'
+        issues_dir = self.tmp / "issues"
+        issues_dir.mkdir()
+        self._make_orphan_issue(issues_dir, "feature--cache.md")
+        self._make_orphan_issue(issues_dir, "feature-cache.md")
+        # package assets required by apply_plan
+        (self.tmp / "assets" / "maestro" / "adapters").mkdir(parents=True)
+        (self.tmp / "assets" / "maestro" / "CONTRACT.md").write_text("# Contract\n")
+        (self.tmp / "assets" / "maestro" / "adapters" / "files.md").write_text("# files\n")
+        (self.tmp / "assets" / "maestro" / "config.template.json").write_text('{"adapter":"files"}\n')
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_two_same_slug_unmatched_have_distinct_new_ids(self):
+        """build_plan must assign distinct new_id values to two unmatched issues with the same slug."""
+        plan = migrate.build_plan(self.tmp)
+        unmatched_items = [it for it in plan["items"] if it.get("advanced_to") is None
+                          and "feature-cache" in it["new_id"]]
+        # Both files are unmatched (track nonexistent-track-xyz does not exist)
+        self.assertEqual(len(plan["unmatched"]), 2,
+                         "Expected 2 unmatched merge candidates")
+        # Both should end up as items in the plan
+        orphan_items = [it for it in plan["items"] if "feature-cache" in it["new_id"]]
+        self.assertEqual(len(orphan_items), 2,
+                         "Expected 2 items containing 'feature-cache' in new_id")
+        ids = [it["new_id"] for it in orphan_items]
+        self.assertEqual(len(set(ids)), 2, f"new_ids must be distinct, got: {ids}")
+
+    def test_two_same_slug_unmatched_have_distinct_record_paths(self):
+        """build_plan must produce distinct record_path values for two same-slug unmatched issues."""
+        plan = migrate.build_plan(self.tmp)
+        orphan_paths = [it["record_path"] for it in plan["items"]
+                        if "feature-cache" in it["new_id"]]
+        self.assertEqual(len(orphan_paths), 2)
+        self.assertEqual(len(set(orphan_paths)), 2,
+                         f"record_paths must be distinct, got: {orphan_paths}")
+
+    def test_apply_plan_both_unmatched_records_survive(self):
+        """apply_plan must write both unmatched records; neither overwrites the other."""
+        plan = migrate.build_plan(self.tmp)
+        migrate.apply_plan(self.tmp, plan)
+        items_dir = self.tmp / ".maestro" / "items"
+        orphan_files = list(items_dir.glob("*feature-cache*.md"))
+        self.assertEqual(len(orphan_files), 2,
+                         f"Expected 2 orphan record files on disk, found: {orphan_files}")
+        # Verify neither was clobbered: the two files must have DIFFERENT content
+        # (each preserves its own stem as title: 'feature--cache' vs 'feature-cache')
+        texts = [f.read_text() for f in sorted(orphan_files)]
+        self.assertNotEqual(texts[0], texts[1],
+                            "The two orphan records must have distinct content (not clobbered)")
+        # Specifically: each record carries its own distinct id in the frontmatter
+        ids_in_files = set()
+        for text in texts:
+            for line in text.splitlines():
+                if line.startswith("id: "):
+                    ids_in_files.add(line[4:].strip())
+        self.assertEqual(len(ids_in_files), 2,
+                         f"Each record must have a distinct id in frontmatter, got: {ids_in_files}")
+
+    def test_collision_guard_raises_on_duplicate_destinations(self):
+        """apply_plan must raise ValueError if the plan contains duplicate destinations."""
+        plan = migrate.build_plan(self.tmp)
+        # Manually inject a duplicate destination to trigger the guard
+        if plan["items"]:
+            dup = dict(plan["items"][0])
+            dup["record_text"] = "---\nid: dup\ntitle: dup\ntype: chore\npriority: P3\nstatus: reviewed\nweight: light\ncreated: 1970-01-01\nupdated: 1970-01-01\n---\n\n# dup\n"
+            plan["items"].append(dup)
+        with self.assertRaises(ValueError) as ctx:
+            migrate.apply_plan(self.tmp, plan)
+        self.assertIn("colliding destinations", str(ctx.exception))
+
+
 if __name__ == "__main__":
     unittest.main()

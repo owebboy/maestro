@@ -235,9 +235,11 @@ def build_plan(repo_root):
     seq_after = 1 + len(tracks)
     items, merges = (plan_issues(issues, 100 + seq_after) if issues.exists() else ([], []))
     tracks, unmatched = apply_merges(tracks, merges)
+    next_seq = 100 + seq_after + len(items)
     for mc in unmatched:  # advanced issue with no surviving track -> light reviewed item
         name = pathlib.Path(mc["old_path"]).stem
-        nid = f"{900:04d}-{sanitize_slug(name)}"
+        nid = f"{next_seq:04d}-{sanitize_slug(name)}"
+        next_seq += 1
         items.append({"old_path": mc["old_path"], "new_id": nid,
                       "record_path": f".maestro/items/{nid}.md",
                       "record_text": _render_record(nid, name, mc["fm"].get("type", "chore"),
@@ -286,6 +288,25 @@ def _write(repo_root, rel, text):
 
 def apply_plan(repo_root, plan, remove_legacy=False):
     repo_root = pathlib.Path(repo_root)
+    # Defense-in-depth: detect any duplicate destinations before writing anything.
+    all_dsts = list(plan["assets"].values())
+    for p in plan["context"]:
+        all_dsts.append(p["dst"])
+    for tp in plan["tracks"]:
+        all_dsts.append(tp["record_path"])
+        for w in tp["work_pairs"]:
+            all_dsts.append(w["dst"])
+    for it in plan["items"]:
+        all_dsts.append(it["record_path"])
+    if plan["inbox"]:
+        all_dsts.append(plan["inbox"]["dst"])
+    seen, dupes = set(), set()
+    for d in all_dsts:
+        if d in seen:
+            dupes.add(d)
+        seen.add(d)
+    if dupes:
+        raise ValueError(f"migration plan has colliding destinations: {sorted(dupes)}")
     for src_rel, dst_rel in plan["assets"].items():
         _write(repo_root, dst_rel, (repo_root / "assets/maestro" / src_rel).read_text())
     for p in plan["context"]:
