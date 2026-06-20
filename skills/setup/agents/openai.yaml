@@ -1,7 +1,7 @@
 interface:
   display_name: "Setup"
-  short_description: "Initialize conductor project context."
-  default_prompt: "Use $setup to initialize Maestro conductor context for this repository."
+  short_description: "Initialize .maestro project context."
+  default_prompt: "Use $setup to initialize Maestro .maestro/ context and adapter for this repository."
 
 policy:
   allow_implicit_invocation: false

@@ -1,25 +1,25 @@
 ---
 name: setup
-description: Use when starting a new project with Maestro, or when the conductor/ directory does not exist yet and needs initializing.
+description: Use when starting a new project with Maestro, or when the .maestro/ directory does not exist yet and needs initializing.
 argument-hint: "[--resume]"
 ---
 
 # Project Setup
 
-Initialize project context through interactive Q&A. Creates the `conductor/` directory with foundational documents that inform all other workflow skills.
+Initialize project context through interactive Q&A. Creates the `.maestro/` directory with foundational documents that inform all other workflow skills, and copies package assets into it.
 
 ## Pre-flight
 
-1. Check if `conductor/` already exists:
-   - If `conductor/product.md` exists: ask whether to resume or reinitialize
-   - If `conductor/setup_state.json` exists with incomplete status: offer to resume
+1. Check if `.maestro/` already exists:
+   - If `.maestro/context/product.md` exists: ask whether to resume or reinitialize
+   - If `.maestro/setup_state.json` exists with incomplete status: offer to resume
 2. Detect project type:
    - **Greenfield**: no .git, no package.json/go.mod/requirements.txt/Cargo.toml, no src/
    - **Brownfield**: any of the above exist — analyze existing code to pre-populate answers
 
 ## Interactive Q&A
 
-**Rules:** Ask ONE question per turn. Wait for response. Offer 2-3 suggested answers plus "Type your own." Ask no more than 5 questions per section; some sections cap lower, as noted in each section heading. Save progress to `conductor/setup_state.json` after each step.
+**Rules:** Ask ONE question per turn. Wait for response. Offer 2-3 suggested answers plus "Type your own." Ask no more than 5 questions per section; some sections cap lower, as noted in each section heading. Save progress to `.maestro/setup_state.json` after each step.
 
 ### Section 1: Product (max 5 questions)
 
@@ -58,21 +58,56 @@ For brownfield: scan for package.json, go.mod, requirements.txt, Cargo.toml firs
 
 ## Artifact Generation
 
-After Q&A, generate these files populated with answers:
+After Q&A, perform two steps in order:
+
+### Step A: Copy package assets
+
+Copy the three package assets from `assets/maestro/` into `.maestro/`. These are idempotent — overwrite `CONTRACT.md` and `adapters/files.md` on every run (they are package-managed); NEVER overwrite `.maestro/config.json` if it already exists (it is project-owned).
+
+| Source (package) | Destination |
+|---|---|
+| `assets/maestro/CONTRACT.md` | `.maestro/CONTRACT.md` |
+| `assets/maestro/adapters/files.md` | `.maestro/adapters/files.md` |
+| `assets/maestro/config.template.json` | `.maestro/config.json` (only if not already present) |
+
+### Step B: Generate context files
+
+Generate these files populated with Q&A answers:
 
 | File | Purpose |
 |------|---------|
-| `conductor/index.md` | Navigation hub with links to all context docs |
-| `conductor/product.md` | Product vision, problem, users, goals |
-| `conductor/product-guidelines.md` | Voice, tone, design principles |
-| `conductor/tech-stack.md` | Languages, frameworks, infra, dependencies |
-| `conductor/workflow.md` | TDD policy, commits, reviews, verification rules |
-| `conductor/tracks.md` | Track registry with standard table format |
-| `conductor/code_styleguides/` | Language-specific conventions |
+| `.maestro/context/product.md` | Product vision, problem, users, goals |
+| `.maestro/context/guidelines.md` | Voice, tone, design principles |
+| `.maestro/context/tech-stack.md` | Languages, frameworks, infra, dependencies |
+| `.maestro/context/workflow.md` | TDD policy, commits, reviews, verification rules |
+| `.maestro/context/styleguides/markdown.md` | Markdown conventions |
+| `.maestro/context/styleguides/bash.md` | Bash conventions |
+| `.maestro/context/styleguides/json.md` | JSON conventions |
+
+Also create the following empty directories and files:
+
+| Path | Notes |
+|------|-------|
+| `.maestro/work/` | Prose artifacts dir (spec.md, design.md, plan.md per item) |
+| `.maestro/items/` | Files-adapter registry root |
+| `.maestro/items/archived/done/` | Archived terminal: done |
+| `.maestro/items/archived/wont-fix/` | Archived terminal: wont-fix |
+| `.maestro/items/archived/deferred/` | Archived terminal: deferred |
+| `.maestro/items/archived/duplicate/` | Archived terminal: duplicate |
+| `.maestro/inbox.md` | Pre-triage scratch (create from template if not present) |
+
+The inbox template (written only if `.maestro/inbox.md` does not already exist):
+```
+# Inbox
+
+Pre-triage scratch. One bullet per raw item; triage converts these into work items.
+
+## Inbox
+```
 
 ## State Management
 
-Track progress in `conductor/setup_state.json`. Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it.
+Track progress in `.maestro/setup_state.json`. Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it.
 ```json
 {
   "status": "in_progress|complete",
@@ -85,49 +120,17 @@ Track progress in `conductor/setup_state.json`. Get the current timestamp by run
 }
 ```
 
-## tracks.md Format (CRITICAL)
-
-The generated `conductor/tracks.md` MUST use this exact format. Downstream skills (`/new-track` in Claude Code or `$new-track` in Codex, and likewise `/status`, `/manage`, `/implement`, `/uat-create`) parse this table by convention:
-
-```markdown
-# Tracks Registry
-
-## Status Legend
-
-- `[ ]` Pending
-- `[~]` In Progress
-- `[x]` Completed
-
-## Active Tracks
-
-| Status | Track ID | Title | Created | Updated |
-| ------ | -------- | ----- | ------- | ------- |
-
-## Archived Tracks
-
-<!-- Tracks archived via /manage in Claude Code or $manage in Codex appear here -->
-```
-
-Do NOT deviate from this table structure. The status column uses checkbox markers (`[ ]`, `[~]`, `[x]`). The Track ID column must match directory names under `conductor/tracks/`.
+Setup is `complete` only after both package assets are copied AND all context sections are done (`completed_sections` contains all five: `product`, `guidelines`, `tech_stack`, `workflow`, `styleguides`).
 
 ## Artifact Templates
 
-`tracks.md` uses the strict format above (it is parsed by convention). The other artifacts are not parsed, so each only needs the section structure below — populate every section from the Q&A answers, and keep them terse and scannable (tables, bullets, and checklists over prose).
-
-### index.md
-
-A static navigation hub — no per-track rows (the track registry is `tracks.md`). Sections:
-
-- `# Conductor Index` and a one-line intro
-- `## Context Documents` — a bullet link to each of `product.md`, `product-guidelines.md`, `tech-stack.md`, `workflow.md`, `tracks.md`, and `code_styleguides/`, each with a one-line purpose
-- `## Related (outside conductor/)` — links to `../README.md` and `../issues/`
-- `## Quick Commands` — a table of common skills and what each does
+The context files are not parsed by downstream skills, so each only needs the section structure below — populate every section from the Q&A answers, and keep them terse and scannable (tables, bullets, and checklists over prose).
 
 ### product.md
 
 `## Name` · `## Description` · `## Problem Statement` · `## Target Users` · `## Key Goals`
 
-### product-guidelines.md
+### guidelines.md
 
 `## Voice & Tone` · `## Design Principles` · `## Applying These`
 
@@ -139,7 +142,7 @@ A static navigation hub — no per-track rows (the track registry is `tracks.md`
 
 `## TDD / Verification Discipline` · `## Commit Strategy` · `## Code Review` · `## Verification Checkpoints` · `## Track Lifecycle`
 
-### code_styleguides/
+### context/styleguides/
 
 One file per language chosen in Section 5 (e.g. `markdown.md`, `bash.md`, `json.md`). Each file: a one-line intro plus `## Formatting`, `## Conventions`, and `## Anti-patterns` sections with project-specific rules.
 
@@ -148,8 +151,14 @@ One file per language chosen in Section 5 (e.g. `markdown.md`, `bash.md`, `json.
 ```
 Setup complete!
 
-Created: conductor/{index,product,product-guidelines,tech-stack,workflow,tracks}.md
-         conductor/code_styleguides/
+Created: .maestro/CONTRACT.md
+         .maestro/adapters/files.md
+         .maestro/config.json
+         .maestro/context/{product,guidelines,tech-stack,workflow}.md
+         .maestro/context/styleguides/
+         .maestro/work/
+         .maestro/items/  (+ archived/{done,wont-fix,deferred,duplicate}/)
+         .maestro/inbox.md
 
 Next: Run /new-track in Claude Code or $new-track in Codex to create your first track.
 ```
