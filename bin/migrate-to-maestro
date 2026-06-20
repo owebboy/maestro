@@ -205,6 +205,26 @@ def plan_context(conductor_dir):
     return pairs
 
 
+_INBOX_HEADER = ("# Inbox\n\nPre-triage scratch. Run /triage (or $triage) to convert "
+                 "bullets into work items.\n\n## Inbox\n")
+
+
+def plan_inbox(issues_dir):
+    inbox = pathlib.Path(issues_dir) / "INBOX.md"
+    if not inbox.exists():
+        return None
+    bullets = []
+    in_section = False
+    for line in inbox.read_text().splitlines():
+        if line.strip().lower().startswith("## inbox"):
+            in_section = True
+            continue
+        if in_section and line.strip().startswith("- "):
+            bullets.append(line.rstrip())
+    text = _INBOX_HEADER + ("\n".join(bullets) + "\n" if bullets else "")
+    return {"dst": ".maestro/inbox.md", "text": text}
+
+
 def parse_args(argv):
     p = argparse.ArgumentParser(prog="migrate-to-maestro",
                                 description="Migrate conductor/ + issues/ to .maestro/")

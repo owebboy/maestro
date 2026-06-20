@@ -108,5 +108,13 @@ class TestMerge(unittest.TestCase):
         self.assertEqual(len(merged), 1)
 
 
+class TestInbox(unittest.TestCase):
+    def test_inbox_bullets_carried_over(self):
+        plan = migrate.plan_inbox(ROOT / "tests/fixtures/legacy/issues")
+        self.assertEqual(plan["dst"], ".maestro/inbox.md")
+        self.assertIn("## Inbox", plan["text"])
+        self.assertIn("-", plan["text"])  # at least one bullet preserved
+
+
 if __name__ == "__main__":
     unittest.main()
