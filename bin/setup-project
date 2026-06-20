@@ -338,7 +338,7 @@ write_claude_settings_with_hooks() {
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/session-start-issues.sh" }
+          { "type": "command", "command": ".claude/hooks/session-start-maestro.sh" }
         ]
       }
     ],
@@ -346,7 +346,7 @@ write_claude_settings_with_hooks() {
       {
         "matcher": "Write|Edit",
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/validate-issue-frontmatter.sh" }
+          { "type": "command", "command": ".claude/hooks/validate-item-frontmatter.sh" }
         ]
       }
     ]
@@ -361,10 +361,10 @@ print_claude_hook_snippet() {
   {
     "hooks": {
       "SessionStart": [
-        { "hooks": [{ "type": "command", "command": ".claude/hooks/session-start-issues.sh" }] }
+        { "hooks": [{ "type": "command", "command": ".claude/hooks/session-start-maestro.sh" }] }
       ],
       "PostToolUse": [
-        { "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": ".claude/hooks/validate-issue-frontmatter.sh" }] }
+        { "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": ".claude/hooks/validate-item-frontmatter.sh" }] }
       ]
     }
   }
@@ -407,7 +407,7 @@ write_codex_hooks_json() {
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": ".codex/hooks/session-start-issues.sh" }
+          { "type": "command", "command": ".codex/hooks/session-start-maestro.sh" }
         ]
       }
     ]
@@ -422,7 +422,7 @@ print_codex_hook_snippet() {
   {
     "hooks": {
       "SessionStart": [
-        { "hooks": [{ "type": "command", "command": ".codex/hooks/session-start-issues.sh" }] }
+        { "hooks": [{ "type": "command", "command": ".codex/hooks/session-start-maestro.sh" }] }
       ]
     }
   }
@@ -433,7 +433,7 @@ install_codex_hooks() {
   local hooks_src="$SCRIPT_DIR/bin/hooks"
   local hooks_dest="$TARGET_DIR/.codex/hooks"
   local hooks_json="$TARGET_DIR/.codex/hooks.json"
-  local session_start_hook="$hooks_src/session-start-issues.sh"
+  local session_start_hook="$hooks_src/session-start-maestro.sh"
 
   [[ -f "$session_start_hook" ]] || return
 
