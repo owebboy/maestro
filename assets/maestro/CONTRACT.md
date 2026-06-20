@@ -34,6 +34,15 @@ GitLab uses **scoped labels** (`status::reviewed`), which are natively mutually-
 2. **The remap escape hatch.** Jira/Linear workflows are per-team and custom. `config.statusMap` remaps canonical → native names (`{ "reviewed": "Selected for Dev" }`) so a user fits Maestro to their board without editing any skill.
 3. **Fields, not just status.** `type` (bug/feature/refactor/chore) → `type:*` label or native issue-type; `priority` (P1/P2/P3) → `priority:*` label or native priority; `weight` (light/tracked) → presence of a plan/sub-issues (or a `maestro:tracked` label). Same canonical→native mapping pattern, via `config.fieldMap`.
 
+## Op execution protocol
+
+To perform ANY operation below, the executing agent:
+1. Reads `.maestro/config.json` and takes the `adapter` field (default `files`).
+2. Loads the matching profile `.maestro/adapters/<adapter>.md`.
+3. Follows that profile's recipe for the op, resolving transport per "Transport resolution" below.
+
+Skills never hard-code an adapter name or a transport — they call the abstract op, and the active profile decides how it is carried out.
+
 ## The 12 operations
 
 ### CRUD + lifecycle (required — every backend)
