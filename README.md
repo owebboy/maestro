@@ -102,6 +102,8 @@ Maestro stores work items through a pluggable adapter, chosen at `/setup`:
 
 The lifecycle skills are backend-agnostic — they speak abstract operations against whichever adapter `config.json` names. `/setup` captures the connection and bootstraps the required labels (idempotent) for forge backends. For the native trackers (`linear`/`jira`) `/setup` instead discovers the team's workflow states and writes a `config.statusMap` that maps Maestro's canonical statuses onto that team's custom states — so any board layout works without editing a skill. Both `linear` and `jira` load the one `adapters/linear-jira.md` profile.
 
+Adapter capability matrix and a guide to writing a new adapter: [docs/adapters/](docs/adapters/)
+
 Full Codex setup and compatibility details: [codex/INSTALL.md](codex/INSTALL.md)
 
 ## Architecture
