@@ -1,124 +1,51 @@
 ---
 name: triage
-description: Use when issues/INBOX.md has unprocessed bullets that need to become structured issue files.
-argument-hint: "[issues-directory]"
+description: Use when .maestro/inbox.md has unprocessed bullets that need to become structured work items.
+argument-hint: ""
 ---
 
 # Triage
 
-Parse INBOX.md bullets into structured issue files.
-
-**Argument:** issues directory path (default: `issues/`)
+Convert `.maestro/inbox.md` bullets into structured work items.
 
 ## Process
 
-1. **Bootstrap** — if `issues/` directory or `issues/INBOX.md` does not exist:
-   - Create `issues/` directory
-   - Create `issues/archived/{tracked,implemented,deferred,wont-fix,duplicate}/`
-   - Create `issues/INBOX.md` with this content:
-     ```markdown
-     # Issue Inbox
+1. **Read** `.maestro/inbox.md` — extract bullets under `## Inbox`
+   - If the file does not exist or has no bullets, inform user and stop
 
-     Add issues as bullet points below. Run `/triage` in Claude Code or `$triage` in Codex to process them into individual issue files.
+2. **Dedup** — for each bullet, call `search(<bullet text>)`
+   - If a candidate is a strong match (same problem, same scope), ask before creating
+   - Offer `relate(new, duplicate-of, existing)` instead of creating a second item
+   - Only flag as duplicate if an **active** item (status not in `done`, `wont-fix`, `deferred`, `duplicate`) already covers the same problem
+   - When overlap is ambiguous, present both candidates and let the user decide
 
-     ## Format
-
-     - <description>
-     - <description> (type: bug, priority: P1)
-
-     Type and priority are optional — triage will infer them.
-
-     **Types:** bug | feature | refactor | chore
-     **Priorities:** P1 (blocking) | P2 (important) | P3 (nice-to-have)
-
-     ## Inbox
-
-     ```
-   - Inform the user: "Created issues/INBOX.md. Add bullets under ## Inbox and run /triage in Claude Code or $triage in Codex again."
-   - Stop (nothing to triage yet)
-
-2. **Read** `issues/INBOX.md` — extract bullets under `## Inbox`
-   - If no bullets found, inform user and stop
-
-3. **Dedup** — for each bullet, check for overlap with:
-   - Existing `issues/*.md` files (read their frontmatter and Summary sections)
-   - **Active** conductor tracks only (check `conductor/tracks.md` for status, if conductor/ exists)
-   - INBOX bullets are typically follow-ups from completed tracks or brand-new issues — completed/archived tracks are NOT duplicates
-   - Only flag as duplicate if an **active** track or **open** issue already covers the same problem
-   - If a genuine duplicate is found, ask user whether to skip or create anyway
-
-4. **Classify** each bullet — infer from description, confirm with user:
+3. **Classify** each bullet — infer from description, confirm with user:
    - **Type:** bug | feature | refactor | chore
    - **Priority:** P1 (blocking/critical) | P2 (important) | P3 (nice-to-have)
 
-5. **Ensure archive directories exist**: create `issues/archived/{tracked,implemented,deferred,wont-fix,duplicate}/` if missing (needed by `/issue-advance`, `/issue-close`, and `/implement` direct issue mode).
-
-6. **Polish descriptions** — before writing issue files, tighten the expanded Summary and Problem Description for each bullet:
+4. **Polish descriptions** — before creating items, tighten the Summary and Problem Description for each bullet:
    - Detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory)
    - If found, invoke it on the draft descriptions (batch all bullets in a single invocation)
    - If not available, do a quick inline pass: remove filler words, prefer active voice, keep each description to 1-2 sentences
    - Do not change technical meaning — only improve clarity
 
-7. **Create issue file** for each bullet using the template:
-   - Filename: `issues/YYYY-MM-DD-<slug>.md`
-   - Slug: 2-4 lowercase hyphenated words from the description
-   - Date: today — Get today's date by running `date +%Y-%m-%d` — do not assume you know it.
+5. **Create item** for each bullet:
+   - Call `create_item({title, type, priority, body, weight: light})`
+   - Then call `set_status(id, triaged)` on the returned id
+   - The adapter handles id minting, `created` timestamp, and file placement
 
-8. **Display summary table:**
+6. **Display summary table:**
 
-   | File | Type | Priority | Summary |
-   |------|------|----------|---------|
-   | 2026-02-24-timer-pause.md | bug | P1 | Timer doesn't pause... |
+   | ID | Type | Priority | Summary |
+   |----|------|----------|---------|
+   | 0042-timer-pause | bug | P1 | Timer doesn't pause... |
 
-9. **Clear processed bullets** from INBOX.md after user confirms
+7. **Clear processed bullets** from `.maestro/inbox.md` after user confirms
    - Leave the `## Inbox` header intact
 
 ## Error Handling
 
-- **Malformed bullets**: If a bullet lacks a clear description (e.g., just a URL or single word), ask the user to clarify before creating an issue file.
-- **INBOX.md has non-bullet content under ## Inbox**: Ignore non-bullet lines (paragraphs, headers, blank lines) — only process lines starting with `- `.
-- **Duplicate detection uncertain**: When overlap is ambiguous (e.g., similar but not identical descriptions), present both items and let the user decide.
-- **File write failure**: If an issue file can't be created, report the error and continue with remaining bullets. Do not clear any bullets from INBOX until their issue files are confirmed written.
-
-## Issue Template
-
-Use this template for each issue file. Fill in the `<placeholders>` with data from the inbox bullet.
-
-```markdown
----
-status: triaged
-type: bug | feature | refactor | chore
-priority: P1 | P2 | P3
-filed: YYYY-MM-DD
----
-
-# Issue: <title>
-
-## Summary
-
-<1-2 sentences>
-
-## Problem Description
-
-<expanded description>
-
-## Acceptance Criteria
-
-- [ ] <at least one>
-
-## Technical Context
-
-<!-- Filled by /issue-review -->
-
-### Affected Files
-
-### Related Tests
-
-### Similar Patterns
-
-## Dependencies
-
-## Out of Scope
-
-## Notes
-```
+- **Malformed bullets**: If a bullet lacks a clear description (e.g., just a URL or single word), ask the user to clarify before creating an item.
+- **.maestro/inbox.md has non-bullet content under ## Inbox**: Ignore non-bullet lines (paragraphs, headers, blank lines) — only process lines starting with `- `.
+- **Duplicate detection uncertain**: When overlap is ambiguous, present both items and let the user decide.
+- **Item creation failure**: If `create_item` or `set_status` fails, report the error and continue with remaining bullets. Do not clear any bullets from inbox until their items are confirmed created.
