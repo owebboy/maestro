@@ -129,7 +129,9 @@ If a forge (`gitea`, `github`, or `gitlab`) was chosen:
 
 2. **Base URL** (self-hosted only — gitea and gitlab) — ask for the instance URL (e.g. `https://gitea.example.com`). Write to `config.backend.url`. Skip for github (always `https://api.github.com`).
 
-3. **Transport detection** — run the shared recipe (see below) to determine which transport is available. Report the resolved transport to the user. If none resolves, print the exact auth command for each transport and STOP — do not continue setup and do not fall back to the files adapter.
+3. **GitLab project ID** (gitlab only) — ask for the project's numeric ID or full path (e.g. `42` or `acme/myapp`); the numeric ID is preferred for the REST API. Write to `config.backend.project_id`. (The `glab` CLI resolves the project from repo context, so this is needed only for the MCP and API transports — capture it regardless so any transport works. The gitlab adapter's REST base is `config.backend.url/api/v4/projects/<project_id>/issues`.)
+
+4. **Transport detection** — run the shared recipe (see below) to determine which transport is available. Report the resolved transport to the user. If none resolves, print the exact auth command for each transport and STOP — do not continue setup and do not fall back to the files adapter.
 
    Backend-specific detection values:
 
@@ -146,7 +148,7 @@ If a forge (`gitea`, `github`, or `gitlab`) was chosen:
    4. **API:** else if `config.backend.token` or the backend's standard env var is set → resolved = `api`.
    5. **None:** STOP. Tell the user exactly which of MCP / CLI / API to set up, with the one-line auth command for each. Never silently fall back to `files`.
 
-4. **Pin transport (optional)** — offer the user the option to pin the resolved transport by setting `config.transport` in `config.json`. If they decline, leave `config.transport` unset (detection runs each session).
+5. **Pin transport (optional)** — offer the user the option to pin the resolved transport by setting `config.transport` in `config.json`. If they decline, leave `config.transport` unset (detection runs each session).
 
 ### Step E: Label bootstrap
 
