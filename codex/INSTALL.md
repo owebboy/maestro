@@ -96,6 +96,10 @@ Maestro uses a unified `.maestro/` directory for all workflow data — context, 
 
 Skills read from and write to `.maestro/`. The SessionStart hook (`session-start-maestro.sh`) summarizes work items at the start of each Codex session.
 
+### Work-item backends
+
+The work-item store is a pluggable adapter, chosen at `$setup`: `files` (default — local Markdown in `.maestro/items/`), `gitea` (MCP / `tea` / REST), `github` (`gh` / REST), or `gitlab` (`glab` / REST, scoped labels). All adapter profiles ship under `assets/maestro/adapters/` and are copied into `.maestro/adapters/`. Lifecycle skills stay backend-agnostic; the active adapter is named in `config.json`, and forge backends resolve transport in MCP > CLI > API order. `$setup` captures the connection and idempotently bootstraps the required labels.
+
 ### Migrating from the legacy layout
 
 If your project used the old two-directory model (a `conductor` directory for tracks plus an `issues` directory for the pipeline), run the bundled migrator:

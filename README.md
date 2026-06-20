@@ -87,6 +87,19 @@ The helper installs Maestro only. Install Superpowers separately via its officia
 
 The helper bootstraps a `.maestro/` directory (layout: `config.json` plus the package-managed `CONTRACT.md` and `adapters/`, then `context/`, `work/`, `items/`, `inbox.md`), installs compatible hook scripts, and creates `.claude/settings.json` with hook config when that file does not already exist.
 
+### Work-item backends
+
+Maestro stores work items through a pluggable adapter, chosen at `/setup`:
+
+| Adapter | Backend | Notes |
+|---------|---------|-------|
+| `files` | local Markdown in `.maestro/items/` | default — solo/local, no service needed |
+| `gitea` | Gitea issues | MCP / `tea` CLI / REST; plain `status:*` labels |
+| `github` | GitHub issues | `gh` CLI / REST; plain `status:*` labels |
+| `gitlab` | GitLab issues | `glab` CLI / REST; scoped `status::*` labels |
+
+The lifecycle skills are backend-agnostic — they speak abstract operations against whichever adapter `config.json` names. `/setup` captures the connection and bootstraps the required labels (idempotent) for forge backends.
+
 Full Codex setup and compatibility details: [codex/INSTALL.md](codex/INSTALL.md)
 
 ## Architecture
