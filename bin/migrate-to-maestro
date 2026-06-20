@@ -125,6 +125,49 @@ def plan_tracks(conductor_dir, seq_start):
     return plans
 
 
+_ISSUE_STATUS = {"triaged": "triaged", "reviewed": "reviewed", "implemented": "done",
+                 "wont-fix": "wont-fix", "deferred": "deferred", "duplicate": "duplicate"}
+
+
+def _iter_issue_files(issues_dir):
+    issues_dir = pathlib.Path(issues_dir)
+    for f in sorted(issues_dir.glob("*.md")):
+        if f.name != "INBOX.md":
+            yield f, None
+    arch = issues_dir / "archived"
+    for reason_dir in sorted(arch.glob("*")) if arch.is_dir() else []:
+        if reason_dir.is_dir():
+            for f in sorted(reason_dir.glob("*.md")):
+                yield f, reason_dir.name
+
+
+def plan_issues(issues_dir, seq_start):
+    items, merges, seq = [], [], seq_start
+    for f, reason in _iter_issue_files(issues_dir):
+        fm, body = split_frontmatter(f.read_text())
+        old_status = fm.get("status", "triaged")
+        slug = sanitize_slug(f.stem)
+        if old_status == "tracked":
+            merges.append({"old_path": str(f), "advanced_to": fm.get("advanced-to", ""),
+                           "body": body, "fm": fm})
+            continue
+        canonical = _ISSUE_STATUS.get(old_status, "triaged")
+        new_id = f"{seq:04d}-{slug}"
+        seq += 1
+        created = fm.get("filed", "") or "1970-01-01"
+        terminal = canonical in ("done", "wont-fix", "deferred", "duplicate")
+        sub = f"archived/{canonical}/" if (reason or terminal) else ""
+        record_text = _render_record(new_id, fm.get("title", f.stem),
+                                     fm.get("type", "chore"), fm.get("priority", "P3"),
+                                     canonical, "light", created, created, body=body,
+                                     note=f"Migrated from issue `{f.name}`.")
+        items.append({"old_path": str(f), "new_id": new_id,
+                      "record_path": f".maestro/items/{sub}{new_id}.md",
+                      "record_text": record_text, "status": canonical,
+                      "advanced_to": None})
+    return items, merges
+
+
 _CONTEXT_RENAME = {"product-guidelines.md": "guidelines.md"}
 _CONTEXT_PASS = {"product.md", "tech-stack.md", "workflow.md"}
 

@@ -76,5 +76,24 @@ class TestTracks(unittest.TestCase):
         self.assertIn(f".maestro/work/{nid}/plan.md", dsts)
 
 
+class TestIssues(unittest.TestCase):
+    def setUp(self):
+        self.items, self.merges = migrate.plan_issues(
+            ROOT / "tests/fixtures/legacy/issues", 100)
+
+    def test_open_issue_becomes_light_item(self):
+        opens = [i for i in self.items if i["status"] == "reviewed"]
+        self.assertEqual(len(opens), 1)
+        self.assertIn("weight: light", opens[0]["record_text"])
+
+    def test_archived_wont_fix_routes_to_archive(self):
+        wf = [i for i in self.items if i["status"] == "wont-fix"]
+        self.assertTrue(wf and "archived/wont-fix/" in wf[0]["record_path"])
+
+    def test_tracked_issue_is_merge_candidate(self):
+        self.assertEqual(len(self.merges), 1)
+        self.assertEqual(self.merges[0]["advanced_to"], "0001-sample")
+
+
 if __name__ == "__main__":
     unittest.main()
