@@ -9,6 +9,32 @@
 input=$(cat)
 file_path=$(echo "$input" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"//; s/"$//')
 
+# Validate .maestro/config.json when written/edited
+if [[ "$file_path" == *.maestro/config.json ]]; then
+  [[ -f "$file_path" ]] || exit 0
+  config_errors=""
+  add_config_error() { config_errors="${config_errors}"$'\n'"  - $1"; }
+
+  # Assert valid JSON
+  if ! python3 -m json.tool "$file_path" >/dev/null 2>&1; then
+    add_config_error "config.json is not valid JSON"
+  else
+    # Assert known adapter value
+    adapter=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('adapter',''))" "$file_path" 2>/dev/null)
+    case "$adapter" in
+      files|gitea|github|gitlab|linear|jira) ;;
+      "") add_config_error "config.json missing 'adapter' field" ;;
+      *)  add_config_error "config.json has unknown adapter '$adapter' (expected: files|gitea|github|gitlab|linear|jira)" ;;
+    esac
+  fi
+
+  if [[ -n "$config_errors" ]]; then
+    printf 'config.json validation errors:%s\n' "$config_errors" >&2
+    exit 2
+  fi
+  exit 0
+fi
+
 # Only validate .maestro/items/ files (including archived/ subtree)
 [[ "$file_path" == *.maestro/items/*.md ]] || exit 0
 [[ -f "$file_path" ]] || exit 0

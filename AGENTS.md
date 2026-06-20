@@ -32,7 +32,8 @@ python3 -m json.tool .claude-plugin/marketplace.json >/dev/null
 python3 -m json.tool .codex-plugin/plugin.json >/dev/null
 python3 -m json.tool .agents/plugins/marketplace.json >/dev/null
 python3 -m unittest discover -s tests -v
-python3 -m py_compile bin/migrate-to-maestro
+python3 -m py_compile bin/migrate-to-maestro bin/validate-maestro
+python3 bin/validate-maestro .
 ```
 
 ## Codex Notes
