@@ -1,101 +1,96 @@
 ---
 name: manage
-description: Use when archiving, restoring, deleting, renaming, or cleaning up conductor tracks. Tracks only; for closing an issue use issue-close.
-argument-hint: "[--archive|--restore|--delete|--rename|--cleanup] [track-id]"
+description: Use when archiving, restoring, renaming, deleting, or cleaning up work items. For closing without implementing use issue-close.
+argument-hint: "[--archive|--restore|--delete|--rename|--cleanup] [item-id]"
 ---
 
-# Track Manager
+# Work Item Manager
 
-Manage the complete track lifecycle.
+Manage the complete work item lifecycle by mapping each operation to an abstract op from the Maestro contract. Read `.maestro/config.json` to determine the active adapter, then follow `.maestro/adapters/<adapter>.md` for each op.
 
 ## Modes
 
 | Argument | Mode | Description |
 |----------|------|-------------|
-| `--archive <id>` | Archive | Move completed track to `_archive/` |
-| `--archive --bulk` | Bulk Archive | Multi-select completed tracks |
-| `--restore <id>` | Restore | Restore archived track to active |
-| `--delete <id>` | Delete | Permanently remove (requires typing 'DELETE') |
-| `--rename <old> <new>` | Rename | Change track ID, update all references |
-| `--cleanup` | Cleanup | Detect and fix orphaned artifacts |
-| `--list [filter]` | List | Show all tracks (active/completed/archived) |
+| `--archive <id>` | Archive | Set item to a terminal status |
+| `--restore <id>` | Restore | Return item to an active status |
+| `--delete <id>` | Delete | Permanently remove item record |
+| `--rename <id> <new-title>` | Rename | Change item title (id is immutable) |
+| `--cleanup` | Cleanup | Find and act on stale non-terminal items |
 | (none) | Interactive | Menu-driven selection |
 
 ## Pre-flight
 
-If conductor/ does not exist, inform the user and stop. Verify `conductor/tracks.md` and `conductor/tracks/` exist. Create `conductor/tracks/_archive/` if needed.
+Read `.maestro/config.json`. If it does not exist, inform the user that Maestro is not set up and stop. All ops go through the active adapter; never access backend files directly.
 
 ## Archive
 
-1. Validate track exists and is complete (warn if in-progress)
-2. Ask archive reason: completed / superseded / abandoned / other
-3. Confirm with 'YES'
-4. Move `conductor/tracks/{id}/` to `conductor/tracks/_archive/{id}/`
-5. Update metadata.json with `archived: true`, `archived_at`, `archive_reason`, and `status_at_archive` (the track's current `status` value, captured before archiving so Restore can reinstate it). Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it.
-6. Update `conductor/tracks.md`: move entry to Archived section
-7. Git commit
+Maps to `set_status`.
 
-**Bulk:** multi-select completed tracks, single commit for all.
+1. Call `get_item(id)` to confirm the item exists and show the user its current status.
+2. Ask whether the work is **complete** or **deferred** (abandoned/paused without finishing):
+   - Complete → `set_status(id, done)`
+   - Deferred (archive without completing) → `set_status(id, deferred)`
+3. Confirm with 'YES' before calling the op.
+
+Per LD-5: terminal statuses (`done`, `deferred`) cause the files adapter to move the record to `.maestro/items/archived/<status>/`. No direct file manipulation of legacy paths; the adapter handles storage.
+
+**Bulk:** Accept `--archive --bulk`. Call `list_items({})`, show non-terminal items, let the user multi-select, then apply `set_status` for each.
 
 ## Restore
 
-1. Validate track exists in `_archive/`, check no ID conflict with active tracks
-2. Confirm with 'YES'
-3. Move back to `conductor/tracks/{id}/`
-4. Update metadata.json: `archived: false`, and restore `status` to the recorded `status_at_archive` value. If `status_at_archive` is absent (an older archive predating this field), prompt the user to choose the correct status from a choice-list of valid values — `pending` / `in_progress` / `complete` — rather than free text, so the metadata stays schema-valid.
-5. Update `conductor/tracks.md`
-6. Git commit
+Maps to `set_status`.
 
-## Delete
+1. Call `get_item(id)` to confirm the item exists.
+2. Determine the prior active status. If the item record carries an identifiable prior non-terminal status, restore to it; otherwise restore to `reviewed`.
+3. Confirm with 'YES'.
+4. Call `set_status(id, <prior active status>)` — for the files adapter this moves the record from `.maestro/items/archived/<status>/` back to `.maestro/items/`.
 
-1. Find track in `tracks/` or `_archive/`
-2. Warn if in-progress (offer archive as alternative)
-3. Show full warning: this CANNOT be undone
-4. Require typing 'DELETE' (not 'yes')
-5. Remove directory, update tracks.md
-6. Git commit (history preserved)
+Valid restore targets (non-terminal): `inbox`, `triaged`, `reviewed`, `planned`, `in-progress`, `in-review`.
 
 ## Rename
 
-1. Validate old track exists, new ID follows `{shortname}_{YYYYMMDD}` format, no conflict
-2. Confirm with 'YES'
-3. Rename directory, update metadata.json (`id`, `previous_ids`), plan.md header, tracks.md
-4. Git commit
+Maps to `update_item`. Id is immutable (LD-4); renaming changes the title only.
+
+1. Call `get_item(id)` to confirm the item exists and show its current title.
+2. Record the old title via `comment(id, "Title changed from '<old>' to '<new>'")`.
+3. Call `update_item(id, { title: "<new-title>" })`.
+4. If the user requests a slug/id change, explain that the id is stable and cannot be changed; only the title is updated.
+
+## Delete
+
+1. Call `get_item(id)` to confirm the item exists. If the item is non-terminal (active work), warn and offer to archive or defer instead.
+2. Show a full warning: this CANNOT be undone.
+3. Require the user to type 'DELETE' (not 'yes') to confirm.
+4. **Files adapter:** Remove the item record (`.maestro/items/<id>.md` or its archived path) and its work directory (`.maestro/work/<id>/`) if it exists.
+5. **Non-files backends:** Deletion may be unsupported. If the adapter does not support record removal, say so and offer `set_status(id, wont-fix)` instead.
 
 ## Cleanup
 
-Scan for and fix:
-- **Directory orphans**: tracks/ dirs not in tracks.md — offer to register
-- **Registry orphans**: tracks.md entries without directories — offer to remove
-- **Incomplete tracks**: missing spec.md/plan.md/metadata.json — offer to create from templates
-- **Stale in-progress**: status `[~]` with metadata.json `updated` timestamp >7 days old — offer to archive. Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it — then compute staleness against the `updated` field. Note: this uses the `updated` field which is written on task completion, so a track being actively debugged without completing tasks could appear stale. Always ask the user before archiving; never auto-archive.
+Maps to `list_items` + `set_status`.
 
-Present findings, let user choose which to fix, single git commit.
-
-## List
-
-Read-only — shows all tracks and makes no metadata or registry changes. With an optional `[filter]` argument (`active` / `completed` / `archived`), restrict output to that group.
-
-1. Read `conductor/tracks.md` and each track's `metadata.json` (active tracks under `conductor/tracks/`, archived under `conductor/tracks/_archive/`).
-2. Group tracks by state:
-   - **Active** — `status` `pending` or `in_progress`
-   - **Completed** — `status` `complete`, not archived
-   - **Archived** — under `_archive/`
-3. Render each non-empty group as a table: `| Track ID | Title | Status | Updated |`.
-4. End with the summary line: `{N} active, {M} completed, {P} archived`.
+1. Call `list_items({})` to get all items.
+2. Filter to items in a non-terminal status (`inbox`, `triaged`, `reviewed`, `planned`, `in-progress`, `in-review`) whose `updated` timestamp is more than 7 days old.
+   - Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it.
+   - A track being actively worked on without completed sub-tasks may appear stale; always ask the user before acting.
+3. Present the stale items as a table: `| ID | Title | Status | Updated |`.
+4. For each item, offer:
+   - **Defer** → `set_status(id, deferred)`
+   - **Archive as done** → `set_status(id, done)`
+   - **Skip** → leave as-is
+5. Apply the user's choices, one `set_status` call per item.
 
 ## Interactive Mode (no arguments)
 
 ```
-TRACK MANAGER
+WORK ITEM MANAGER
 
-1. List all tracks          (same as --list)
-2. Archive a completed track (same as --archive)
-3. Restore an archived track (same as --restore)
-4. Delete a track permanently (same as --delete)
-5. Rename a track            (same as --rename)
-6. Cleanup orphaned artifacts (same as --cleanup)
-7. Exit
-
-Quick stats: {N} active, {M} completed, {P} archived
+1. Archive an item     (same as --archive)
+2. Restore an item     (same as --restore)
+3. Rename an item      (same as --rename)
+4. Delete an item      (same as --delete)
+5. Cleanup stale items (same as --cleanup)
+6. Exit
 ```
+
+Show a brief summary of active item counts (items whose status is non-terminal — i.e. not `done`/`wont-fix`/`deferred`/`duplicate`) from `list_items({})` before presenting the menu.

@@ -1,7 +1,7 @@
 interface:
-  display_name: "Track Manager"
-  short_description: "Manage conductor track lifecycle."
-  default_prompt: "Use $manage to list, archive, restore, rename, delete, or clean up Maestro tracks."
+  display_name: "Work Item Manager"
+  short_description: "Manage work-item lifecycle."
+  default_prompt: "Use $manage to archive, restore, rename, delete, or clean up Maestro work items."
 
 policy:
   allow_implicit_invocation: false
