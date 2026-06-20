@@ -242,7 +242,7 @@ mcp__gitlab__list_issues(
 **CLI:**
 ```bash
 glab issue list --label "status::<canonical>" --output json
-# For terminal: glab issue list --label "<reason>" --state closed --output json
+# For terminal: glab issue list --label "<reason>" --closed --output json
 ```
 
 **API:**
@@ -330,7 +330,7 @@ mcp__gitlab__create_issue_note(
 
 **CLI:**
 ```bash
-glab issue note create <ref> -m "Artifact: <url_or_path>"
+glab issue note <ref> -m "Artifact: <url_or_path>"
 ```
 
 **API:**
@@ -358,7 +358,7 @@ mcp__gitlab__create_issue_note(
 
 **CLI:**
 ```bash
-glab issue note create <ref> -m "<text>"
+glab issue note <ref> -m "<text>"
 ```
 
 **API:**
@@ -386,7 +386,7 @@ mcp__gitlab__create_issue_note(
 
 **CLI:**
 ```bash
-glab issue note create <ref> -m "$(printf '```\n%s\n```' "<raw text>")"
+glab issue note <ref> -m "$(printf '```\n%s\n```' "<raw text>")"
 ```
 
 **API:**
@@ -445,7 +445,7 @@ mcp__gitlab__update_issue(
 
 **CLI:**
 ```bash
-glab issue note create <ref> -m "Duplicate of #<target>"
+glab issue note <ref> -m "Duplicate of #<target>"
 glab issue update <ref> --label "duplicate"
 glab issue close <ref>
 ```
