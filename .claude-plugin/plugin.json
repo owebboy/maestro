@@ -1,7 +1,7 @@
 {
   "name": "maestro",
-  "version": "1.3.0",
-  "description": "Complete development workflow: track management, issue pipeline, UAT, codebase review, and session wrap-up. Uses Superpowers as the execution engine for brainstorming, planning, TDD, and subagent-driven development.",
+  "version": "2.0.0",
+  "description": "Unified work-item workflow with pluggable backends (files/gitea/github/gitlab/linear/jira): inbox triage, review, spec + plan, implementation, UAT, codebase review, and session wrap-up. Uses Superpowers as the execution engine for brainstorming, planning, TDD, and subagent-driven development.",
   "author": {"name": "Oliver Pope"},
   "license": "MIT",
   "repository": "https://github.com/owebboy/maestro"
