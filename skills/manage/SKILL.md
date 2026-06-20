@@ -72,7 +72,7 @@ Maps to `list_items` + `set_status`.
 1. Call `list_items({})` to get all items.
 2. Filter to items in a non-terminal status (`inbox`, `triaged`, `reviewed`, `planned`, `in-progress`, `in-review`) whose `updated` timestamp is more than 7 days old.
    - Get the current timestamp by running `date -u +%Y-%m-%dT%H:%M:%SZ` — do not assume you know it.
-   - A track being actively worked on without completed sub-tasks may appear stale; always ask the user before acting.
+   - A work item being actively worked on without completed sub-tasks may appear stale; always ask the user before acting.
 3. Present the stale items as a table: `| ID | Title | Status | Updated |`.
 4. For each item, offer:
    - **Defer** → `set_status(id, deferred)`

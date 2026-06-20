@@ -68,17 +68,17 @@ Skills never hard-code an adapter name or a transport — they call the abstract
 | Op | Called by |
 |---|---|
 | `create_item` | triage, new-track |
-| `get_item` | nearly all skills |
-| `update_item` | triage, manage |
-| `set_status` | every lifecycle skill |
-| `list_items` | status, issue-review (batch), uat-create |
-| `set_subtasks` | new-track (after plan written) |
-| `set_subtask_state` | implement |
+| `get_item` | implement, issue-advance, issue-close, issue-review, manage, status, uat-create |
+| `update_item` | issue-advance, issue-review, manage |
+| `set_status` | implement, issue-advance, issue-close, issue-review, manage, new-track, session-wrap-up, triage |
+| `list_items` | implement, issue-advance, issue-review, manage, session-wrap-up, status, uat-create |
+| `set_subtasks` | issue-advance, new-track |
+| `set_subtask_state` | implement, session-wrap-up |
 | `link_artifact` | issue-advance, new-track |
-| `comment` | issue-close, session-wrap-up |
-| `capture_raw` | implement, uat-run, session-wrap-up, codebase-review |
-| `search` | triage (dedup) |
-| `relate` | issue-close |
+| `comment` | implement, issue-advance, issue-close, manage |
+| `capture_raw` | codebase-review, implement, session-wrap-up, uat-run |
+| `search` | issue-review, triage |
+| `relate` | issue-close, triage |
 
 ## Normalized record (anti-corruption layer — every get_item/list_items returns this)
 

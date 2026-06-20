@@ -138,7 +138,7 @@ The context files are not parsed by downstream skills, so each only needs the se
 
 ### workflow.md
 
-`## TDD / Verification Discipline` · `## Commit Strategy` · `## Code Review` · `## Verification Checkpoints` · `## Track Lifecycle`
+`## TDD / Verification Discipline` · `## Commit Strategy` · `## Code Review` · `## Verification Checkpoints` · `## Work Item Lifecycle`
 
 ### context/styleguides/
 
