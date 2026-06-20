@@ -41,5 +41,15 @@ class TestParsers(unittest.TestCase):
         self.assertEqual(tasks[1]["title"], "Second")
 
 
+class TestContext(unittest.TestCase):
+    def test_plan_context_renames_and_relocates(self):
+        pairs = migrate.plan_context(ROOT / "tests/fixtures/legacy/conductor")
+        dsts = {p["dst"] for p in pairs}
+        self.assertIn(".maestro/context/guidelines.md", dsts)        # renamed
+        self.assertIn(".maestro/context/product.md", dsts)
+        self.assertIn(".maestro/context/styleguides/markdown.md", dsts)  # relocated
+        self.assertFalse(any("tracks.md" in d for d in dsts))         # dropped
+
+
 if __name__ == "__main__":
     unittest.main()

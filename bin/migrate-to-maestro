@@ -2,6 +2,7 @@
 """Migrate legacy conductor/ + issues/ into .maestro/. Dry-run by default."""
 import argparse
 import json
+import pathlib
 import re
 import sys
 
@@ -44,6 +45,25 @@ def parse_plan_tasks(plan_md):
             ref, title = f"t{idx}", rest
         tasks.append({"ref": ref, "title": title, "state": state})
     return tasks
+
+
+_CONTEXT_RENAME = {"product-guidelines.md": "guidelines.md"}
+_CONTEXT_PASS = {"product.md", "tech-stack.md", "workflow.md"}
+
+
+def plan_context(conductor_dir):
+    conductor_dir = pathlib.Path(conductor_dir)
+    pairs = []
+    for name in sorted(_CONTEXT_PASS | set(_CONTEXT_RENAME)):
+        src = conductor_dir / name
+        if src.exists():
+            dst = _CONTEXT_RENAME.get(name, name)
+            pairs.append({"src": str(src), "dst": f".maestro/context/{dst}"})
+    styles = conductor_dir / "code_styleguides"
+    if styles.is_dir():
+        for f in sorted(styles.glob("*.md")):
+            pairs.append({"src": str(f), "dst": f".maestro/context/styleguides/{f.name}"})
+    return pairs
 
 
 def parse_args(argv):
