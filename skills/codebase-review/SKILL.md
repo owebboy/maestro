@@ -7,7 +7,7 @@ argument-hint: "[scope — e.g., 'src/', 'api layer', 'recent changes']"
 
 # Codebase Review
 
-Full codebase review using two waves of parallel agents. Tested at scale: 65 findings → 5 audit agents → 2 FP removed, 14 corrected → 18 issues → 9 tracks.
+Full codebase review using two waves of parallel agents. Tested at scale: 65 findings → 5 audit agents → 2 FP removed, 14 corrected → 18 work items captured for triage.
 
 **Argument:** optional scope constraint (directory, layer, or "recent changes"). Default: entire codebase.
 
@@ -20,7 +20,7 @@ Codebase Review Progress:
 - [ ] Phase 1: Launch 6 review agents (security, perf, arch, testing, data, UX)
 - [ ] Phase 2: Launch audit agents (one per review agent with findings)
 - [ ] Phase 3: Consolidate — remove FPs, correct partial findings, present table
-- [ ] Phase 4: File confirmed findings to INBOX.md
+- [ ] Phase 4: Capture confirmed findings via capture_raw
 ```
 
 ## Phase 1: Review Wave
@@ -71,16 +71,16 @@ Each audit agent receives the findings from its corresponding review agent:
    | # | Area | Severity | File | Description | Verdict |
    |---|------|----------|------|-------------|---------|
 
-5. Ask user to confirm which findings should be added to INBOX
+5. Ask user to confirm which findings should be captured for triage
 
-## Phase 4: File to INBOX
+## Phase 4: Capture Findings
 
-For each confirmed finding, append a bullet to `issues/INBOX.md`. Get today's date by running `date +%Y-%m-%d` — do not assume you know it — and use it for the source tag:
+For each confirmed finding, call `capture_raw` with the following format. Get today's date by running `date +%Y-%m-%d` — do not assume you know it — and use it for the source tag:
 
 ```
-- **<brief description>.** <details>. <severity> priority. Source: codebase-review_YYYYMMDD.
+capture_raw("**<brief description>.** <details>. <severity> priority. Source: codebase-review_YYYYMMDD.")
 ```
 
-If `issues/INBOX.md` does not exist, create the full issues directory structure and INBOX.md template (same as `/triage` bootstrap — see that skill for the exact template), then append findings.
+The adapter creates `.maestro/inbox.md` if it does not already exist.
 
-Suggest running `/triage` in Claude Code or `$triage` in Codex next to process the new INBOX items.
+Suggest running `/triage` in Claude Code or `$triage` in Codex next to process the new work items.

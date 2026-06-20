@@ -1,7 +1,7 @@
 interface:
   display_name: "Codebase Review"
   short_description: "Review and audit a codebase with agents."
-  default_prompt: "Use $codebase-review to review this repository and file confirmed findings to issues/INBOX.md."
+  default_prompt: "Use $codebase-review to review this repository and capture confirmed findings for triage."
 
 policy:
   allow_implicit_invocation: false
