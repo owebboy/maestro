@@ -168,6 +168,24 @@ def plan_issues(issues_dir, seq_start):
     return items, merges
 
 
+def apply_merges(track_plans, merge_candidates):
+    by_old = {tp["old_id"]: tp for tp in track_plans}
+    unmatched = []
+    for mc in merge_candidates:
+        tp = by_old.get(mc["advanced_to"])
+        if not tp:
+            unmatched.append(mc)
+            continue
+        name = pathlib.Path(mc["old_path"]).name
+        addition = (f"\n> Origin issue: {name} (advanced-to {mc['advanced_to']}).\n"
+                    f"\n### Original issue\n\n{mc['body'].strip()}\n")
+        if "## Notes" in tp["record_text"]:
+            tp["record_text"] = tp["record_text"].rstrip() + "\n" + addition
+        else:
+            tp["record_text"] = tp["record_text"].rstrip() + "\n\n## Notes\n" + addition
+    return track_plans, unmatched
+
+
 _CONTEXT_RENAME = {"product-guidelines.md": "guidelines.md"}
 _CONTEXT_PASS = {"product.md", "tech-stack.md", "workflow.md"}
 

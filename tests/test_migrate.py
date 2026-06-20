@@ -95,5 +95,18 @@ class TestIssues(unittest.TestCase):
         self.assertEqual(self.merges[0]["advanced_to"], "0001-sample")
 
 
+class TestMerge(unittest.TestCase):
+    def test_advanced_issue_folds_into_track(self):
+        tracks = migrate.plan_tracks(ROOT / "tests/fixtures/legacy/conductor", 1)
+        _, merges = migrate.plan_issues(ROOT / "tests/fixtures/legacy/issues", 100)
+        merged, unmatched = migrate.apply_merges(tracks, merges)
+        self.assertEqual(unmatched, [])
+        folded = merged[0]["record_text"]
+        self.assertIn("Origin issue:", folded)
+        self.assertIn("### Original issue", folded)
+        # the merged track is still ONE item, not two
+        self.assertEqual(len(merged), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
