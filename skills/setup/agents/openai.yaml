@@ -1,6 +1,6 @@
 interface:
   display_name: "Setup"
-  short_description: "Initialize .maestro context + backend."
+  short_description: "Initialize .maestro context + backend (files/gitea/github/gitlab/linear/jira)."
   default_prompt: "Use $setup to initialize Maestro .maestro/ context and adapter for this repository."
 
 policy:

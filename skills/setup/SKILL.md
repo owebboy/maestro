@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Use when starting a new project with Maestro, or when the .maestro/ directory does not exist yet and needs initializing. Interactively collects project context, lets you choose a work-item backend (files/gitea/github/gitlab), and bootstraps it.
+description: Use when starting a new project with Maestro, or when the .maestro/ directory does not exist yet and needs initializing. Interactively collects project context, lets you choose a work-item backend (files/gitea/github/gitlab/linear/jira), and bootstraps it.
 argument-hint: "[--resume]"
 ---
 
@@ -116,10 +116,12 @@ Ask:
 > 2. **gitea** — self-hosted Gitea instance
 > 3. **github** — GitHub.com or GitHub Enterprise
 > 4. **gitlab** — GitLab.com or self-hosted GitLab
+> 5. **linear** — Linear.app (native states; per-team workflow)
+> 6. **jira** — Jira Cloud or Jira Server (native states; per-team workflow)
 
-Record the choice as `config.adapter` in `.maestro/config.json`.
+Record the choice as `config.adapter` in `.maestro/config.json`. For `linear` or `jira`, both resolve to the `linear-jira.md` adapter profile (the profile branches internally on `config.backend.kind`).
 
-### Step D: Connection capture (forge backends only)
+### Step D: Connection capture (forge and native-tracker backends)
 
 Skip this step if the user chose `files` — go directly to Step E.
 
@@ -150,7 +152,74 @@ If a forge (`gitea`, `github`, or `gitlab`) was chosen:
 
 5. **Pin transport (optional)** — offer the user the option to pin the resolved transport by setting `config.transport` in `config.json`. If they decline, leave `config.transport` unset (detection runs each session).
 
-### Step E: Label bootstrap
+If `linear` was chosen:
+
+1. **Linear MCP check** — check whether `mcp__linear__*` tools are available in this session. If yes, confirm the connection is live (no further credentials needed for MCP transport). If MCP is not available, continue to credential capture below.
+
+2. **Team key** — ask:
+
+   > What is your Linear team key (e.g. `ENG`, `BACKEND`)? This is the short identifier shown in Linear → Settings → Teams.
+
+   Write to `config.backend.team`.
+
+3. **API key** (only if MCP is not available) — ask:
+
+   > Paste your Linear API key (Settings → Security → Personal API keys). Leave blank if you will set `LINEAR_API_KEY` as an environment variable.
+
+   Write to `config.backend.token` if provided (or record that the env var path will be used).
+
+4. **Write backend block** — write to `config.backend`:
+   ```json
+   { "kind": "linear", "team": "<team key>", "token": "<key if captured>" }
+   ```
+   Omit `token` if using the env var path.
+
+5. **Transport detection (Linear — MCP or API only; no CLI):**
+   1. If `config.transport` is already set, use it (skip detection).
+   2. **MCP:** if my available tools include `mcp__linear__*` → resolved = `mcp`.
+   3. **API:** else if `config.backend.token` or `$LINEAR_API_KEY` is set → resolved = `api` (Linear GraphQL at `https://api.linear.app/graphql`).
+   4. **None:** STOP. Tell the user to either connect the Linear MCP server or supply an API key. Never fall back to `files`. Do NOT attempt CLI detection — Linear has no official CLI.
+
+6. **Pin transport (optional)** — offer to pin via `config.transport`. If declined, leave unset.
+
+If `jira` was chosen:
+
+1. **Jira MCP check** — check whether `mcp__atlassian__*` or `mcp__jira__*` tools are available. If yes, confirm connection is live.
+
+2. **Site URL** — ask:
+
+   > What is your Jira site URL (e.g. `https://yourcompany.atlassian.net` or your self-hosted URL)?
+
+   Write to `config.backend.url`.
+
+3. **Project key** — ask:
+
+   > What is your Jira project key (e.g. `ENG`, `PROJ`)?
+
+   Write to `config.backend.project`.
+
+4. **Credentials** (only if MCP is not available) — ask:
+
+   > Provide your Jira email and API token (Jira → Account Settings → Security → API tokens), separated by a newline, or leave blank if you will use the `jira` CLI (which handles auth separately) or set `JIRA_EMAIL` + `JIRA_TOKEN` as environment variables.
+
+   Write `config.backend.email` and `config.backend.token` if provided.
+
+5. **Write backend block** — write to `config.backend`:
+   ```json
+   { "kind": "jira", "url": "<site url>", "project": "<project key>" }
+   ```
+   Include `email` and `token` if captured.
+
+6. **Transport detection (Jira — MCP > CLI > API):**
+   1. If `config.transport` is already set, use it (skip detection).
+   2. **MCP:** if my available tools include `mcp__atlassian__*` or `mcp__jira__*` → resolved = `mcp`.
+   3. **CLI:** else if `command -v jira` succeeds AND `jira me` returns a valid user → resolved = `cli`.
+   4. **API:** else if `config.backend.token` or `$JIRA_TOKEN` is set → resolved = `api` (Jira REST at `<url>/rest/api/3`).
+   5. **None:** STOP. Tell the user to set up one of: Jira MCP server, `jira` CLI (ankitpokhrel/jira-cli), or Jira API token. Never fall back to `files`.
+
+7. **Pin transport (optional)** — offer to pin via `config.transport`. If declined, leave unset.
+
+### Step E: Label bootstrap and state discovery
 
 **For `files` backend:**
 
@@ -171,6 +240,102 @@ No label bootstrap is needed for the files adapter.
 Run the chosen adapter's `## Label bootstrap` procedure from `.maestro/adapters/<adapter>.md`. This is idempotent — it lists existing labels first and creates only those that are missing; it is safe to re-run at any time.
 
 Use the transport resolved in Step D for the bootstrap calls (MCP / CLI / API as determined).
+
+**For native-tracker backends (`linear`, `jira`) — state discovery + statusMap builder:**
+
+Instead of label bootstrap, perform state discovery and build `config.statusMap` and `config.fieldMap`. Use the transport resolved in Step D for all discovery calls.
+
+#### E.1 Discover native workflow states
+
+- **Linear:** call `mcp__linear__list_issue_statuses` (MCP) or query `workflowStates(filter:{team:{key:{eq:"<team>"}}}){nodes{name,type}}` via the Linear GraphQL API.
+- **Jira:** call the Jira MCP list-statuses tool (MCP), or run `jira project list-statuses <project>` (CLI), or GET `<url>/rest/api/3/project/<project>/statuses` (API). Extract the unique status names from all issue types.
+
+Collect the full list of native state names and display them to the user:
+
+> I discovered the following workflow states on your team's board:
+> `[list the discovered state names]`
+
+#### E.2 Propose statusMap
+
+Using the default canonical→native state table below, plus fuzzy/synonym matching against the discovered states, propose a mapping for all 10 canonical statuses. Present it as an editable table:
+
+| Canonical status | Proposed native state | Source |
+|---|---|---|
+| `inbox` | `<proposed>` | default table / fuzzy match / no match |
+| `triaged` | `<proposed>` | … |
+| `reviewed` | `<proposed>` | … |
+| `planned` | `<proposed>` | … |
+| `in-progress` | `<proposed>` | … |
+| `in-review` | `<proposed>` | … |
+| `done` | `<proposed>` | … |
+| `wont-fix` | `<proposed>` | … |
+| `deferred` | `<proposed>` | … |
+| `duplicate` | `<proposed>` | … |
+
+Default canonical→native reference (use this as tier-2 starting point):
+
+| Canonical | Linear default | Jira typical |
+|---|---|---|
+| `inbox` | Triage | Backlog |
+| `triaged` | Backlog | To Do |
+| `reviewed` | Todo | Selected for Development |
+| `planned` | Todo | To Do |
+| `in-progress` | In Progress | In Progress |
+| `in-review` | In Review | In Review |
+| `done` | Done | Done |
+| `wont-fix` | Canceled | Won't Do |
+| `deferred` | Backlog | Backlog |
+| `duplicate` | Duplicate | Duplicate |
+
+Fuzzy/synonym rules: `reviewed` ↔ {Selected, Ready}; `in-progress` ↔ {In Progress, Doing, Active}; `done` ↔ {Done, Closed, Complete, Resolved}.
+
+Ask:
+
+> Does this statusMap look correct? Reply with any corrections in the form `<canonical>: <native state name>`, or press Enter to accept as-is.
+
+Apply user corrections and persist the final mapping as `config.statusMap` in `config.json`.
+
+#### E.3 Handle unmapped canonical statuses
+
+For any canonical status where no matching native state was found (proposed native = none), flag it:
+
+> The following canonical statuses have no native equivalent on your board: `<list>`.
+> For each, choose:
+> a) Map to nearest state (I'll suggest one) — skills that set this status will use that state instead
+> b) Leave unmapped — skills that would set it will fall back to the adjacent canonical state
+
+For each unmapped status, wait for the user's choice and record it in `config.statusMap` (map-to-nearest: write the chosen native state name; leave-unmapped: write `null` for that key).
+
+#### E.4 fieldMap builder
+
+**Priority discovery:**
+
+- **Linear:** native priorities are fixed (0 = No Priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low).
+- **Jira:** call the Jira MCP priorities tool (MCP), or `jira project list-priorities` (CLI), or GET `<url>/rest/api/3/priority` (API). Display the discovered priority names.
+
+**Issue type discovery:**
+
+- **Linear:** issue types are not distinct in Linear (all issues are the same type); set `config.fieldMap.type = null`.
+- **Jira:** call the Jira MCP issue-types tool (MCP), or `jira issue list-types` (CLI), or GET `<url>/rest/api/3/project/<key>/statuses` (API, issue types embedded in response). Display the discovered types.
+
+Propose `config.fieldMap`:
+
+```json
+{
+  "priority": {
+    "P1": "<native urgent/highest priority>",
+    "P2": "<native high priority>",
+    "P3": "<native medium priority>"
+  },
+  "type": "<default issue type for new items, or null for Linear>"
+}
+```
+
+Ask:
+
+> Does this fieldMap look correct? Reply with any corrections, or press Enter to accept.
+
+Apply corrections and persist as `config.fieldMap` in `config.json`.
 
 ### Step F: Capture mode
 
@@ -257,6 +422,26 @@ Created: .maestro/CONTRACT.md
          .maestro/inbox.md
 
 Bootstrap: <N> labels created in <backend> (transport: <mcp|cli|api>)
+
+Next: Run /new-track in Claude Code or $new-track in Codex to create your first track.
+```
+
+For a **native-tracker** backend (`linear` / `jira`), print:
+
+```
+Setup complete!
+
+Created: .maestro/CONTRACT.md
+         .maestro/adapters/  (files.md + all profiles, including linear-jira.md)
+         .maestro/config.json  (adapter: <linear|jira>, team/project: <key>, captureMode: <chosen>)
+         .maestro/context/{product,guidelines,tech-stack,workflow}.md
+         .maestro/context/styleguides/
+         .maestro/work/
+         .maestro/inbox.md
+
+Discovery: <N> native states discovered (transport: <mcp|api|cli>)
+           statusMap: <N> canonical statuses mapped, <N> unmapped
+           fieldMap: priority (P1/P2/P3 → native), type: <type or null>
 
 Next: Run /new-track in Claude Code or $new-track in Codex to create your first track.
 ```
