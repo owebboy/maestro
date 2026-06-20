@@ -73,15 +73,22 @@ Status lives in the `status:` frontmatter field. Terminal statuses (`done`, `won
 
 - **list_items({filters})**: scan items/ (+ archived/ when a terminal filter is requested); return records matching filters.
 
-- **set_subtasks(id, [task])**: write/replace the ## Tasks checklist; each task -> `- [ ] <ref> — <title>`.
+- **set_subtasks(id, [task])**: write/replace the ## Tasks checklist; each task -> `- [ ] <ref> — <title>`. This is a full overwrite — existing state on matching refs is discarded; advance individual tasks afterward with `set_subtask_state`.
 
 - **set_subtask_state(id, ref, state)**: flip the matching ## Tasks line: todo=`[ ]`, doing=`[~]`, done=`[x]`.
 
 - **link_artifact(id, kind, ref)**: add {kind,ref} to artifacts: frontmatter (dedupe by kind+ref). (Body-append fallback unused — files supports artifacts natively.)
 
-- **comment(id, text)**: append `> <text>` under ## Notes with a date prefix.
+- **comment(id, text)**: append `> <YYYY-MM-DD> <text>` under ## Notes (date from `date +%Y-%m-%d`).
 
-- **capture_raw(text)**: append `- <text>` under the ## Inbox heading of .maestro/inbox.md (create file from template if missing).
+- **capture_raw(text)**: append `- <text>` under the ## Inbox heading of .maestro/inbox.md (create file from template if missing). The template written on creation is:
+  ```
+  # Inbox
+
+  Pre-triage scratch. One bullet per raw item; triage converts these into work items.
+
+  ## Inbox
+  ```
 
 - **search(query)**: list_items then match query against id/title/Summary (case-insensitive substring); return candidates.
 
