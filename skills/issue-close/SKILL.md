@@ -1,39 +1,35 @@
 ---
 name: issue-close
-description: Use when closing an issue without implementing it — wont-fix, deferred, or duplicate. Issues only; for archiving tracks use manage.
-argument-hint: "<issue-file-path> [--reason wont-fix|deferred|duplicate]"
+description: Use when closing a work item without implementing it — wont-fix, deferred, or duplicate.
+argument-hint: "<item-ref> [--reason wont-fix|deferred|duplicate]"
 ---
 
 # Issue Close
 
-Archive an issue without creating a track.
+Close a work item without implementing it.
 
-**Argument:** `<file-path> [--reason wont-fix|deferred|duplicate]`
+**Argument:** `<item-ref> [--reason wont-fix|deferred|duplicate]`
 
 ## Process
 
-1. **Read** the issue file
-   - If the issue file does not exist, inform the user and stop.
-   - If the issue's `status` is already `implemented`, `wont-fix`, `deferred`, or `duplicate`, the issue is already closed — inform the user and stop.
-   - If the issue file has no `status` field, inform the user and stop.
+1. **Fetch item** — `get_item(ref)`
+   - If the item does not exist, inform the user and stop.
+   - If the item's `status` is already terminal (`done`, `wont-fix`, `deferred`, or `duplicate`), inform the user the item is already closed and stop.
 
 2. **Get reason** if not provided as argument — ask:
    ```
-   Why are you closing this issue?
+   Why are you closing this item?
    1. wont-fix — not worth doing
    2. deferred — valid but not now
    3. duplicate — already covered elsewhere
    ```
 
-3. **If duplicate** — ask which issue file or conductor track it duplicates
+3. **If duplicate** — ask which item it duplicates (accept any loose ref: id, slug, or URL)
 
-4. **Update issue file frontmatter:**
-   - Update `status` to the reason (wont-fix | deferred | duplicate)
-   - Get today's date by running `date +%Y-%m-%d` — do not assume you know it. Add `closed: YYYY-MM-DD`
-   - If duplicate: add `duplicate-of: <issue-filename-or-track-id>`
-   - Add a brief closing note under `## Notes` if user provides one
+4. **Close the item** using abstract ops:
+   - `set_status(id, <reason>)` where reason ∈ {wont-fix, deferred, duplicate}
+     — the adapter handles the terminal archive move per LD-5; the skill does NOT move files.
+   - If duplicate: `relate(id, duplicate-of, <target-ref>)`
+   - `comment(id, "<closing note>")` — include the reason and any user-provided note
 
-5. **Move** to `issues/archived/<reason>/`
-   - Create the archive subdirectory if it doesn't exist
-
-6. **Confirm** closure with file location
+5. **Confirm** closure to the user (id, title, status set)
