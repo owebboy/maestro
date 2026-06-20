@@ -20,5 +20,26 @@ class TestArgs(unittest.TestCase):
         self.assertTrue(ns.apply)
 
 
+class TestParsers(unittest.TestCase):
+    def test_split_frontmatter(self):
+        fm, body = migrate.split_frontmatter(
+            "---\nstatus: reviewed\ntype: bug\n---\n# Title\n\ntext\n")
+        self.assertEqual(fm["status"], "reviewed")
+        self.assertEqual(fm["type"], "bug")
+        self.assertIn("# Title", body)
+
+    def test_split_frontmatter_none(self):
+        fm, body = migrate.split_frontmatter("no frontmatter here")
+        self.assertEqual(fm, {})
+        self.assertEqual(body.strip(), "no frontmatter here")
+
+    def test_parse_plan_tasks(self):
+        tasks = migrate.parse_plan_tasks(
+            "## Phase 1\n- [x] 1.1 First\n- [ ] 1.2 Second\n- [~] 1.3 Third\n")
+        self.assertEqual([t["state"] for t in tasks], ["done", "todo", "doing"])
+        self.assertEqual(tasks[0]["ref"], "1.1")
+        self.assertEqual(tasks[1]["title"], "Second")
+
+
 if __name__ == "__main__":
     unittest.main()
