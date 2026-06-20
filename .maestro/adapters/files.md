@@ -69,7 +69,7 @@ Status lives in the `status:` frontmatter field. Terminal statuses (`done`, `won
 
 - **update_item(id,{fields})**: rewrite changed frontmatter fields + body; bump updated.
 
-- **set_status(id, canonical)**: set status: field; bump updated; if terminal (LD-5) move file to items/archived/<status>/; if reopening a deferred item, move back to items/ and set the new status.
+- **set_status(id, canonical)**: set status: field; bump updated; if terminal (LD-5) move file to items/archived/<status>/ (create that directory if it does not exist); if reopening a deferred item, move back to items/ and set the new status.
 
 - **list_items({filters})**: scan items/ (+ archived/ when a terminal filter is requested); return records matching filters.
 
@@ -93,3 +93,7 @@ Status lives in the `status:` frontmatter field. Terminal statuses (`done`, `won
 - **search(query)**: list_items then match query against id/title/Summary (case-insensitive substring); return candidates.
 
 - **relate(id, kind, target)**: add {kind,target} to links: frontmatter; for duplicate-of also set status=duplicate via set_status.
+
+## Degradation
+
+Follows CONTRACT §Degradation; this backend supports: subtasks (the `## Tasks` checklist is a real native store here, so it declares the plain `subtasks` token rather than the forge `subtasks-as-tasklist` fallback token), relations (via `links:` frontmatter), artifacts (via `artifacts:` frontmatter). All ops are implemented natively against local Markdown files — body/frontmatter IS the storage layer, so the CONTRACT fallbacks (body-append for link_artifact, Notes-append for comment, inbox.md for capture_raw, list_items+local-match for search, comment for relate) are satisfied here by the primary implementations above. No transport degradation applies; the files adapter has no remote transport to lose.

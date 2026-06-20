@@ -69,7 +69,7 @@ Status lives in the `status:` frontmatter field. Terminal statuses (`done`, `won
 
 - **update_item(id,{fields})**: rewrite changed frontmatter fields + body; bump updated.
 
-- **set_status(id, canonical)**: set status: field; bump updated; if terminal (LD-5) move file to items/archived/<status>/; if reopening a deferred item, move back to items/ and set the new status.
+- **set_status(id, canonical)**: set status: field; bump updated; if terminal (LD-5) move file to items/archived/<status>/ (create that directory if it does not exist); if reopening a deferred item, move back to items/ and set the new status.
 
 - **list_items({filters})**: scan items/ (+ archived/ when a terminal filter is requested); return records matching filters.
 

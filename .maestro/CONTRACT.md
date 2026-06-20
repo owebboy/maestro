@@ -17,7 +17,7 @@ State machine:
 |---|---|---|---|---|
 | `inbox`      | INBOX scratch / `status: inbox`      | open + `status:inbox`                | Triage    | Backlog                    |
 | `triaged`    | `status: triaged`                    | open + `status:triaged`              | Backlog   | To Do                      |
-| `reviewed`   | `status: reviewed`                   | open + `status:reviewed`             | Todo      | Selected                   |
+| `reviewed`   | `status: reviewed`                   | open + `status:reviewed`             | Todo      | Selected for Development    |
 | `planned`    | `status: planned`                    | open + `status:planned`              | Todo      | To Do                      |
 | `in-progress`| `status: in-progress`               | open + `status:in-progress`          | In Progress | In Progress              |
 | `in-review`  | `status: in-review`                 | open + `status:in-review` (or PR open) | In Review | In Review               |
@@ -108,7 +108,7 @@ Skills only ever read this shape. The adapter translates in and out.
 
 Example (gitea profile header):
 ```jsonc
-{ "supports": ["labels", "subissues", "relations"], "scoped_labels": false }
+{ "supports": ["labels", "relations", "subtasks-as-tasklist"], "scoped_labels": false, "transports": ["mcp","cli","api"] }
 ```
 
 `set_status(id, "reviewed")` rendered three ways from the same skill call:
@@ -142,3 +142,37 @@ Each profile carries a transport block per op (or a shared one where the mapping
   - `relate` fallback: a `comment` (e.g. "duplicate of #X")
 
 Net: a minimal backend (the 5 core) is usable; tracked features and niceties layer on as the backend supports them.
+
+## Config keys (.maestro/config.json)
+- adapter: files | gitea | github | gitlab | linear | jira
+- backend: { kind?, repo?, url?, token?, project_id?, team?, project?, email?, stateCache? }  (forge/native connection. kind: linear|jira (same value as adapter; the linear-jira profile branches on it). repo: github/gitea owner/name. project_id: GitLab project numeric id or path (gitlab MCP/REST). team: Linear team key. project: Jira project key. email: Jira account email. stateCache: linear/jira discovered native states + Jira transition ids, written by /setup and read by set_status/set_subtask_state)
+- statusMap: { <canonical>: <native name> }   (remap escape hatch)
+- fieldMap: { priority: {...}, type: {...} }
+- captureMode: local | backend
+- transport: mcp | cli | api   (optional; pins transport, overrides detection)
+- artifactsDir: .maestro/work
+
+### Adapter-name resolution
+- adapter `files` -> adapters/files.md
+- adapter `gitea|github|gitlab` -> adapters/<name>.md
+- adapter `linear|jira` -> adapters/linear-jira.md (profile branches on the name)
+
+## Degradation
+
+Capability flags (profile header `supports`) drive behavior. Rules:
+
+1. Degradable required ops:
+   - link_artifact: if no native artifact field -> append `- <kind>: <ref>` under `## Artifacts` in the body, OR post it as a comment/note where that is the backend's idiomatic body-extension surface (e.g. github/gitlab use a comment so the link is timestamped and surfaced in the UI; gitea/files use the body `## Artifacts` block).
+   - comment: if no native comments -> append the text under `## Notes` in the body.
+2. Optional ops:
+   - capture_raw: captureMode=backend needs create_item; if the backend can't, use local .maestro/inbox.md.
+   - search: if no native search -> list_items + case-insensitive local match.
+   - relate: if no native relations -> a comment ("duplicate-of #X") + set_status(duplicate) for duplicates.
+3. set_subtasks/set_subtask_state for a TRACKED item:
+   - prefer native sub-issues (supports: subissues); else a native subtask store (supports: subtasks —
+     e.g. the files adapter's `## Tasks` checklist); else a `- [ ]` task-list in the issue body
+     (supports: subtasks-as-tasklist); if NONE is possible, STOP and tell the user this backend cannot
+     track plan progress natively — offer to keep the item `light` (steps live only in .maestro/work/<id>/plan.md).
+4. No transport available (detection yields none): STOP. Print which of MCP/CLI/API to configure and the
+   one-line auth command for each. NEVER fall back to the files adapter silently.
+5. Unmapped native status (linear/jira read path): report `inbox` + warn; prompt to add to config.statusMap.

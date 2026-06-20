@@ -255,8 +255,11 @@ def build_plan(repo_root, assets_root=None):
     dropped = [str(conductor / n) for n in ("tracks.md", "index.md", "setup_state.json")
                if (conductor / n).exists()]
     assets = {"CONTRACT.md": ".maestro/CONTRACT.md",
-              "adapters/files.md": ".maestro/adapters/files.md",
               "config.template.json": ".maestro/config.json"}
+    adapters_src = resolved_assets / "adapters"
+    if adapters_src.is_dir():
+        for ad in sorted(adapters_src.glob("*.md")):
+            assets[f"adapters/{ad.name}"] = f".maestro/adapters/{ad.name}"
     return {"repo_root": str(repo_root), "assets_root": str(resolved_assets),
             "context": context, "tracks": tracks,
             "items": items, "inbox": inbox, "dropped": dropped,
@@ -359,7 +362,7 @@ def main(argv=None):
         return 0
     try:
         apply_plan(args.path, plan, remove_legacy=args.remove_legacy)
-    except ValueError as exc:
+    except (ValueError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     print("Migration applied. Legacy dirs backed up to .conductor.bak/.issues.bak.")

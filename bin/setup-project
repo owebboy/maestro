@@ -289,6 +289,7 @@ ensure_maestro_scaffold() {
   fi
 
   if [[ -d "$assets_src/adapters" ]]; then
+    rm -rf "$maestro_dir/adapters"
     mkdir -p "$maestro_dir/adapters"
     cp -R "$assets_src/adapters/." "$maestro_dir/adapters/"
     note "copy: .maestro/adapters/ (package-managed)"
