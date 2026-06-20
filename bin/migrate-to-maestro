@@ -7,6 +7,8 @@ import re
 import shutil
 import sys
 
+# Package assets live next to this script: bin/../assets/maestro
+ASSETS_SRC = pathlib.Path(__file__).resolve().parent.parent / "assets/maestro"
 
 _FM_RE = re.compile(r"\A---\n(.*?)\n---\n?(.*)\Z", re.DOTALL)
 _TASK_RE = re.compile(r"^\s*-\s*\[([ x~])\]\s*(.*\S)\s*$")
@@ -178,6 +180,7 @@ def apply_merges(track_plans, merge_candidates):
             unmatched.append(mc)
             continue
         name = pathlib.Path(mc["old_path"]).name
+        tp.setdefault("folded", []).append(name)
         addition = (f"\n> Origin issue: {name} (advanced-to {mc['advanced_to']}).\n"
                     f"\n### Original issue\n\n{mc['body'].strip()}\n")
         if "## Notes" in tp["record_text"]:
@@ -226,8 +229,9 @@ def plan_inbox(issues_dir):
     return {"dst": ".maestro/inbox.md", "text": text}
 
 
-def build_plan(repo_root):
+def build_plan(repo_root, assets_root=None):
     repo_root = pathlib.Path(repo_root)
+    resolved_assets = pathlib.Path(assets_root) if assets_root is not None else ASSETS_SRC
     conductor = repo_root / "conductor"
     issues = repo_root / "issues"
     context = plan_context(conductor) if conductor.exists() else []
@@ -253,7 +257,8 @@ def build_plan(repo_root):
     assets = {"CONTRACT.md": ".maestro/CONTRACT.md",
               "adapters/files.md": ".maestro/adapters/files.md",
               "config.template.json": ".maestro/config.json"}
-    return {"repo_root": str(repo_root), "context": context, "tracks": tracks,
+    return {"repo_root": str(repo_root), "assets_root": str(resolved_assets),
+            "context": context, "tracks": tracks,
             "items": items, "inbox": inbox, "dropped": dropped,
             "unmatched": unmatched, "assets": assets}
 
@@ -270,6 +275,8 @@ def render_dry_run(plan):
         L.append(f"  track {tp['old_id']} -> {tp['record_path']} ({tp['status']})")
         for w in tp["work_pairs"]:
             L.append(f"    prose {w['src']} -> {w['dst']}")
+        for fname in tp.get("folded", []):
+            L.append(f"    merge {fname} -> folded into {tp['new_id']}")
     for it in plan["items"]:
         L.append(f"  issue {it['old_path']} -> {it['record_path']} ({it['status']})")
     if plan["inbox"]:
@@ -288,6 +295,11 @@ def _write(repo_root, rel, text):
 
 def apply_plan(repo_root, plan, remove_legacy=False):
     repo_root = pathlib.Path(repo_root)
+    if (repo_root / ".maestro").exists():
+        raise ValueError(
+            f".maestro/ already exists at {repo_root}; refusing to overwrite. "
+            "Remove or back it up first."
+        )
     # Defense-in-depth: detect any duplicate destinations before writing anything.
     all_dsts = list(plan["assets"].values())
     for p in plan["context"]:
@@ -307,8 +319,9 @@ def apply_plan(repo_root, plan, remove_legacy=False):
         seen.add(d)
     if dupes:
         raise ValueError(f"migration plan has colliding destinations: {sorted(dupes)}")
+    assets_root = pathlib.Path(plan["assets_root"])
     for src_rel, dst_rel in plan["assets"].items():
-        _write(repo_root, dst_rel, (repo_root / "assets/maestro" / src_rel).read_text())
+        _write(repo_root, dst_rel, (assets_root / src_rel).read_text())
     for p in plan["context"]:
         _write(repo_root, p["dst"], pathlib.Path(p["src"]).read_text())
     for tp in plan["tracks"]:
@@ -344,7 +357,11 @@ def main(argv=None):
     if not args.apply:
         print(render_dry_run(plan))
         return 0
-    apply_plan(args.path, plan, remove_legacy=args.remove_legacy)
+    try:
+        apply_plan(args.path, plan, remove_legacy=args.remove_legacy)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
     print("Migration applied. Legacy dirs backed up to .conductor.bak/.issues.bak.")
     if not args.remove_legacy:
         print("Verify .maestro/, then delete the .bak dirs (or re-run with --remove-legacy).")

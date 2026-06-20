@@ -130,19 +130,19 @@ class TestPlanAndApply(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_build_plan_counts(self):
-        plan = migrate.build_plan(self.tmp)
+        plan = migrate.build_plan(self.tmp, assets_root=self.tmp / "assets/maestro")
         self.assertEqual(len(plan["tracks"]), 1)
         # one open + one archived issue become items; the tracked issue is merged
         self.assertEqual(len(plan["items"]), 2)
         self.assertIn("tracks.md", " ".join(plan["dropped"]))
 
     def test_dry_run_is_readonly(self):
-        plan = migrate.build_plan(self.tmp)
+        plan = migrate.build_plan(self.tmp, assets_root=self.tmp / "assets/maestro")
         _ = migrate.render_dry_run(plan)
         self.assertFalse((self.tmp / ".maestro").exists())  # nothing written
 
     def test_apply_writes_and_backs_up(self):
-        plan = migrate.build_plan(self.tmp)
+        plan = migrate.build_plan(self.tmp, assets_root=self.tmp / "assets/maestro")
         migrate.apply_plan(self.tmp, plan)
         self.assertTrue((self.tmp / ".maestro/config.json").exists())
         self.assertTrue((self.tmp / ".maestro/context/guidelines.md").exists())
@@ -247,6 +247,122 @@ class TestUnmatchedDeduplicate(unittest.TestCase):
         with self.assertRaises(ValueError) as ctx:
             migrate.apply_plan(self.tmp, plan)
         self.assertIn("colliding destinations", str(ctx.exception))
+
+
+class TestFixA_AssetsRoot(unittest.TestCase):
+    """Fix A: assets are sourced from the package (script location), not the target repo."""
+
+    def setUp(self):
+        self.tmp = pathlib.Path(tempfile.mkdtemp())
+        # target repo with conductor+issues but NO assets/maestro/ under it
+        shutil.copytree(ROOT / "tests/fixtures/legacy", self.tmp, dirs_exist_ok=True)
+        # package assets dir (separate from the target)
+        self.pkg = pathlib.Path(tempfile.mkdtemp())
+        (self.pkg / "adapters").mkdir(parents=True)
+        (self.pkg / "CONTRACT.md").write_text("# Contract\n")
+        (self.pkg / "adapters/files.md").write_text("# files\n")
+        (self.pkg / "config.template.json").write_text('{"adapter":"files"}\n')
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+        shutil.rmtree(self.pkg, ignore_errors=True)
+
+    def test_build_plan_stores_assets_root(self):
+        """build_plan must record assets_root in the plan."""
+        plan = migrate.build_plan(self.tmp, assets_root=self.pkg)
+        self.assertIn("assets_root", plan)
+        self.assertEqual(pathlib.Path(plan["assets_root"]), self.pkg)
+
+    def test_apply_uses_assets_root_not_target(self):
+        """apply_plan must read assets from plan['assets_root'], not from target/assets/maestro."""
+        # Target has NO assets/maestro; assets live in self.pkg only.
+        self.assertFalse((self.tmp / "assets").exists())
+        plan = migrate.build_plan(self.tmp, assets_root=self.pkg)
+        migrate.apply_plan(self.tmp, plan)
+        self.assertTrue((self.tmp / ".maestro/config.json").exists(),
+                        "config.json must be written even when target has no assets/maestro/")
+
+
+class TestFixB_MergeFoldsInDryRun(unittest.TestCase):
+    """Fix B: folded issues must appear in render_dry_run output."""
+
+    def test_apply_merges_annotates_track_plan(self):
+        """apply_merges must set plan['folded'] on the track when folding an issue."""
+        tracks = migrate.plan_tracks(ROOT / "tests/fixtures/legacy/conductor", 1)
+        _, merges = migrate.plan_issues(ROOT / "tests/fixtures/legacy/issues", 100)
+        merged, unmatched = migrate.apply_merges(tracks, merges)
+        self.assertEqual(unmatched, [])
+        tp = merged[0]
+        self.assertIn("folded", tp, "Track plan must have a 'folded' key after apply_merges")
+        self.assertTrue(tp["folded"], "folded list must be non-empty")
+        self.assertIn("2026-06-09-advanced.md", tp["folded"],
+                      "Folded list must contain the advanced issue filename")
+
+    def test_render_dry_run_shows_folded_into(self):
+        """render_dry_run output must contain a 'folded into' line for the folded issue."""
+        tmp = pathlib.Path(tempfile.mkdtemp())
+        try:
+            shutil.copytree(ROOT / "tests/fixtures/legacy", tmp, dirs_exist_ok=True)
+            pkg = pathlib.Path(tempfile.mkdtemp())
+            try:
+                (pkg / "adapters").mkdir(parents=True)
+                (pkg / "CONTRACT.md").write_text("# Contract\n")
+                (pkg / "adapters/files.md").write_text("# files\n")
+                (pkg / "config.template.json").write_text('{"adapter":"files"}\n')
+                plan = migrate.build_plan(tmp, assets_root=pkg)
+                output = migrate.render_dry_run(plan)
+                self.assertIn("folded into", output,
+                              "render_dry_run must include a 'folded into' line")
+                self.assertIn("2026-06-09-advanced.md", output,
+                              "render_dry_run must name the folded issue file")
+            finally:
+                shutil.rmtree(pkg, ignore_errors=True)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
+class TestFixC_RefuseExistingMaestro(unittest.TestCase):
+    """Fix C: apply_plan must refuse if .maestro/ already exists at target."""
+
+    def setUp(self):
+        self.tmp = pathlib.Path(tempfile.mkdtemp())
+        shutil.copytree(ROOT / "tests/fixtures/legacy", self.tmp, dirs_exist_ok=True)
+        self.pkg = pathlib.Path(tempfile.mkdtemp())
+        (self.pkg / "adapters").mkdir(parents=True)
+        (self.pkg / "CONTRACT.md").write_text("# Contract\n")
+        (self.pkg / "adapters/files.md").write_text("# files\n")
+        (self.pkg / "config.template.json").write_text('{"adapter":"files"}\n')
+        # Pre-create .maestro/ to simulate an already-migrated repo
+        (self.tmp / ".maestro").mkdir()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+        shutil.rmtree(self.pkg, ignore_errors=True)
+
+    def test_apply_plan_refuses_existing_maestro(self):
+        """apply_plan must raise when .maestro/ already exists."""
+        plan = migrate.build_plan(self.tmp, assets_root=self.pkg)
+        with self.assertRaises((SystemExit, ValueError)) as ctx:
+            migrate.apply_plan(self.tmp, plan)
+        msg = str(ctx.exception)
+        self.assertIn(".maestro", msg.lower() + msg, "Error must mention .maestro")
+
+    def test_apply_plan_refuses_without_touching_legacy(self):
+        """When refusing, legacy conductor/ and issues/ must remain untouched (no .bak)."""
+        plan = migrate.build_plan(self.tmp, assets_root=self.pkg)
+        try:
+            migrate.apply_plan(self.tmp, plan)
+        except (SystemExit, ValueError):
+            pass
+        # Legacy dirs must still exist, no .bak created
+        self.assertTrue((self.tmp / "conductor").exists(),
+                        "conductor/ must still exist after refusal")
+        self.assertTrue((self.tmp / "issues").exists(),
+                        "issues/ must still exist after refusal")
+        self.assertFalse((self.tmp / ".conductor.bak").exists(),
+                         ".conductor.bak must not have been created")
+        self.assertFalse((self.tmp / ".issues.bak").exists(),
+                         ".issues.bak must not have been created")
 
 
 if __name__ == "__main__":
