@@ -162,7 +162,7 @@ Net: a minimal backend (the 5 core) is usable; tracked features and niceties lay
 Capability flags (profile header `supports`) drive behavior. Rules:
 
 1. Degradable required ops:
-   - link_artifact: if no native artifact field -> append `- <kind>: <ref>` under `## Artifacts` in the body.
+   - link_artifact: if no native artifact field -> append `- <kind>: <ref>` under `## Artifacts` in the body, OR post it as a comment/note where that is the backend's idiomatic body-extension surface (e.g. github/gitlab use a comment so the link is timestamped and surfaced in the UI; gitea/files use the body `## Artifacts` block).
    - comment: if no native comments -> append the text under `## Notes` in the body.
 2. Optional ops:
    - capture_raw: captureMode=backend needs create_item; if the backend can't, use local .maestro/inbox.md.
