@@ -287,7 +287,7 @@ Default canonical→native reference (use this as tier-2 starting point):
 | `deferred` | Backlog | Backlog |
 | `duplicate` | Duplicate | Duplicate |
 
-Fuzzy/synonym rules: `reviewed` ↔ {Selected, Ready}; `in-progress` ↔ {In Progress, Doing, Active}; `done` ↔ {Done, Closed, Complete, Resolved}.
+Fuzzy/synonym rules (must match the adapter profile's tier-3 synonyms exactly): `reviewed` ↔ {Selected, Ready}; `in-progress` ↔ {In Progress, Doing}; `done` ↔ {Done, Closed, Complete}.
 
 Ask:
 

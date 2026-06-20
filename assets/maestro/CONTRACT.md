@@ -145,7 +145,7 @@ Net: a minimal backend (the 5 core) is usable; tracked features and niceties lay
 
 ## Config keys (.maestro/config.json)
 - adapter: files | gitea | github | gitlab | linear | jira
-- backend: { repo?, url?, token?, project_id? }  (forge/native connection; project_id is the GitLab project numeric id or path, used by the gitlab adapter's MCP/REST transports)
+- backend: { repo?, url?, token?, project_id?, team?, project?, email?, stateCache? }  (forge/native connection. repo: github/gitea owner/name. project_id: GitLab project numeric id or path (gitlab MCP/REST). team: Linear team key. project: Jira project key. email: Jira account email. stateCache: linear/jira discovered native states + Jira transition ids, written by /setup and read by set_status/set_subtask_state)
 - statusMap: { <canonical>: <native name> }   (remap escape hatch)
 - fieldMap: { priority: {...}, type: {...} }
 - captureMode: local | backend

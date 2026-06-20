@@ -165,9 +165,9 @@ Transition an item to a new canonical status, resolving the native state via the
 - **API:** Resolve the native state name to a `stateId` via `config.backend.stateCache`. Then GraphQL `updateIssue(id: "<id>", input: { stateId: "<stateId>" })`.
 
 **Jira:**
-- **MCP:** Using the native state name from step 1 as the target status: call `GET <url>/rest/api/3/issue/<id>/transitions` (or MCP equivalent) to fetch available transitions; select the transition whose target status name equals the resolved native state name; then call `mcp__atlassian__transition_issue` (or `mcp__jira__transition_issue`) with `issueKey=<id>`, `transitionId=<tid>`.
+- **MCP:** Resolve the transition ID for the target status — look up the resolved native state name in `config.backend.stateCache` (Jira entries map state name → `{id, transitionId}`) and use its `transitionId`; **on a cache miss**, call `GET <url>/rest/api/3/issue/<id>/transitions` (or MCP equivalent) and select the transition whose target status name equals the resolved native state name. Then call `mcp__atlassian__transition_issue` (or `mcp__jira__transition_issue`) with `issueKey=<id>`, `transitionId=<tid>`.
 - **CLI:** `jira issue transition "<native state name>" <id>` (the CLI takes the target state name directly, so no transition-ID lookup is needed).
-- **API:** `GET <url>/rest/api/3/issue/<id>/transitions` to fetch available transitions; find the transition whose `to.name` equals the resolved native state name; then `POST <url>/rest/api/3/issue/<id>/transitions { "transition": {"id":"<tid>"} }`.
+- **API:** Use the `transitionId` cached for the resolved native state name in `config.backend.stateCache`; **on a cache miss**, `GET <url>/rest/api/3/issue/<id>/transitions` and find the transition whose `to.name` equals the resolved native state name. Then `POST <url>/rest/api/3/issue/<id>/transitions { "transition": {"id":"<tid>"} }`.
 
 No separate open/close call. Native state change is the only action.
 
@@ -210,9 +210,9 @@ Map subtask state to canonical: `todo` → `planned`; `doing` → `in-progress`;
 - **API:** Resolve the mapped canonical status to a `stateId` via the four-tier write path + `config.backend.stateCache`. Then GraphQL `updateIssue(id: "<ref>", input: { stateId: "<stateId>" })`.
 
 **Jira:**
-- **MCP:** Resolve the mapped canonical status to a native state name via the four-tier write path. Fetch available transitions for `<ref>`; select the transition whose target status equals the resolved native state name; then `mcp__atlassian__transition_issue` with `issueKey=<ref>`, `transitionId=<tid>`.
+- **MCP:** Resolve the mapped canonical status to a native state name via the four-tier write path. Use the `transitionId` cached for that state name in `config.backend.stateCache`; **on a cache miss**, fetch available transitions for `<ref>` and select the transition whose target status equals the resolved native state name. Then `mcp__atlassian__transition_issue` with `issueKey=<ref>`, `transitionId=<tid>`.
 - **CLI:** Resolve the mapped canonical status to a native state name via the four-tier write path. Then `jira issue transition "<native state name>" <ref>`.
-- **API:** Resolve the mapped canonical status to a native state name via the four-tier write path. `GET <url>/rest/api/3/issue/<ref>/transitions` to find transition ID matching native state name; then `POST <url>/rest/api/3/issue/<ref>/transitions { "transition": {"id":"<tid>"} }`.
+- **API:** Resolve the mapped canonical status to a native state name via the four-tier write path. Use the `transitionId` cached for that state name in `config.backend.stateCache`; **on a cache miss**, `GET <url>/rest/api/3/issue/<ref>/transitions` to find the transition ID whose target matches the native state name. Then `POST <url>/rest/api/3/issue/<ref>/transitions { "transition": {"id":"<tid>"} }`.
 
 ### link_artifact
 
