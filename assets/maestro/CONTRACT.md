@@ -156,3 +156,22 @@ Net: a minimal backend (the 5 core) is usable; tracked features and niceties lay
 - adapter `files` -> adapters/files.md
 - adapter `gitea|github|gitlab` -> adapters/<name>.md
 - adapter `linear|jira` -> adapters/linear-jira.md (profile branches on the name)
+
+## Degradation
+
+Capability flags (profile header `supports`) drive behavior. Rules:
+
+1. Degradable required ops:
+   - link_artifact: if no native artifact field -> append `- <kind>: <ref>` under `## Artifacts` in the body.
+   - comment: if no native comments -> append the text under `## Notes` in the body.
+2. Optional ops:
+   - capture_raw: captureMode=backend needs create_item; if the backend can't, use local .maestro/inbox.md.
+   - search: if no native search -> list_items + case-insensitive local match.
+   - relate: if no native relations -> a comment ("duplicate-of #X") + set_status(duplicate) for duplicates.
+3. set_subtasks/set_subtask_state for a TRACKED item:
+   - prefer native sub-issues (supports: subissues); else a `- [ ]` task-list in the body (supports:
+     subtasks-as-tasklist); if NEITHER is possible, STOP and tell the user this backend cannot track
+     plan progress natively — offer to keep the item `light` (steps live only in .maestro/work/<id>/plan.md).
+4. No transport available (detection yields none): STOP. Print which of MCP/CLI/API to configure and the
+   one-line auth command for each. NEVER fall back to the files adapter silently.
+5. Unmapped native status (linear/jira read path): report `inbox` + warn; prompt to add to config.statusMap.

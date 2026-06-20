@@ -378,7 +378,7 @@ Match the task line by its description text; toggle `[ ]` ↔ `[x]`.
 
 ### link_artifact
 
-Record a relationship between an issue and an external artifact (PR, commit, deploy URL, etc.) by posting a structured comment.
+Record a relationship between an issue and an external artifact (PR, commit, deploy URL, etc.) by posting a structured comment. GitHub has no native artifact field; a structured comment is the CONTRACT §Degradation fallback ("append link to body" — here realized as a comment rather than body edit, since GitHub comments are the idiomatic body-extension surface).
 
 **MCP**
 ```
@@ -439,7 +439,7 @@ Content-Type: application/json
 
 ### capture_raw
 
-Store raw external data (webhook payload, CI output, external ticket dump) against an issue as a collapsible comment block.
+Store raw external data (webhook payload, CI output, external ticket dump) against an issue as a collapsible comment block. If `config.captureMode != "backend"` (or the backend is unreachable), fall back to appending a dated bullet to `.maestro/inbox.md` (CONTRACT §Degradation fallback).
 
 **MCP**
 ```
@@ -602,3 +602,7 @@ create_label_if_missing "maestro:tracked" "5319e7" "Maestro: work item tracked"
 ```
 
 Re-running this script is safe: `gh label list` captures the current state before each run; labels that already exist are skipped.
+
+## Degradation
+
+Follows CONTRACT §Degradation; this backend supports: labels, relations, subtasks-as-tasklist. Fallbacks apply for: link_artifact (no native artifact field → structured comment, as above); comment is native; capture_raw falls back to local .maestro/inbox.md when captureMode≠backend (see capture_raw above); search is native; relate uses a structured comment (GitHub has no native typed relations, as noted in the relate recipe above).

@@ -214,7 +214,7 @@ State encoding: todo = `[ ]`, doing = `[~]`, done = `[x]`.
 
 ### link_artifact
 
-Records an artifact (PR, commit, deployment, etc.) against a work item. Gitea has no native artifact field; artifacts are stored in a `## Artifacts` body section.
+Records an artifact (PR, commit, deployment, etc.) against a work item. Gitea has no native artifact field; artifacts are stored in a `## Artifacts` body section (CONTRACT §Degradation fallback: append `- <kind>: <ref>` under `## Artifacts` in the body).
 
 - **MCP:**
   ```
@@ -359,3 +359,7 @@ Bootstrap procedure (all three transports follow the same logic — check then c
   ```
 
 Never error if a label already exists. On conflict (label exists with different color), skip — do not overwrite user customizations.
+
+## Degradation
+
+Follows CONTRACT §Degradation; this backend supports: labels, relations, subtasks-as-tasklist. Fallbacks apply for: link_artifact (no native artifact field → body `## Artifacts` section, as above); comment is native; capture_raw falls back to local .maestro/inbox.md when captureMode≠backend; search is native; relate uses a comment as the reliable fallback (see relate recipe above).

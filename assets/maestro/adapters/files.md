@@ -93,3 +93,7 @@ Status lives in the `status:` frontmatter field. Terminal statuses (`done`, `won
 - **search(query)**: list_items then match query against id/title/Summary (case-insensitive substring); return candidates.
 
 - **relate(id, kind, target)**: add {kind,target} to links: frontmatter; for duplicate-of also set status=duplicate via set_status.
+
+## Degradation
+
+Follows CONTRACT §Degradation; this backend supports: subtasks (via `## Tasks` checklist), relations (via `links:` frontmatter), artifacts (via `artifacts:` frontmatter). All ops are implemented natively against local Markdown files — body/frontmatter IS the storage layer, so the CONTRACT fallbacks (body-append for link_artifact, Notes-append for comment, inbox.md for capture_raw, list_items+local-match for search, comment for relate) are satisfied here by the primary implementations above. No transport degradation applies; the files adapter has no remote transport to lose.

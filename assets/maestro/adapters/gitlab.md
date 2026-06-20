@@ -317,7 +317,7 @@ PRIVATE-TOKEN: <token>
 
 ### link_artifact
 
-Record an artifact reference (URL, path, build link) as a comment on the issue.
+Record an artifact reference (URL, path, build link) as a note on the issue. GitLab has no native artifact field; a structured note is the CONTRACT §Degradation fallback (append link to body — here realized as a note since GitLab notes are the idiomatic body-extension surface).
 
 **MCP:**
 ```
@@ -373,7 +373,7 @@ PRIVATE-TOKEN: <token>
 
 ### capture_raw
 
-Store a raw text payload (e.g., tool output, log snippet) as a comment on the issue.
+Store a raw text payload (e.g., tool output, log snippet) as a note on the issue. If `config.captureMode != "backend"` (or the backend is unreachable), fall back to appending a dated bullet to `.maestro/inbox.md` (CONTRACT §Degradation fallback).
 
 **MCP:**
 ```
@@ -504,3 +504,7 @@ ensure_label "maestro:tracked" "#0e8a16"
 ```
 
 > **Note:** Terminal labels (`done`, `wont-fix`, `deferred`, `duplicate`) and `maestro:tracked` are **not** scoped — they are singleton labels without a `::` namespace, so GitLab does not enforce mutual exclusivity on them. Only `status::*`, `type::*`, and `priority::*` are scoped.
+
+## Degradation
+
+Follows CONTRACT §Degradation; this backend supports: labels (scoped), relations, subtasks-as-tasklist. Fallbacks apply for: link_artifact (no native artifact field → structured note, as above); comment is native (notes); capture_raw falls back to local .maestro/inbox.md when captureMode≠backend (see capture_raw above); search is native; relate uses a note + label close (GitLab has no typed native relations — see relate recipe above).

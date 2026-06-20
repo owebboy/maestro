@@ -335,3 +335,7 @@ After discovery, `/setup` updates `.maestro/config.json` with:
 - `fieldMap.priority` and `fieldMap.type` (only if non-default)
 
 No lifecycle skill needs to change when switching between `linear` and `jira`. All branching is in this profile.
+
+## Degradation
+
+Follows CONTRACT §Degradation; this backend supports: native-states, subissues, relations, priority-field, type-field. Fallbacks apply for: link_artifact (body append if attachment API unavailable, as noted above); comment (body append if comment API unavailable, as noted above); capture_raw falls back to local .maestro/inbox.md if transport unavailable (as noted above); search falls back to list_items + local match if native search unavailable (as noted above); relate falls back to a comment if native relation API unavailable (as noted above). Unmapped native status on read path → report `inbox` + warn + prompt to add to config.statusMap (four-tier read path, rule 4).
