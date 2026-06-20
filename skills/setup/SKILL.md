@@ -80,9 +80,7 @@ Generate these files populated with Q&A answers:
 | `.maestro/context/guidelines.md` | Voice, tone, design principles |
 | `.maestro/context/tech-stack.md` | Languages, frameworks, infra, dependencies |
 | `.maestro/context/workflow.md` | TDD policy, commits, reviews, verification rules |
-| `.maestro/context/styleguides/markdown.md` | Markdown conventions |
-| `.maestro/context/styleguides/bash.md` | Bash conventions |
-| `.maestro/context/styleguides/json.md` | JSON conventions |
+| `.maestro/context/styleguides/<language>.md` | One file per language selected in Section 5 (e.g. markdown, bash, json) |
 
 Also create the following empty directories and files:
 
