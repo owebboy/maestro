@@ -79,6 +79,21 @@ Unlike the git-forge adapters, Linear and Jira use **native workflow states** �
 
 **Important:** There is NO separate open/close call. Setting any state (including `done`, `wont-fix`, `deferred`, `duplicate`) is a single native state transition. The native state implies open/closed; Maestro does not manage this separately.
 
+### Worked example — remap precedence (tier 1 beats tier 2)
+
+A team calls its "ready for development" column **"Selected for Dev"**. Their `/setup` discovery wrote:
+
+```json
+"statusMap": { "reviewed": "Selected for Dev" }
+```
+
+Now an unchanged lifecycle skill calls the abstract op `set_status(id, reviewed)`:
+
+1. **Tier 1 — statusMap:** `config.statusMap["reviewed"]` is `"Selected for Dev"` → resolved native state = **"Selected for Dev"**. Resolution stops here.
+2. Tier 2 (default table: Linear `Todo` / Jira `Selected for Development`) is **never consulted**, because tier 1 matched.
+
+The agent then transitions the issue to "Selected for Dev" (Linear: look up its `stateId`; Jira: find the transition whose target status is "Selected for Dev"). The skill said `reviewed`; the profile — not the skill — decided that this team's `reviewed` means "Selected for Dev". This is the whole point of P3: **a backend is fitted to any team's workflow by editing `config.statusMap`, with zero lifecycle-skill changes.**
+
 ## Field mapping
 
 Native trackers support first-class priority, type, and weight fields — do NOT use labels.

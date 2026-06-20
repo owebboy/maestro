@@ -97,8 +97,10 @@ Maestro stores work items through a pluggable adapter, chosen at `/setup`:
 | `gitea` | Gitea issues | MCP / `tea` CLI / REST; plain `status:*` labels |
 | `github` | GitHub issues | `gh` CLI / REST; plain `status:*` labels |
 | `gitlab` | GitLab issues | `glab` CLI / REST; scoped `status::*` labels |
+| `linear` | Linear issues | MCP / GraphQL; native workflow states (no CLI) |
+| `jira` | Jira issues | MCP / `jira` CLI / REST; native workflow states |
 
-The lifecycle skills are backend-agnostic — they speak abstract operations against whichever adapter `config.json` names. `/setup` captures the connection and bootstraps the required labels (idempotent) for forge backends.
+The lifecycle skills are backend-agnostic — they speak abstract operations against whichever adapter `config.json` names. `/setup` captures the connection and bootstraps the required labels (idempotent) for forge backends. For the native trackers (`linear`/`jira`) `/setup` instead discovers the team's workflow states and writes a `config.statusMap` that maps Maestro's canonical statuses onto that team's custom states — so any board layout works without editing a skill. Both `linear` and `jira` load the one `adapters/linear-jira.md` profile.
 
 Full Codex setup and compatibility details: [codex/INSTALL.md](codex/INSTALL.md)
 

@@ -98,7 +98,7 @@ Skills read from and write to `.maestro/`. The SessionStart hook (`session-start
 
 ### Work-item backends
 
-The work-item store is a pluggable adapter, chosen at `$setup`: `files` (default — local Markdown in `.maestro/items/`), `gitea` (MCP / `tea` / REST), `github` (`gh` / REST), or `gitlab` (`glab` / REST, scoped labels). All adapter profiles ship under `assets/maestro/adapters/` and are copied into `.maestro/adapters/`. Lifecycle skills stay backend-agnostic; the active adapter is named in `config.json`, and forge backends resolve transport in MCP > CLI > API order. `$setup` captures the connection and idempotently bootstraps the required labels.
+The work-item store is a pluggable adapter, chosen at `$setup`: `files` (default — local Markdown in `.maestro/items/`), `gitea` (MCP / `tea` / REST), `github` (`gh` / REST), `gitlab` (`glab` / REST, scoped labels), or the native trackers `linear` (MCP / GraphQL, no CLI) and `jira` (MCP / `jira` CLI / REST). All adapter profiles ship under `assets/maestro/adapters/` and are copied into `.maestro/adapters/` (both `linear` and `jira` load the single `linear-jira.md` profile). Lifecycle skills stay backend-agnostic; the active adapter is named in `config.json`, and forge/native backends resolve transport in MCP > CLI > API order. For forges, `$setup` captures the connection and idempotently bootstraps the required labels; for `linear`/`jira` it discovers the team's native workflow states and writes a `config.statusMap` (requires that discovery step) so any custom board fits with zero skill edits.
 
 ### Migrating from the legacy layout
 
