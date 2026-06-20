@@ -4,6 +4,7 @@ import argparse
 import json
 import pathlib
 import re
+import shutil
 import sys
 
 
@@ -225,6 +226,87 @@ def plan_inbox(issues_dir):
     return {"dst": ".maestro/inbox.md", "text": text}
 
 
+def build_plan(repo_root):
+    repo_root = pathlib.Path(repo_root)
+    conductor = repo_root / "conductor"
+    issues = repo_root / "issues"
+    context = plan_context(conductor) if conductor.exists() else []
+    tracks = plan_tracks(conductor, 1) if (conductor / "tracks").exists() else []
+    seq_after = 1 + len(tracks)
+    items, merges = (plan_issues(issues, 100 + seq_after) if issues.exists() else ([], []))
+    tracks, unmatched = apply_merges(tracks, merges)
+    for mc in unmatched:  # advanced issue with no surviving track -> light reviewed item
+        name = pathlib.Path(mc["old_path"]).stem
+        nid = f"{900:04d}-{sanitize_slug(name)}"
+        items.append({"old_path": mc["old_path"], "new_id": nid,
+                      "record_path": f".maestro/items/{nid}.md",
+                      "record_text": _render_record(nid, name, mc["fm"].get("type", "chore"),
+                          mc["fm"].get("priority", "P3"), "reviewed", "light",
+                          mc["fm"].get("filed", "1970-01-01"), mc["fm"].get("filed", "1970-01-01"),
+                          body=mc["body"], note="Was advanced-to a track that no longer exists."),
+                      "status": "reviewed", "advanced_to": None})
+    inbox = plan_inbox(issues) if issues.exists() else None
+    dropped = [str(conductor / n) for n in ("tracks.md", "index.md", "setup_state.json")
+               if (conductor / n).exists()]
+    assets = {"CONTRACT.md": ".maestro/CONTRACT.md",
+              "adapters/files.md": ".maestro/adapters/files.md",
+              "config.template.json": ".maestro/config.json"}
+    return {"repo_root": str(repo_root), "context": context, "tracks": tracks,
+            "items": items, "inbox": inbox, "dropped": dropped,
+            "unmatched": unmatched, "assets": assets}
+
+
+def render_dry_run(plan):
+    L = ["=== Maestro migration plan (dry-run) ==="]
+    L.append(f"context docs : {len(plan['context'])}")
+    L.append(f"tracks->items: {len(plan['tracks'])}")
+    L.append(f"issues->items: {len(plan['items'])}")
+    L.append(f"dropped      : {len(plan['dropped'])} (old registry files)")
+    for p in plan["context"]:
+        L.append(f"  move {p['src']} -> {p['dst']}")
+    for tp in plan["tracks"]:
+        L.append(f"  track {tp['old_id']} -> {tp['record_path']} ({tp['status']})")
+        for w in tp["work_pairs"]:
+            L.append(f"    prose {w['src']} -> {w['dst']}")
+    for it in plan["items"]:
+        L.append(f"  issue {it['old_path']} -> {it['record_path']} ({it['status']})")
+    if plan["inbox"]:
+        L.append(f"  inbox -> {plan['inbox']['dst']}")
+    for d in plan["dropped"]:
+        L.append(f"  DROP {d} (not migrated; old registry)")
+    L.append("Run again with --apply to perform this migration.")
+    return "\n".join(L)
+
+
+def _write(repo_root, rel, text):
+    dst = pathlib.Path(repo_root) / rel
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_text(text)
+
+
+def apply_plan(repo_root, plan, remove_legacy=False):
+    repo_root = pathlib.Path(repo_root)
+    for src_rel, dst_rel in plan["assets"].items():
+        _write(repo_root, dst_rel, (repo_root / "assets/maestro" / src_rel).read_text())
+    for p in plan["context"]:
+        _write(repo_root, p["dst"], pathlib.Path(p["src"]).read_text())
+    for tp in plan["tracks"]:
+        _write(repo_root, tp["record_path"], tp["record_text"])
+        for w in tp["work_pairs"]:
+            _write(repo_root, w["dst"], pathlib.Path(w["src"]).read_text())
+    for it in plan["items"]:
+        _write(repo_root, it["record_path"], it["record_text"])
+    if plan["inbox"]:
+        _write(repo_root, plan["inbox"]["dst"], plan["inbox"]["text"])
+    for name in ("conductor", "issues"):
+        d = repo_root / name
+        if d.exists():
+            d.rename(repo_root / f".{name}.bak")
+    if remove_legacy:
+        for name in (".conductor.bak", ".issues.bak"):
+            shutil.rmtree(repo_root / name, ignore_errors=True)
+
+
 def parse_args(argv):
     p = argparse.ArgumentParser(prog="migrate-to-maestro",
                                 description="Migrate conductor/ + issues/ to .maestro/")
@@ -237,7 +319,14 @@ def parse_args(argv):
 
 def main(argv=None):
     args = parse_args(sys.argv[1:] if argv is None else argv)
-    print(f"[migrate-to-maestro] path={args.path} apply={args.apply}")
+    plan = build_plan(args.path)
+    if not args.apply:
+        print(render_dry_run(plan))
+        return 0
+    apply_plan(args.path, plan, remove_legacy=args.remove_legacy)
+    print("Migration applied. Legacy dirs backed up to .conductor.bak/.issues.bak.")
+    if not args.remove_legacy:
+        print("Verify .maestro/, then delete the .bak dirs (or re-run with --remove-legacy).")
     return 0
 
 

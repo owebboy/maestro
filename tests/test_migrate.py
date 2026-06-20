@@ -1,4 +1,4 @@
-import importlib.util, importlib.machinery, pathlib, sys, unittest
+import importlib.util, importlib.machinery, pathlib, sys, unittest, shutil, tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 _LOC = ROOT / "bin" / "migrate-to-maestro"
@@ -114,6 +114,44 @@ class TestInbox(unittest.TestCase):
         self.assertEqual(plan["dst"], ".maestro/inbox.md")
         self.assertIn("## Inbox", plan["text"])
         self.assertIn("-", plan["text"])  # at least one bullet preserved
+
+
+class TestPlanAndApply(unittest.TestCase):
+    def setUp(self):
+        self.tmp = pathlib.Path(tempfile.mkdtemp())
+        shutil.copytree(ROOT / "tests/fixtures/legacy", self.tmp, dirs_exist_ok=True)
+        # provide the package assets the planner copies:
+        (self.tmp / "assets/maestro/adapters").mkdir(parents=True)
+        (self.tmp / "assets/maestro/CONTRACT.md").write_text("# Contract\n")
+        (self.tmp / "assets/maestro/adapters/files.md").write_text("# files\n")
+        (self.tmp / "assets/maestro/config.template.json").write_text('{"adapter":"files"}\n')
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_build_plan_counts(self):
+        plan = migrate.build_plan(self.tmp)
+        self.assertEqual(len(plan["tracks"]), 1)
+        # one open + one archived issue become items; the tracked issue is merged
+        self.assertEqual(len(plan["items"]), 2)
+        self.assertIn("tracks.md", " ".join(plan["dropped"]))
+
+    def test_dry_run_is_readonly(self):
+        plan = migrate.build_plan(self.tmp)
+        _ = migrate.render_dry_run(plan)
+        self.assertFalse((self.tmp / ".maestro").exists())  # nothing written
+
+    def test_apply_writes_and_backs_up(self):
+        plan = migrate.build_plan(self.tmp)
+        migrate.apply_plan(self.tmp, plan)
+        self.assertTrue((self.tmp / ".maestro/config.json").exists())
+        self.assertTrue((self.tmp / ".maestro/context/guidelines.md").exists())
+        self.assertTrue((self.tmp / ".conductor.bak").exists())
+        self.assertTrue((self.tmp / ".issues.bak").exists())
+        self.assertFalse((self.tmp / "conductor").exists())
+        # the in-progress track became a planned/in-progress item record
+        items = list((self.tmp / ".maestro/items").glob("*.md"))
+        self.assertTrue(items)
 
 
 if __name__ == "__main__":
