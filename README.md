@@ -1,6 +1,6 @@
 # Maestro
 
-Complete development workflow for Claude Code and Codex: issue pipeline, tracked development with specs and plans, UAT, codebase review, and session wrap-up. Uses [Superpowers](https://github.com/obra/superpowers) as the execution engine for brainstorming, planning, TDD, and subagent-driven development.
+Complete development workflow for Claude Code and Codex: inbox triage, tracked development with specs and plans, UAT, codebase review, and session wrap-up — all backed by a **pluggable work-item store**. Work items live as local Markdown by default, or in Gitea, GitHub, GitLab, Linear, or Jira; the lifecycle skills are backend-agnostic, so switching trackers is a config change, not a rewrite. Uses [Superpowers](https://github.com/obra/superpowers) as the execution engine for brainstorming, planning, TDD, and subagent-driven development.
 
 ## Install
 
@@ -102,7 +102,7 @@ Maestro stores work items through a pluggable adapter, chosen at `/setup`:
 
 The lifecycle skills are backend-agnostic — they speak abstract operations against whichever adapter `config.json` names. `/setup` captures the connection and bootstraps the required labels (idempotent) for forge backends. For the native trackers (`linear`/`jira`) `/setup` instead discovers the team's workflow states and writes a `config.statusMap` that maps Maestro's canonical statuses onto that team's custom states — so any board layout works without editing a skill. Both `linear` and `jira` load the one `adapters/linear-jira.md` profile.
 
-Adapter capability matrix and a guide to writing a new adapter: [docs/adapters/](docs/adapters/)
+Every adapter implements one 12-operation contract against a fixed set of canonical statuses, so adding a backend is one adapter profile plus a `config.json` entry — no lifecycle skill changes. Adapter capability matrix and a guide to writing your own: [docs/adapters/](docs/adapters/)
 
 Full Codex setup and compatibility details: [codex/INSTALL.md](codex/INSTALL.md)
 
@@ -144,7 +144,7 @@ Maestro (WHAT and WHEN)                    Superpowers (HOW)
 
 | Skill | Invocation | Purpose |
 |-------|------------|---------|
-| triage | `/triage` or `$triage` | INBOX.md bullets → structured issue files |
+| triage | `/triage` or `$triage` | `.maestro/inbox.md` bullets → structured item records |
 | issue-review | `/issue-review <path>` or `$issue-review <path>` | 3 parallel agents enrich issue with codebase context |
 | issue-advance | `/issue-advance <path\|all>` or `$issue-advance <path\|all>` | Issue → new track (spec + brainstorm + plan) |
 | issue-close | `/issue-close <path>` or `$issue-close <path>` | Archive as wont-fix, deferred, or duplicate |
@@ -306,7 +306,7 @@ Six review agents (security, performance, architecture, testing, data integrity,
 
 ```
 /uat-create          # generates acceptance test checklist from completed tracks
-/uat-run             # interactive proctor — walks through tests, captures failures to INBOX
+/uat-run             # interactive proctor — walks through tests, captures failures to .maestro/inbox.md
 ```
 
 ### 4. Wrap up
