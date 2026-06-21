@@ -1,0 +1,8 @@
+{
+  "adapter": "files",
+  "backend": {},
+  "statusMap": {},
+  "fieldMap": {},
+  "captureMode": "local",
+  "artifactsDir": ".maestro/work"
+}

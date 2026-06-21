@@ -1,84 +1,83 @@
 ---
 name: status
-description: Use when getting oriented at the start of a session, or checking overall progress, active tracks, and next actions.
-argument-hint: "[track-id] [--quick]"
+description: Use when getting oriented at the start of a session, or checking overall progress, active work items, and next actions.
+argument-hint: "[ref]"
 ---
 
 # Project Status
 
-Display current status of the project: overall progress, track summary, current focus, and next actions.
+Display current status of the project: overall progress, work item board, and next actions.
 
 ## Pre-flight
 
-1. Verify `conductor/product.md` and `conductor/tracks.md` exist
-   - If missing: suggest running `/setup` in Claude Code or `$setup` in Codex first
-2. If no tracks registered: show setup-complete message, suggest `/new-track` in Claude Code or `$new-track` in Codex
+1. Read `.maestro/context/product.md` for project name and description.
+   - If missing: suggest running `/setup` in Claude Code or `$setup` in Codex first.
+2. Read `.maestro/inbox.md` and count top-level bullet items (lines beginning with `- `) under `## Inbox` for the raw inbox count — match what triage processes; ignore continuation lines, blanks, and headers.
+3. Call `list_items({})` to retrieve all items.
+   - If the result is empty and inbox count is 0: show setup-complete message, suggest `/new-track` in Claude Code or `$new-track` in Codex.
 
-## Data Collection
+## Data: Board counts
 
-1. **Project info**: read `conductor/product.md` for name and description
-2. **Tracks overview**: parse `conductor/tracks.md` for total/completed/in-progress/pending counts
-3. **Per-track detail**: for each track in `conductor/tracks/`:
-   - Read plan.md: count tasks by status (`[x]`, `[~]`, `[ ]`), identify current phase
-   - Read metadata.json: type, dates, status
-   - Read spec.md: check for blockers or dependencies
-4. **Blocker detection**: tasks prefixed with `BLOCKED:`, dependencies on incomplete tracks
-5. **Issues overview** (if `issues/` exists):
-   - Count bullets in `issues/INBOX.md` under `## Inbox`
-   - Scan `issues/*.md` files (excluding INBOX.md) — read each file's frontmatter for `status` and `priority`
-   - If an issue file has malformed or missing frontmatter, skip that file and note it in the output.
-   - Group counts by status: triaged, reviewed
-   - Sort issue lists by priority (P1 first)
+From the `list_items({})` result:
+
+- **By status:** count items per canonical status (`inbox`, `triaged`, `reviewed`, `planned`, `in-progress`, `in-review`, `done`, `wont-fix`, `deferred`, `duplicate`). Omit statuses with zero items.
+- **By priority:** count items per `priority` value (`P1`, `P2`, `P3`). Omit priorities with zero items.
+- **By weight:** count `tracked` items vs `light` items.
+- **Updated date** (for the ACTIVE ITEMS table): use each record's `updated` field from the normalized record.
 
 ## Output: Full Status (no argument)
 
 ```
 PROJECT STATUS: {Project Name}
+{Project Description — one line, from product.md}
 
-PROGRESS
-Tracks: {completed}/{total} ({percentage}%)
-Tasks:  {completed}/{total} ({percentage}%)
+BOARD
+Status breakdown:
+  in-progress  2
+  reviewed     3
+  triaged      1
+  done         5
+  (omit zero-count statuses)
 
-TRACKS
-| Status | Track ID | Type | Tasks | Updated |
-|--------|----------|------|-------|---------|
-| [x] | auth_20260401 | feature | 12/12 (100%) | 2026-04-02 |
-| [~] | dashboard_20260402 | feature | 7/15 (47%) | 2026-04-03 |
-| [ ] | nav-fix_20260403 | bug | 0/4 (0%) | 2026-04-03 |
+Priority breakdown:
+  P1  1
+  P2  4
+  P3  1
 
-CURRENT FOCUS
-Active: dashboard_20260402 — Phase 2: Core Components
-Current: [~] Task 2.3 — Implement chart rendering
-Next: Task 2.4 — Add filter controls
+Weight: {N} tracked  |  {M} light
 
-BLOCKERS
-(none)
+Inbox: {inbox_bullet_count} unprocessed
 
-ISSUES
-Inbox: {inbox_count} unprocessed
-| Priority | Status | File | Summary |
-|----------|--------|------|---------|
-| P1 | reviewed | 2026-04-03-auth-bug.md | Auth token not refreshing |
-| P2 | triaged | 2026-04-03-nav-layout.md | Nav collapses on mobile |
+ACTIVE ITEMS  (status: in-progress or in-review, sorted P1 first)
+| Priority | ID | Title | Weight | Updated |
+|----------|----|-------|--------|---------|
+| P1 | 0007-auth-bug | Auth token not refreshing | light | 2026-04-03 |
+| P2 | 0012-dashboard | Dashboard charts | tracked | 2026-04-03 |
 
-Commands (in Claude Code, or $command in Codex): /implement {trackId} | /new-track | /manage | /triage | /issue-review
+NEXT UP  (status: planned or reviewed, sorted P1 first, max 5)
+| Priority | ID | Title | Weight |
+|----------|-----|-------|--------|
+| P2 | 0015-nav-fix | Nav collapses on mobile | light |
+
+Commands (Claude Code / Codex): /implement {id} | /new-track | /manage | /triage | /issue-review
 ```
 
-## Output: Single Track (with track-id)
+## Output: Single Item (with ref argument)
 
-Show detailed view: spec summary, acceptance criteria checklist, full task tree with phase markers, related git commits, next steps.
+Call `get_item(ref)`.
 
-## Quick Mode (--quick)
+Show:
+- **ID / Title / Type** (from record)
+- **Status / Priority / Weight** (canonical values from record)
+- **Artifacts** (from `artifacts` list — kind + ref for each)
+- **Tasks progress** (for `weight: tracked` items only): count subtasks by state (`todo`/`doing`/`done`); render as `done/total (X%)`. List any `doing` subtasks by title.
+- **Links** (from `links` list, if any)
 
-```
-{Project Name}: {completed}/{total} tasks ({percentage}%)
-Active: {trackId} — Task {X.Y}
-```
+If no item found: list active item IDs with suggestion.
 
 ## Empty States
 
-- No tracks: "No tracks yet. Run /new-track in Claude Code or $new-track in Codex to create one."
-- Track not found: list available tracks with suggestion
-- No issues directory: omit ISSUES section entirely
-- Issues directory exists but no open issues: "ISSUES: None open (inbox empty)"
-- Multiple in-progress tracks: choose the most recently updated one as the single `Active` track in CURRENT FOCUS, and list the others under TRACKS.
+- No items and inbox empty: "No work yet. Run /new-track in Claude Code or $new-track in Codex to create one."
+- Ref not found: list available item IDs with suggestion.
+- No active (in-progress/in-review) items: omit ACTIVE ITEMS section.
+- No planned/reviewed items: omit NEXT UP section.

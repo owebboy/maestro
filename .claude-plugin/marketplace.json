@@ -7,8 +7,8 @@
   "plugins": [
     {
       "name": "maestro",
-      "description": "Complete development workflow: track management, issue pipeline, UAT, codebase review, and session wrap-up.",
-      "version": "1.3.0",
+      "description": "Unified work-item workflow with pluggable backends (files/gitea/github/gitlab/linear/jira): inbox triage, review, spec + plan, implementation, UAT, codebase review, and session wrap-up.",
+      "version": "2.0.0",
       "source": "./",
       "author": {
         "name": "Oliver Pope"

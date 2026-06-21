@@ -1,66 +1,135 @@
 ---
 name: issue-advance
-description: Use when a reviewed issue is ready to become a conductor track, or "all" to batch-advance. For a track that already has a spec and plan, use implement instead.
-argument-hint: "<issue-file-path> | all"
+description: Use when a reviewed work item is ready to grow a spec and plan (promote to tracked), or "all" to batch-promote. For an item that already has a plan, use implement.
+argument-hint: "<item-ref> | all"
 ---
 
 # Issue Advance
 
-Convert a reviewed issue file into a conductor track.
+Promote a reviewed work item to tracked in place — no new id minted, no file moved.
 
-**Argument:** path to issue file (e.g., `issues/2026-02-24-timer-pause.md`) or `all` to batch-advance all reviewed issues
+**Argument:** item ref (id, slug, or `work/<id>` path) or `all` to batch-promote all reviewed items
 
 ## Pre-flight
 
-1. **Read** the issue file(s)
-   - If the issue file path does not exist, inform the user and stop
-   - Verify frontmatter `status` is `reviewed`
-   - If status is `triaged` — suggest running `/issue-review` in Claude Code or `$issue-review` in Codex first
-   - If status is anything other than `reviewed` (and not `triaged`), inform the user of the unexpected status and stop
+1. **Verify project is initialized:**
+   - `.maestro/config.json` must exist — if not, suggest running `/setup` in Claude Code or `$setup` in Codex first and stop
+   - `.maestro/context/product.md`, `.maestro/context/tech-stack.md`, `.maestro/context/workflow.md` must exist — if any are missing, suggest running `/setup` first and stop
 
-2. **Verify project** is initialized:
-   - Check that `conductor/` directory exists with `product.md` (or `product-guidelines.md`) and `workflow.md`
-   - If not found — tell the user: "Project is not initialized. Run `/setup` in Claude Code or `$setup` in Codex first."
-   - Stop if not initialized
+2. **Load context:** read `product.md`, `tech-stack.md`, `workflow.md` for project understanding
 
 3. **Batch mode** (`all` argument):
-   - Scan `issues/*.md` for files with frontmatter `status: reviewed`
-   - If no reviewed issues are found, inform the user and stop
-   - Sort by priority (P1 first, then P2, then P3) so blocking issues are advanced first
-   - Present the sorted list and ask user to confirm which to advance
-   - Group related issues into fewer tracks where they address the same subsystem — ask user before grouping
+   - Call `list_items({status: reviewed})` to get all reviewed items
+   - If no reviewed items are found, inform the user and stop
+   - Sort by priority (P1 first, then P2, then P3)
+   - Present the sorted list and ask the user to confirm which to promote
+   - Promote each confirmed item using the Process below
 
-## Process (per issue)
+## Process (per item)
 
-4. **Invoke** `new-track` using the harness form (`/new-track` in Claude Code, `$new-track` in Codex):
-   - Pass the issue type and Summary as the argument (e.g., `bug fix timer pause`)
-   - **IMPORTANT:** When new-track asks interactive questions, draft the answers yourself from the issue file data rather than re-asking the user. Present the drafted answers to the user, and once they confirm, proceed with them.
+### Step 1: Load item
 
-   | new-track Question | Answer from Issue Field |
-   |-------------------|----------------------|
-   | Track type? | **Type** (bug/feature/refactor/chore) |
-   | Summary? | **Summary** |
-   | Steps to reproduce / User story? | **Problem Description** |
-   | Acceptance criteria? | **Acceptance Criteria** |
-   | Dependencies? | **Dependencies** section |
-   | Out of scope? | **Out of Scope** section |
-   | Technical considerations? | **Technical Context** (filled by `/issue-review` in Claude Code or `$issue-review` in Codex) |
+1. Call `get_item(ref)` to load the item
+2. Check `status`:
+   - If `reviewed` — proceed
+   - If `triaged` — suggest running `/issue-review` in Claude Code or `$issue-review` in Codex first, then stop
+   - Any other status — inform the user and stop
+3. Note the existing `id` — this is the permanent identity. **Do NOT mint a new id.**
 
-   - When new-track shows spec for review — verify it accurately captures the issue
-   - When brainstorming/planning begins — provide design context from the issue's Technical Context section
-   - When plan is shown for review — approve if reasonable
+### Step 2: Spec generation
 
-5. **Archive the issue** after track creation succeeds:
-   - Add to frontmatter: `advanced-to: <track-id>` — the `<track-id>` is the id created by `new-track` in the previous step
-   - Update frontmatter `status` to `tracked`
-   - Move file to `issues/archived/tracked/`
-   - Create `issues/archived/tracked/` directory if it doesn't exist
+Write the spec prose to `.maestro/work/<id>/spec.md` (get today's date by running `date +%Y-%m-%d` — do not assume you know it), drawing content from the item record:
 
-6. **Confirm** — display track ID, location, and next steps
+```markdown
+# Specification: {Title}
+
+**Item ID:** {id}
+**Type:** {type}
+**Created:** {date}
+**Status:** Draft
+
+## Summary
+## Context
+## Acceptance Criteria
+- [ ] ...
+## Dependencies
+## Out of Scope
+## Technical Notes
+```
+
+Show the spec to the user for review. Wait for approval before proceeding.
+
+### Step 3: Design via Brainstorming
+
+Detect `brainstorming` using the [detection procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
+
+If available, invoke the brainstorming skill using the detected form. Pass the approved spec as context AND instruct it to write its design doc to `.maestro/work/<id>/design.md`. Example invocation context:
+
+> Design a solution for the following specification. Write the design document to `.maestro/work/<id>/design.md`.
+>
+> {spec content}
+
+If Superpowers writes the design doc elsewhere despite the instruction (e.g., `docs/superpowers/specs/` or `docs/specs/`), move it to `.maestro/work/<id>/design.md` and delete the external file.
+
+If Superpowers is not installed, run an inline design discussion:
+1. Propose 2-3 implementation approaches based on the spec
+2. Present trade-offs for each
+3. Get user approval on approach
+4. Write the approved design to `.maestro/work/<id>/design.md`
+
+### Step 4: Plan via Writing Plans
+
+Detect `writing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
+
+If available, invoke the writing-plans skill using the detected form. Instruct it to write the plan to `.maestro/work/<id>/plan.md`. Example invocation context:
+
+> Create an implementation plan based on the approved design at `.maestro/work/<id>/design.md`. Write the plan to `.maestro/work/<id>/plan.md`.
+
+If Superpowers writes the plan elsewhere despite the instruction (e.g., `docs/superpowers/plans/` or `docs/plans/`), move it to `.maestro/work/<id>/plan.md` and delete the external file. `/implement` reads this path directly — the plan MUST be there.
+
+If Superpowers is not installed, generate a phased plan inline:
+- Group tasks into logical phases
+- Each task: description, files to modify, test to write, verification step
+- Write plan directly to `.maestro/work/<id>/plan.md`
+
+### Step 5: Artifact linking + subtasks + lifecycle
+
+After all prose is written:
+
+1. **Link artifacts** (one call per artifact):
+   - `link_artifact(id, spec, .maestro/work/<id>/spec.md)`
+   - `link_artifact(id, design, .maestro/work/<id>/design.md)`
+   - `link_artifact(id, plan, .maestro/work/<id>/plan.md)`
+
+2. **Mirror plan tasks as subtasks:** parse the plan for phase/task entries; call `set_subtasks(id, [{ref, title, state: todo} for each plan task])` where `ref` = the plan's phase.task number (e.g. `1.1`, `1.2`, `2.1`). This is the coarse progress store — detailed TDD steps remain in the plan file.
+
+3. **Promote weight:** `update_item(id, { weight: tracked })`
+
+4. **Set lifecycle status:** `set_status(id, planned)`
+
+5. **Add provenance note:** `comment(id, "Promoted to tracked from reviewed.")`
 
 ## Error Handling
 
-- **`new-track` fails partway**: If track creation fails after spec generation but before plan completion, report the partial state. The user can resume with `/new-track` in Claude Code or `$new-track` in Codex using the existing spec, or delete the partial track directory and retry.
-- **Issue data incomplete**: If the issue file is missing sections that `new-track` needs (e.g., no Acceptance Criteria), fill with reasonable defaults from the Summary and flag to the user for confirmation.
-- **Archive directory missing**: Create `issues/archived/tracked/` if it doesn't exist before moving.
-- **Batch mode conflict**: If two reviewed issues appear to cover the same problem, ask the user whether to group them into one track or create separate tracks.
+- **Item not found**: Report the error and stop. Do not attempt to create a new item.
+- **Spec rejected by user**: Return to Step 2 and revise the spec based on user feedback.
+- **Brainstorming or planning skill fails**: Fall back to the inline alternative for that step and continue.
+- **Superpowers writes files to wrong location**: Move the file to the correct `.maestro/work/<id>/` path and delete the external copy. Check both `docs/superpowers/specs/`, `docs/superpowers/plans/`, `docs/specs/`, and `docs/plans/` as common default locations.
+- **Batch mode conflict**: If two reviewed items appear to cover the same problem, ask the user whether to promote them separately or consolidate — do not merge automatically.
+
+## Completion
+
+```
+Item promoted: {id}
+Location: .maestro/work/{id}/
+
+Files:
+  spec.md    — requirements
+  design.md  — approved design
+  plan.md    — implementation plan
+
+Status: planned
+Weight: tracked
+
+Next: Run /implement {id} in Claude Code or $implement {id} in Codex to start implementation.
+```

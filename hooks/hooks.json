@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/hooks/session-start-issues.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/hooks/session-start-maestro.sh\""
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/hooks/validate-issue-frontmatter.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/hooks/validate-item-frontmatter.sh\""
           }
         ]
       }

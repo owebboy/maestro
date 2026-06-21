@@ -1,7 +1,7 @@
 interface:
-  display_name: "Implement Track"
-  short_description: "Execute a planned conductor track, or implement a small issue file directly."
-  default_prompt: "Use $implement to execute the active Maestro track plan with checkpoints, or pass an issues/*.md path to implement a small issue directly."
+  display_name: "Implement"
+  short_description: "Implement a work item (tracked plan or light fix)."
+  default_prompt: "Use $implement to execute a tracked item's plan with checkpoints, or fix a light item directly."
 
 policy:
   allow_implicit_invocation: false

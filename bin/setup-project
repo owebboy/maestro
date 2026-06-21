@@ -7,12 +7,13 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd -P)"
 
 INSTALL_CLAUDE=false
 INSTALL_CODEX=false
-SETUP_ISSUES=true
+SETUP_MAESTRO=true
 SETUP_HOOKS=true
 INSTALL_MODE="symlink"
 TARGET_DIR=""
 EXPLICIT_HARNESS=false
 HARNESS_SOURCE="explicit"
+LEGACY_DETECTED=false
 
 print_help() {
   cat <<'EOF'
@@ -30,7 +31,8 @@ Options:
   --both               Install for both harnesses
   --copy, --portable   Copy files instead of creating symlinks
   --symlink            Create symlinks (default)
-  --no-issues          Do not create issues/ scaffolding
+  --no-maestro         Do not create .maestro/ scaffolding
+  --no-issues          Alias for --no-maestro (back-compat)
   --no-hooks           Do not install hook scripts/config
   --help, -h           Show this help
 
@@ -87,8 +89,12 @@ parse_args() {
         INSTALL_MODE="symlink"
         shift
         ;;
+      --no-maestro)
+        SETUP_MAESTRO=false
+        shift
+        ;;
       --no-issues)
-        SETUP_ISSUES=false
+        SETUP_MAESTRO=false
         shift
         ;;
       --no-hooks)
@@ -161,7 +167,7 @@ print_summary() {
   note "Mode:        $INSTALL_MODE"
   note "Claude:      $INSTALL_CLAUDE"
   note "Codex:       $INSTALL_CODEX"
-  note "Issues:      $SETUP_ISSUES"
+  note "Maestro:     $SETUP_MAESTRO"
   note "Hooks:       $SETUP_HOOKS"
   note "Harnesses:   $HARNESS_SOURCE"
   echo ""
@@ -220,9 +226,9 @@ write_inbox_file() {
   local inbox_path="$1"
 
   cat > "$inbox_path" <<'EOF'
-# Issue Inbox
+# Inbox
 
-Add issues as bullet points below. Run `/triage` in Claude Code or `$triage` in Codex to process them into individual issue files.
+Add work items as bullet points below. Run `/triage` in Claude Code or `$triage` in Codex to process them.
 
 ## Format
 
@@ -253,27 +259,55 @@ ensure_directory() {
   fi
 }
 
-ensure_issues_scaffold() {
-  local issues_dir="$TARGET_DIR/issues"
-  local inbox_path="$issues_dir/INBOX.md"
+ensure_maestro_scaffold() {
+  local maestro_dir="$TARGET_DIR/.maestro"
+  local assets_src="$SCRIPT_DIR/assets/maestro"
+  local inbox_path="$maestro_dir/inbox.md"
+  local config_path="$maestro_dir/config.json"
 
-  if ! $SETUP_ISSUES; then
+  if ! $SETUP_MAESTRO; then
     return
   fi
 
-  section "Issues Directory"
-  ensure_directory "$issues_dir" "issues/"
-  ensure_directory "$issues_dir/archived/tracked" "issues/archived/tracked/"
-  ensure_directory "$issues_dir/archived/implemented" "issues/archived/implemented/"
-  ensure_directory "$issues_dir/archived/deferred" "issues/archived/deferred/"
-  ensure_directory "$issues_dir/archived/wont-fix" "issues/archived/wont-fix/"
-  ensure_directory "$issues_dir/archived/duplicate" "issues/archived/duplicate/"
+  section ".maestro/ Directory"
+
+  # Core directories (LD-1)
+  ensure_directory "$maestro_dir" ".maestro/"
+  ensure_directory "$maestro_dir/context" ".maestro/context/"
+  ensure_directory "$maestro_dir/context/styleguides" ".maestro/context/styleguides/"
+  ensure_directory "$maestro_dir/work" ".maestro/work/"
+  ensure_directory "$maestro_dir/items" ".maestro/items/"
+  ensure_directory "$maestro_dir/items/archived/done" ".maestro/items/archived/done/"
+  ensure_directory "$maestro_dir/items/archived/wont-fix" ".maestro/items/archived/wont-fix/"
+  ensure_directory "$maestro_dir/items/archived/deferred" ".maestro/items/archived/deferred/"
+  ensure_directory "$maestro_dir/items/archived/duplicate" ".maestro/items/archived/duplicate/"
+
+  # Package-managed assets: overwrite on each setup (LD-2)
+  if [[ -f "$assets_src/CONTRACT.md" ]]; then
+    cp "$assets_src/CONTRACT.md" "$maestro_dir/CONTRACT.md"
+    note "copy: .maestro/CONTRACT.md (package-managed)"
+  fi
+
+  if [[ -d "$assets_src/adapters" ]]; then
+    rm -rf "$maestro_dir/adapters"
+    mkdir -p "$maestro_dir/adapters"
+    cp -R "$assets_src/adapters/." "$maestro_dir/adapters/"
+    note "copy: .maestro/adapters/ (package-managed)"
+  fi
+
+  # Project-owned assets: only if missing (LD-1)
+  if [[ -f "$config_path" ]]; then
+    note "ok: .maestro/config.json"
+  elif [[ -f "$assets_src/config.template.json" ]]; then
+    cp "$assets_src/config.template.json" "$config_path"
+    note "created: .maestro/config.json (from template)"
+  fi
 
   if [[ -f "$inbox_path" ]]; then
-    note "ok: issues/INBOX.md"
+    note "ok: .maestro/inbox.md"
   else
     write_inbox_file "$inbox_path"
-    note "created: issues/INBOX.md"
+    note "created: .maestro/inbox.md"
   fi
 
   echo ""
@@ -305,7 +339,7 @@ write_claude_settings_with_hooks() {
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/session-start-issues.sh" }
+          { "type": "command", "command": ".claude/hooks/session-start-maestro.sh" }
         ]
       }
     ],
@@ -313,7 +347,7 @@ write_claude_settings_with_hooks() {
       {
         "matcher": "Write|Edit",
         "hooks": [
-          { "type": "command", "command": ".claude/hooks/validate-issue-frontmatter.sh" }
+          { "type": "command", "command": ".claude/hooks/validate-item-frontmatter.sh" }
         ]
       }
     ]
@@ -328,10 +362,10 @@ print_claude_hook_snippet() {
   {
     "hooks": {
       "SessionStart": [
-        { "hooks": [{ "type": "command", "command": ".claude/hooks/session-start-issues.sh" }] }
+        { "hooks": [{ "type": "command", "command": ".claude/hooks/session-start-maestro.sh" }] }
       ],
       "PostToolUse": [
-        { "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": ".claude/hooks/validate-issue-frontmatter.sh" }] }
+        { "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": ".claude/hooks/validate-item-frontmatter.sh" }] }
       ]
     }
   }
@@ -374,7 +408,7 @@ write_codex_hooks_json() {
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": ".codex/hooks/session-start-issues.sh" }
+          { "type": "command", "command": ".codex/hooks/session-start-maestro.sh" }
         ]
       }
     ]
@@ -389,7 +423,7 @@ print_codex_hook_snippet() {
   {
     "hooks": {
       "SessionStart": [
-        { "hooks": [{ "type": "command", "command": ".codex/hooks/session-start-issues.sh" }] }
+        { "hooks": [{ "type": "command", "command": ".codex/hooks/session-start-maestro.sh" }] }
       ]
     }
   }
@@ -400,7 +434,7 @@ install_codex_hooks() {
   local hooks_src="$SCRIPT_DIR/bin/hooks"
   local hooks_dest="$TARGET_DIR/.codex/hooks"
   local hooks_json="$TARGET_DIR/.codex/hooks.json"
-  local session_start_hook="$hooks_src/session-start-issues.sh"
+  local session_start_hook="$hooks_src/session-start-maestro.sh"
 
   [[ -f "$session_start_hook" ]] || return
 
@@ -450,17 +484,33 @@ print_codex_tip() {
 print_next_steps() {
   echo "Done."
   if $INSTALL_CLAUDE && $INSTALL_CODEX; then
-    echo 'Run /setup in Claude Code or $setup in Codex to initialize conductor/ context.'
+    echo 'Run /setup in Claude Code or $setup in Codex to initialize .maestro/ context, then /triage or $triage to process inbox items.'
   elif $INSTALL_CLAUDE; then
-    echo 'Run /setup in Claude Code to initialize conductor/ context.'
+    echo 'Run /setup in Claude Code to initialize .maestro/ context, then /triage to process inbox items.'
   else
-    echo 'Run $setup in Codex to initialize conductor/ context.'
+    echo 'Run $setup in Codex to initialize .maestro/ context, then $triage to process inbox items.'
+  fi
+  if $LEGACY_DETECTED; then
+    echo ""
+    echo "To migrate legacy data: $SCRIPT_DIR/bin/migrate-to-maestro --path \"$TARGET_DIR\" --apply"
+  fi
+}
+
+detect_legacy() {
+  if { [[ -d "$TARGET_DIR/conductor" ]] || [[ -d "$TARGET_DIR/issues" ]]; } && [[ ! -d "$TARGET_DIR/.maestro" ]]; then
+    LEGACY_DETECTED=true
+    echo ""
+    echo "Legacy conductor/ or issues/ detected and no .maestro/ yet."
+    echo "Preview migration:  $SCRIPT_DIR/bin/migrate-to-maestro --path \"$TARGET_DIR\""
+    echo "Apply migration:    $SCRIPT_DIR/bin/migrate-to-maestro --path \"$TARGET_DIR\" --apply"
+    echo ""
   fi
 }
 
 main() {
   parse_args "$@"
   resolve_target_dir
+  detect_legacy
   auto_select_harnesses
   print_summary
 
@@ -472,7 +522,7 @@ main() {
     install_codex_skills
   fi
 
-  ensure_issues_scaffold
+  ensure_maestro_scaffold
   install_hooks
   print_codex_tip
   print_next_steps

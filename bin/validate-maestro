@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""Static validation of the Maestro package: contract, adapters, skill abstraction."""
+import pathlib
+import re
+import sys
+
+OPS = ["create_item", "get_item", "update_item", "set_status", "list_items",
+       "set_subtasks", "set_subtask_state", "link_artifact", "comment",
+       "capture_raw", "search", "relate"]
+STATUSES = ["inbox", "triaged", "reviewed", "planned", "in-progress", "in-review",
+            "done", "wont-fix", "deferred", "duplicate"]
+SHAPE_SECTIONS = ["## Capabilities", "## Transport detection", "## Status mapping",
+                  "## Field mapping", "## Operations"]
+LEGACY = ["conductor/", "issues/", "metadata.json", "tracks.md"]
+BACKEND_TOKENS = ["mcp__gitea", "gh issue", "glab issue", "mcp__linear",
+                  "mcp__atlassian", "jira issue"]
+LIFECYCLE = ["triage", "issue-review", "issue-advance", "new-track", "implement",
+             "issue-close", "status", "manage", "session-wrap-up", "workflow-router",
+             "uat-create", "uat-run", "codebase-review"]
+
+
+def _read(p):
+    return p.read_text() if p.exists() else ""
+
+
+def check_contract(root):
+    txt = _read(pathlib.Path(root) / "assets/maestro/CONTRACT.md")
+    errs = []
+    for op in OPS:
+        if op not in txt:
+            errs.append(f"CONTRACT missing op {op}")
+    for st in STATUSES:
+        if st not in txt:
+            errs.append(f"CONTRACT missing status {st}")
+    for sec in ("## Degradation", "## Config keys"):
+        if sec not in txt:
+            errs.append(f"CONTRACT missing section {sec}")
+    return errs
+
+
+def check_adapters(root):
+    base = pathlib.Path(root) / "assets/maestro/adapters"
+    errs = []
+    for f in sorted(base.glob("*.md")):
+        if f.name.startswith("_"):
+            continue
+        txt = f.read_text()
+        # files adapter uses a simpler shape; forge/native adapters use the full shape
+        if f.stem != "files":
+            for sec in SHAPE_SECTIONS:
+                if sec not in txt:
+                    errs.append(f"{f.name} missing section {sec}")
+        for op in OPS:
+            if op not in txt:
+                errs.append(f"{f.name} missing op {op}")
+    return errs
+
+
+def check_skills_abstract(root):
+    base = pathlib.Path(root) / "skills"
+    errs = []
+    for name in LIFECYCLE:
+        txt = _read(base / name / "SKILL.md")
+        for bad in LEGACY + BACKEND_TOKENS:
+            # allow the bare word "issues" in prose; only flag path-like "issues/"
+            if bad in txt:
+                errs.append(f"skills/{name} references forbidden token {bad!r}")
+    return errs
+
+
+def validate(root):
+    return check_contract(root) + check_adapters(root) + check_skills_abstract(root)
+
+
+def main(argv=None):
+    root = (argv or sys.argv[1:] or ["."])[0]
+    errs = validate(root)
+    if errs:
+        print("MAESTRO VALIDATION FAILED:")
+        for e in errs:
+            print(f"  - {e}")
+        return 1
+    print("maestro validation ok")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

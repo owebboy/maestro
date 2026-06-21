@@ -6,17 +6,17 @@ argument-hint: "[UAT-file-path | date]"
 
 # UAT Run
 
-Interactive proctor for walking through a UAT checklist. Runs pre-checks, guides manual testing section by section, captures failures as INBOX issues.
+Interactive proctor for walking through a UAT checklist. Runs pre-checks, guides manual testing section by section, captures failures via `capture_raw`.
 
 ## Arguments
 
-Optional: UAT file path or date (e.g., `2026-03-11`). If omitted, uses the most recent `conductor/UAT-*.md` — the one whose filename date (`UAT-YYYY-MM-DD.md`) is newest. If no matching UAT file exists, or a passed path/date resolves to no file, inform the user and stop.
+Optional: UAT file path or date (e.g., `2026-03-11`). If omitted, uses the most recent `.maestro/work/uat/UAT-*.md` — the one whose filename date (`UAT-YYYY-MM-DD.md`) is newest. If no matching UAT file exists, or a passed path/date resolves to no file, inform the user and stop.
 
 ## Process
 
 ### 1. Load
 
-- Read the target `conductor/UAT-YYYY-MM-DD.md`
+- Read the target `.maestro/work/uat/UAT-YYYY-MM-DD.md`
 - Parse all sections, test items, and their current status (`[ ]`, `[x]`, `[!]`, `[-]`)
 - Identify incomplete items (skip already-passed `[x]` sections unless user requests re-test)
 - Check prerequisites — warn if any are unmet
@@ -64,12 +64,11 @@ When user reports a failure:
 
 1. Ask for the symptom (what happened vs what was expected)
 2. If automated tools are available, run diagnostic queries/commands to gather context
-3. Draft an INBOX bullet:
+3. Draft a failure description:
    ```
-   - <description of failure with specific test reference> (type: <inferred>, priority: <inferred>)
+   <description of failure with specific test reference> (type: <inferred>, priority: <inferred>)
    ```
-4. Show the draft and ask for confirmation before appending under the `## Inbox` section of `issues/INBOX.md`
-   - If `issues/INBOX.md` does not exist, create it first: create `issues/INBOX.md` containing a top-level heading `# Issue Inbox`, the line `Add issues as bullet points below. Run `/triage` in Claude Code or `$triage` in Codex to process them.`, and an `## Inbox` section header; also create `issues/archived/{tracked,implemented,deferred,wont-fix,duplicate}/`
+4. Show the draft and ask for confirmation, then call `capture_raw("<failure with test ref> (type: <inferred>, priority: <inferred>)")` to route the failure to `.maestro/inbox.md`
 
 **Type inference:** visual/UI issue -> bug; data mismatch -> bug; missing feature -> feature
 **Priority inference:** blocks core workflow -> P1; incorrect results -> P2; cosmetic/minor -> P3
@@ -93,9 +92,9 @@ Results: X pass, Y fail, Z blocked out of N total
 - Section B: 2 fail (B.3, B.5)
 - Section C: blocked (deployment)
 
-New INBOX items: M
-- <bullet 1 summary>
-- <bullet 2 summary>
+New captured failures: M
+- <failure 1 summary>
+- <failure 2 summary>
 ```
 
 ## Rules
@@ -104,4 +103,4 @@ New INBOX items: M
 - **Don't assume** — if an automated result is ambiguous, ask the user rather than auto-marking pass
 - **Preserve existing marks** — don't overwrite `[x]` items from prior runs unless user explicitly asks to re-test
 - **One section at a time** — wait for user input before advancing to the next section
-- **INBOX bullets need confirmation** — always show the draft before appending
+- **Failures need confirmation** — always show the draft before calling `capture_raw`

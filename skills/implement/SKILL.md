@@ -1,12 +1,12 @@
 ---
 name: implement
-description: Use when ready to implement a track that has an approved spec and plan, or when a triaged/reviewed issue file is simple enough to fix without track ceremony. Takes a track ID or an issues/*.md path; for a designed track from an issue, use issue-advance instead.
-argument-hint: "[track-id | issue-file-path] [--task X.Y] [--phase N]"
+description: Use when ready to implement a work item — tracked (has spec+plan) or light (simple enough to fix directly). Takes a work-item ref.
+argument-hint: "[item-ref] [--task X.Y] [--phase N]"
 ---
 
-# Implement Track
+# Implement
 
-Execute a track's plan using Superpowers' execution engine (subagent-driven or inline), with track progress management and phase checkpoints. Small issues can skip the track entirely: pass an issue file path to use [Direct Issue Mode](#direct-issue-mode).
+Execute a work item to completion. Works for both tracked items (have a spec+plan) and light items (implement directly from body). Uses abstract ops; the active adapter handles all storage.
 
 ## Progress Checklist
 
@@ -15,128 +15,152 @@ Copy this checklist and track your progress:
 ```
 Implementation Progress:
 - [ ] Pre-flight: verify project initialized
-- [ ] Track selection (argument or interactive)
+- [ ] Item selection (argument or interactive)
 - [ ] Context loading
-- [ ] Track status → in-progress
-- [ ] Execution mode selection
-- [ ] Per-task loop: RED → GREEN → REFACTOR → commit → mark complete
-- [ ] Phase review: code simplifier → code reviewer → auto-fix → INBOX
+- [ ] set_status(id, in-progress)
+- [ ] Execution (tracked: per-task loop with set_subtask_state; light: direct)
+- [ ] Phase review: code simplifier → code reviewer → capture_raw out-of-scope
 - [ ] Phase checkpoint → user approval
-- [ ] (repeat tasks/phases)
-- [ ] Track completion: final verification + status update
+- [ ] (repeat tasks/phases for tracked)
+- [ ] Completion: final verification + set_status(id, in-review | done)
 ```
 
 ## Pre-flight
 
-0. If the argument is a path to an existing `.md` file under `issues/`, go straight to [Direct Issue Mode](#direct-issue-mode) — it has its own pre-flight and does not require `conductor/`.
-1. Verify project is initialized (conductor/workflow.md exists). If conductor/workflow.md does not exist, inform the user and stop (suggest setup).
-2. Load workflow config: TDD strictness, commit strategy, verification rules
+Verify project is initialized (`.maestro/context/workflow.md` exists). If it does not exist, inform the user and stop (suggest `/setup` or `$setup`).
 
-## Track Selection
+Load workflow config from `.maestro/context/workflow.md`: TDD strictness, commit strategy, verification rules.
 
-**If the argument is a path to an existing `.md` file under `issues/`:** skip the track flow entirely and follow [Direct Issue Mode](#direct-issue-mode) below.
+## Item Selection
 
-**If argument provided (track ID):** validate `conductor/tracks/{argument}/plan.md` exists.
+**If argument provided:** call `get_item(ref)` to resolve the loose ref (bare id, slug, or `work/<id>` path) and load the item record.
 
-**If no argument:** read `conductor/tracks.md`, show incomplete tracks:
+**If no argument:** call `list_items({status: in-progress})` and `list_items({status: planned})`, then show the union:
+
 ```
-Select a track to implement:
+Select a work item to implement:
 
 In Progress:
-1. [~] auth_20260403 - User Authentication (Phase 2, Task 3)
+1. [~] 0042-user-auth — User Authentication
 
-Pending:
-2. [ ] nav-fix_20260402 - Navigation Bug Fix
+Planned:
+2. [ ] 0017-nav-fix — Navigation Bug Fix
 
-Enter number or track ID:
+Enter number or item ref:
 ```
+
+Then call `get_item(ref)` on the chosen item.
 
 ## Context Loading
 
 Read all relevant context:
-- `conductor/tracks/{trackId}/spec.md` — requirements
-- `conductor/tracks/{trackId}/plan.md` — task list
-- `conductor/tracks/{trackId}/metadata.json` — progress state
-- `conductor/product.md` — product context
-- `conductor/tech-stack.md` — technical constraints
-- `conductor/workflow.md` — process rules
-- `conductor/code_styleguides/` — language conventions
+- `.maestro/work/<id>/spec.md` — requirements (tracked items; skip if not present)
+- `.maestro/context/product.md` — product context
+- `.maestro/context/tech-stack.md` — technical constraints
+- `.maestro/context/workflow.md` — process rules
+- `.maestro/context/styleguides/` — language conventions
 
-## Track Status Update
+## Status Update
 
-Mark track as in-progress:
-- In `conductor/tracks.md`: change `[ ]` to `[~]`
-- In metadata.json: set `status: "in_progress"`, update timestamp
+Call `set_status(id, in-progress)`.
 
-## Execution Mode Selection
+## Execution Mode: Tracked vs Light
 
-Detect `subagent-driven-development` and `executing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
+Branch on the item's `weight` field returned by `get_item`.
+
+### weight == tracked
+
+Read detailed steps from `.maestro/work/<id>/plan.md`. This file is the source of truth for **steps**; the `## Tasks` checklist in the item record is the source of truth for **status** (updated via `set_subtask_state`).
+
+Detect `subagent-driven-development` and `executing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). Check both plugin-prefixed and bare forms.
 
 If Superpowers is available, offer the choice:
 
 ```
-How should this track be implemented?
+How should this item be implemented?
 
 1. Subagent-driven (recommended) — fresh subagent per task with two-stage review
 2. Inline execution — single session, batch checkpoints every 3 tasks
 ```
 
-### Subagent-Driven Execution (via Superpowers)
+#### Subagent-Driven Execution (via Superpowers)
 
-Invoke the subagent-driven-development skill using the detected form, passing the track's plan from `conductor/tracks/{trackId}/plan.md`.
-
-Superpowers handles:
-- Fresh subagent per task (implementer → spec-reviewer → code-quality-reviewer)
-- TDD enforcement (red → green → refactor)
-- Per-task commits
-- Final code review across entire implementation
+Invoke the subagent-driven-development skill using the detected form, passing the plan from `.maestro/work/<id>/plan.md`.
 
 **Our wrapper responsibilities (before/after Superpowers runs each task):**
 
-Before dispatching each task's subagent, update metadata.json: set `current_task` to this task's ID (e.g., "2.3") and `current_phase` to the containing phase number. This ensures resume state is accurate even if the session is interrupted mid-task.
+Before dispatching each task's subagent: `set_subtask_state(id, <ref>, doing)`.
 
-After each task completes, update track metadata:
-- Mark task `[x]` in `conductor/tracks/{trackId}/plan.md`
-- Increment `tasks.completed` in metadata.json
-- Set `current_task` to the next incomplete task ID
-- Check for phase completion
+After each task completes: `set_subtask_state(id, <ref>, done)`. Check for phase completion.
 
-**Superpowers output control:** When invoking the skill, instruct it that all artifacts belong in `conductor/tracks/{trackId}/` — not `docs/superpowers/`. If Superpowers writes artifacts outside the track directory despite the instruction, move them in. If Superpowers invokes `finishing-a-development-branch` at the end, defer to our own Track Completion flow below instead — we manage the track lifecycle, not Superpowers.
+**Superpowers output control:** When invoking the skill, instruct it that all artifacts belong in `.maestro/work/<id>/` — not `docs/superpowers/`. If Superpowers writes artifacts outside the work directory despite the instruction, move them in. If Superpowers invokes `finishing-a-development-branch` at the end, defer to our own Completion flow below.
 
-### Inline Execution (via Superpowers)
+#### Inline Execution (via Superpowers)
 
-Detect `executing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). If no signal is positive, fall back to the no-Superpowers path below.
+Detect `executing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md). If found, invoke it with the plan. Same subtask lifecycle: `set_subtask_state(id, <ref>, doing)` before each task, `set_subtask_state(id, <ref>, done)` after. Same output control.
 
-Invoke the executing-plans skill using the detected form, passing the track's plan.
+#### Fallback (no Superpowers)
 
-Same metadata lifecycle: write `current_task` before each task starts, update counters after each task completes. Same output control: instruct Superpowers to write to the track directory, redirect anything that escapes, and handle completion via our Track Completion flow.
-
-### Fallback (no Superpowers)
-
-Execute tasks directly following TDD workflow from conductor/workflow.md:
+Execute tasks directly following TDD workflow from `.maestro/context/workflow.md`:
 
 For each incomplete task (`[ ]` in plan.md):
 
-1. **Mark in-progress**: change `[ ]` to `[~]` in plan.md
-2. **Update metadata.json**: set `current_task` to this task's ID (e.g., "2.3"), set `current_phase` to the containing phase number
-3. **RED**: write failing test, verify it fails
-4. **GREEN**: implement minimal code to pass, verify pass
-5. **REFACTOR**: clean up, verify still passing
-6. **Commit**: following commit strategy from workflow.md
-7. **Mark complete**: change `[~]` to `[x]` in plan.md, increment `tasks.completed` in metadata.json
+1. **Mark doing**: `set_subtask_state(id, <ref>, doing)`
+2. **RED**: write failing test, verify it fails
+3. **GREEN**: implement minimal code to pass, verify pass
+4. **REFACTOR**: clean up, verify still passing
+5. **Commit**: following commit strategy from `.maestro/context/workflow.md`
+6. **Mark done**: `set_subtask_state(id, <ref>, done)`
 
-## Phase Checkpoints
+### weight == light
 
-After all tasks in a phase are `[x]`:
+Implement directly from the item body. No plan.md required.
+
+#### Simplicity gate
+
+Before executing, assess the item against all four criteria and present a one-line verdict for each:
+
+1. **Testable** — acceptance criteria are concrete and verifiable as written
+2. **Small** — expected change surface is ~3 files or fewer
+3. **No design decisions** — no new architecture, schema/API changes, or new dependencies
+4. **Single session** — completable in one sitting
+
+Then ask the user:
+
+```
+Recommendation: {implement directly | advance to a tracked item}
+
+1. Implement directly
+2. Advance to a tracked item instead (/issue-advance in Claude Code, $issue-advance in Codex)
+3. Cancel
+```
+
+Failing any criterion flips the recommendation to "advance" — but the user decides; honor an override in either direction.
+
+#### Execute with TDD
+
+Run the RED → GREEN → REFACTOR loop driven by the acceptance criteria instead of plan tasks: write a failing test per criterion, make it pass, refactor. If the project has no test suite, say so and verify each acceptance criterion by inspection instead.
+
+If the test suite fails before you change anything: HALT and show the failures — do not build on a broken baseline.
+
+**Scope escalation:** if the work exceeds the assessed size (more files than expected, a design decision surfaces), stop and present: continue anyway / escalate to `/issue-advance` / pause. Escalation does not carry work-in-progress.
+
+Out-of-scope findings discovered during execution: call `capture_raw("<desc> in <file>:<line> (<severity>). Source: implement of <id>.")` — do not expand the current item's scope.
+
+Commit once, following the commit strategy from `.maestro/context/workflow.md`; reference the item id in the commit message.
+
+## Phase Checkpoints (tracked items only)
+
+After all tasks in a phase are done:
 
 ### 1. Determine Phase File Scope
 
 Build the list of files this phase touched:
 
-**Primary method:** Collect all "files to modify" entries from the phase's tasks in plan.md.
+**Primary method:** Collect all "files to modify" entries from the phase's tasks in `.maestro/work/<id>/plan.md`.
 
-**Fallback (always run as supplement):** The plan.md list misses new files created during tasks and files touched incidentally. Always supplement with git:
-- Find the phase's first task commit in `git log` (match by task ID or commit message convention from workflow.md)
+**Fallback (always run as supplement):** Always supplement with git:
+- Find the phase's first task commit in `git log`
 - Get its parent SHA with `git rev-parse {first-task-commit}^`
 - Diff from its parent: `git diff --name-only {parent-sha}..HEAD`
 - If no task commit is found, skip the git supplement and use the plan.md file list only
@@ -146,10 +170,10 @@ This is the **phase file list** — all review and fixes are scoped to ONLY thes
 
 ### 2. Phase Code Review
 
-Launch Agent 1 first, then Agent 2 after it finishes. Running sequentially avoids edit conflicts when both agents fix the same file.
+Launch Agent 1 first, then Agent 2 after it finishes. Running sequentially avoids edit conflicts.
 
 **Agent 1 — Code Simplifier:**
-Detect the `simplify` skill using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). If found via any signal, invoke it with the phase file list. Otherwise, launch a general-purpose agent:
+Detect the `simplify` skill using the [multi-signal procedure](../../docs/detecting-optional-skills.md). If found, invoke it with the phase file list. Otherwise, launch a general-purpose agent:
 
 > Review ONLY the following files from this phase: [phase file list].
 > Check for: unnecessary complexity, duplicated logic across the phase's files, dead code introduced by this phase, inconsistent patterns between tasks in this phase.
@@ -168,33 +192,24 @@ Launch after Agent 1 completes so it reviews the already-simplified code:
 > - Style and cosmetic issues (naming, formatting, dead imports)
 >
 > For each issue found: state the file, line, severity (critical/warning/nit), and fix.
-> - **In-scope** (file is in the phase file list): Apply the fix directly, regardless of severity. Fix everything — critical, warning, and nit.
-> - **Out-of-scope** (file is NOT in the phase file list but you noticed an issue while reviewing code that calls into it): Do NOT fix. Return as a separate out-of-scope list.
+> - **In-scope** (file is in the phase file list): Apply the fix directly, regardless of severity.
+> - **Out-of-scope** (file is NOT in the phase file list): Do NOT fix. Return as a separate out-of-scope list.
 
-If your harness cannot spawn subagents (e.g. Gemini CLI, Copilot CLI, or plain chat), do this work yourself sequentially, using each agent's brief above as a checklist.
+If your harness cannot spawn subagents, do this work yourself sequentially.
 
 **After both agents finish:**
 
-1. If either agent made changes, commit following the commit strategy in workflow.md (e.g., `refactor: phase {N} code review fixes`). If neither agent made changes, skip the commit.
-2. Collect out-of-scope issues from both agents. If any, append each as a bullet to `issues/INBOX.md`:
+1. If either agent made changes, commit following the commit strategy in `.maestro/context/workflow.md` (e.g., `refactor: phase {N} code review fixes`). If neither made changes, skip the commit.
+2. Collect out-of-scope issues from both agents. For each, call:
    ```
-   - {description} in {file}:{line} ({severity}). Source: phase {N} review of {trackId}.
+   capture_raw("<desc> in <file>:<line> (<severity>). Source: implement of <id>.")
    ```
-   If `issues/INBOX.md` does not exist, create it first with this content, then append the bullet under `## Inbox`:
-   ```markdown
-   # Issue Inbox
-
-   Add issues as bullet points below. Run `/triage` in Claude Code or `$triage` in Codex to process them.
-
-   ## Inbox
-   ```
-   Also create `issues/archived/{tracked,implemented,deferred,wont-fix,duplicate}/`.
 
 ### 3. Run Verification
 
-1. Run phase verification steps listed in plan.md
+1. Run phase verification steps listed in `.maestro/work/<id>/plan.md`
 2. Run full test suite
-3. If review fixes broke tests: fix the regression inline (do not re-launch review agents), amend the review fixes commit, re-run tests to confirm
+3. If review fixes broke tests: fix the regression inline, amend the review fixes commit, re-run tests to confirm
 
 ### 4. Report and Wait for Approval
 
@@ -203,12 +218,11 @@ Phase {N} complete.
 
 Results:
 - All phase tasks: complete
-- Code review: {X} in-scope fixes applied, {Y} out-of-scope issues filed to INBOX
+- Code review: {X} in-scope fixes applied, {Y} out-of-scope issues captured
 - Tests: passing
 - Verification: pass
 
 Review fixes committed: {commit SHA or "none — code was clean"}
-INBOX items added: {Y}
 
 Approve to continue to Phase {N+1}?
 1. Yes, continue
@@ -218,8 +232,6 @@ Approve to continue to Phase {N+1}?
 
 **CRITICAL: Never proceed to the next phase without user approval.**
 
-Update metadata.json: increment `phases.completed`.
-
 ## Error Handling
 
 - **Tool failure**: HALT, present options (retry / skip / pause / revert)
@@ -228,102 +240,30 @@ Update metadata.json: increment `phases.completed`.
 
 ## Resumption
 
-If resuming a paused track:
-1. Load metadata.json for current state
-2. Find current task:
-   - If `current_task` field exists in metadata.json, use it
-   - Otherwise, fall back to scanning plan.md: first task marked `[~]` (in-progress), or if none, first task marked `[ ]` (pending)
+If resuming a paused item:
+1. Call `get_item(ref)` for current state — check `subtasks` for in-progress or pending tasks
+2. Find current task: first subtask with state `doing`, or if none, first with state `todo`
 3. Ask: continue from here / restart current task / show progress
 
-## Track Completion
+## Completion
 
-When all phases and tasks are `[x]`:
+When all tasks are done (tracked) or the implementation is complete (light):
 
-1. Run final verification (full test suite + acceptance criteria from spec.md)
-2. Update track status to complete:
-   - In `conductor/tracks.md`: change `[~]` to `[x]`
-   - In metadata.json: set `status: "complete"`
-3. Offer cleanup: archive / keep as-is
-4. Display summary:
+1. Run final verification (full test suite + acceptance criteria from spec.md or item body)
+2. Get the current commit SHA
+3. Call `comment(id, "Implemented in <sha>.")`
+4. Determine completion status:
+   - Set `in-review` if EITHER (a) the item body has a non-empty `## Acceptance Criteria` section that warrants UAT verification, OR (b) `.maestro/context/workflow.md` defines a review/UAT step (e.g. a `reviewer:` field or a documented review gate). Otherwise set `done`.
+   - Call `set_status(id, in-review)` or `set_status(id, done)` accordingly.
+5. Display summary:
 
 ```
-Track Complete: {title}
+Item Complete: {title}
 
-Phases: {N}/{N}
-Tasks: {M}/{M}
-Commits: {count}
+Tasks: {M}/{M} (tracked) or direct implementation (light)
+Commit: {sha}
 Tests: all passing
+Status: {in-review | done}
 
 Next: Run /uat-create in Claude Code or $uat-create in Codex to generate an acceptance testing checklist.
 ```
-
-## Direct Issue Mode
-
-Implement a small issue straight from its file — no spec, no plan, no track. The issue file is the spec; its Acceptance Criteria are the verification contract.
-
-### 1. Read and validate the issue
-
-- If the file does not exist: tell the user and stop.
-- Read frontmatter. Eligible statuses: `reviewed` (preferred) or `triaged`. For `triaged`, tell the user the issue hasn't been through issue-review, and base your sizing on whatever Technical Context actually contains — it may be empty or incomplete.
-- Any other status (tracked, implemented, wont-fix, deferred, duplicate): tell the user the issue already left the pipeline and stop.
-- Malformed or missing frontmatter: show what's wrong, offer to fix it or stop.
-
-### 2. Simplicity gate
-
-Assess the issue against all four criteria and present a one-line verdict for each:
-
-1. **Testable** — acceptance criteria are concrete and verifiable as written
-2. **Small** — expected change surface is ~3 files or fewer (count the actual files in Technical Context's Affected Files, expanding any globs; if absent, scan the codebase)
-3. **No design decisions** — no new architecture, schema/API changes, or new dependencies
-4. **Single session** — completable in one sitting
-
-Then ask the user:
-
-```
-Recommendation: {implement directly | advance to a track}
-
-1. Implement directly
-2. Advance to a track instead (/issue-advance in Claude Code, $issue-advance in Codex)
-3. Cancel
-```
-
-Failing any criterion flips the recommendation to "advance" — but the user decides; honor an override in either direction.
-
-### 3. Execute with TDD
-
-- If `conductor/workflow.md` exists, load TDD strictness and commit strategy from it. Otherwise use defaults — strict TDD, single commit — and say so.
-- Run the RED → GREEN → REFACTOR loop from [Fallback (no Superpowers)](#fallback-no-superpowers) above, driven by the acceptance criteria instead of plan tasks: write a failing test per criterion, make it pass, refactor. Skip that section's plan.md and metadata.json bookkeeping — there is no track.
-- If the project has no test suite, say so and verify each acceptance criterion by inspection instead.
-- If the test suite fails before you change anything: HALT and show the failures — do not build on a broken baseline.
-- **Scope escalation:** if the work exceeds the assessed size (more files than expected, a design decision surfaces), stop and present: continue anyway / escalate to issue-advance / pause. Escalation does not carry work-in-progress.
-- Out-of-scope findings discovered along the way: append to `issues/INBOX.md` as bullets, creating the file with a `## Inbox` heading if missing.
-- Commit once, following the commit strategy; reference the issue file path in the message (e.g., `fix: honor track status on restore (issues/2026-06-09-manage-restore-status.md)`).
-
-### 4. Final gate
-
-Present before archiving:
-
-```
-Issue implemented: {title}
-
-Acceptance criteria: {checklist with pass/fail}
-Tests: {results}
-Changes: {git diff --stat summary}
-Commit: {sha}
-
-Approve to archive the issue?
-1. Yes, archive
-2. No — fix something first
-3. No — revert the work
-```
-
-If the user wants changes: fix, re-present. On revert: undo the commit, leave the issue file untouched.
-
-### 5. Archive as implemented
-
-On approval:
-
-- Get today's date by running `date +%Y-%m-%d` — do not assume you know it.
-- Update frontmatter: `status: implemented`, add `implemented: YYYY-MM-DD` and `commit: <sha>`.
-- Move the file to `issues/archived/implemented/` (create the directory if missing).
-- Confirm: issue title, commit SHA, and archive location.

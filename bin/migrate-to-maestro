@@ -1,0 +1,375 @@
+#!/usr/bin/env python3
+"""Migrate legacy conductor/ + issues/ into .maestro/. Dry-run by default."""
+import argparse
+import json
+import pathlib
+import re
+import shutil
+import sys
+
+# Package assets live next to this script: bin/../assets/maestro
+ASSETS_SRC = pathlib.Path(__file__).resolve().parent.parent / "assets/maestro"
+
+_FM_RE = re.compile(r"\A---\n(.*?)\n---\n?(.*)\Z", re.DOTALL)
+_TASK_RE = re.compile(r"^\s*-\s*\[([ x~])\]\s*(.*\S)\s*$")
+_REF_RE = re.compile(r"^(\d+\.\d+)\s+(.*)$")
+_STATE = {" ": "todo", "~": "doing", "x": "done"}
+
+
+def split_frontmatter(text):
+    m = _FM_RE.match(text)
+    if not m:
+        return {}, text
+    fm = {}
+    for line in m.group(1).splitlines():
+        if ":" in line:
+            k, v = line.split(":", 1)
+            fm[k.strip()] = v.strip()
+    return fm, m.group(2)
+
+
+def parse_metadata_json(text):
+    return json.loads(text)
+
+
+def parse_plan_tasks(plan_md):
+    tasks, idx = [], 0
+    for line in plan_md.splitlines():
+        m = _TASK_RE.match(line)
+        if not m:
+            continue
+        idx += 1
+        state = _STATE[m.group(1)]
+        rest = m.group(2)
+        rm = _REF_RE.match(rest)
+        if rm:
+            ref, title = rm.group(1), rm.group(2)
+        else:
+            ref, title = f"t{idx}", rest
+        tasks.append({"ref": ref, "title": title, "state": state})
+    return tasks
+
+
+_TRACK_STATUS = {"pending": "planned", "in_progress": "in-progress", "complete": "done"}
+_DATE_SUFFIX = re.compile(r"[-_]?\d{8}$")
+_TODAY = None  # injected by main(); tests may pass created/updated through metadata
+
+
+def sanitize_slug(old_id):
+    s = _DATE_SUFFIX.sub("", old_id).lower()
+    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+    return s or "item"
+
+
+def _task_lines(tasks):
+    mark = {"todo": " ", "doing": "~", "done": "x"}
+    return "\n".join(f"- [{mark[t['state']]}] {t['ref']} — {t['title']}" for t in tasks)
+
+
+def _render_record(new_id, title, type_, priority, status, weight, created, updated,
+                   body, tasks=None, artifacts=None, note=None):
+    arts = artifacts or []
+    lines = ["---", f"id: {new_id}", f"title: {title}", f"type: {type_}",
+             f"priority: {priority}", f"status: {status}", f"weight: {weight}",
+             f"created: {created}", f"updated: {updated}"]
+    if arts:
+        lines.append("artifacts:")
+        lines += [f"  - {{ kind: {a['kind']}, ref: {a['ref']} }}" for a in arts]
+    lines.append("---")
+    out = "\n".join(lines) + f"\n\n# {title}\n\n" + (body.strip() + "\n" if body.strip() else "")
+    if note:
+        out += f"\n## Notes\n\n> {note}\n"
+    if tasks:
+        out += "\n## Tasks\n\n" + _task_lines(tasks) + "\n"
+    return out
+
+
+def _iter_track_dirs(conductor_dir):
+    base = pathlib.Path(conductor_dir) / "tracks"
+    for d in sorted(base.glob("*")) if base.is_dir() else []:
+        if d.is_dir() and d.name != "_archive":
+            yield d, False
+    arch = base / "_archive"
+    for d in sorted(arch.glob("*")) if arch.is_dir() else []:
+        if d.is_dir():
+            yield d, True
+
+
+def plan_tracks(conductor_dir, seq_start):
+    plans, seq = [], seq_start
+    for d, archived in _iter_track_dirs(conductor_dir):
+        meta = {}
+        mf = d / "metadata.json"
+        if mf.exists():
+            meta = parse_metadata_json(mf.read_text())
+        old_id = meta.get("id", d.name)
+        new_id = f"{seq:04d}-{sanitize_slug(old_id)}"
+        seq += 1
+        status = "done" if archived else _TRACK_STATUS.get(meta.get("status", "pending"), "planned")
+        created = (meta.get("created", "") or "")[:10] or "1970-01-01"
+        updated = (meta.get("updated", "") or "")[:10] or created
+        tasks = []
+        plan_md = d / "plan.md"
+        if plan_md.exists():
+            tasks = parse_plan_tasks(plan_md.read_text())
+        arts = [{"kind": k, "ref": f".maestro/work/{new_id}/{k}.md"}
+                for k in ("spec", "design", "plan") if (d / f"{k}.md").exists()]
+        record_text = _render_record(
+            new_id, meta.get("title", old_id), meta.get("type", "chore"),
+            meta.get("priority", "P3"), status, "tracked", created, updated,
+            body="", tasks=tasks, artifacts=arts,
+            note=f"Migrated from conductor track `{old_id}`.")
+        sub = "archived/done/" if archived else ""
+        work_pairs = [{"src": str(d / f"{k}.md"), "dst": f".maestro/work/{new_id}/{k}.md"}
+                      for k in ("spec", "design", "plan") if (d / f"{k}.md").exists()]
+        plans.append({"old_id": old_id, "new_id": new_id,
+                      "record_path": f".maestro/items/{sub}{new_id}.md",
+                      "record_text": record_text, "work_pairs": work_pairs, "status": status})
+    return plans
+
+
+_ISSUE_STATUS = {"triaged": "triaged", "reviewed": "reviewed", "implemented": "done",
+                 "wont-fix": "wont-fix", "deferred": "deferred", "duplicate": "duplicate"}
+
+
+def _iter_issue_files(issues_dir):
+    issues_dir = pathlib.Path(issues_dir)
+    for f in sorted(issues_dir.glob("*.md")):
+        if f.name != "INBOX.md":
+            yield f, None
+    arch = issues_dir / "archived"
+    for reason_dir in sorted(arch.glob("*")) if arch.is_dir() else []:
+        if reason_dir.is_dir():
+            for f in sorted(reason_dir.glob("*.md")):
+                yield f, reason_dir.name
+
+
+def plan_issues(issues_dir, seq_start):
+    items, merges, seq = [], [], seq_start
+    for f, reason in _iter_issue_files(issues_dir):
+        fm, body = split_frontmatter(f.read_text())
+        old_status = fm.get("status", "triaged")
+        slug = sanitize_slug(f.stem)
+        if old_status == "tracked":
+            merges.append({"old_path": str(f), "advanced_to": fm.get("advanced-to", ""),
+                           "body": body, "fm": fm})
+            continue
+        canonical = _ISSUE_STATUS.get(old_status, "triaged")
+        new_id = f"{seq:04d}-{slug}"
+        seq += 1
+        created = fm.get("filed", "") or "1970-01-01"
+        terminal = canonical in ("done", "wont-fix", "deferred", "duplicate")
+        sub = f"archived/{canonical}/" if (reason or terminal) else ""
+        record_text = _render_record(new_id, fm.get("title", f.stem),
+                                     fm.get("type", "chore"), fm.get("priority", "P3"),
+                                     canonical, "light", created, created, body=body,
+                                     note=f"Migrated from issue `{f.name}`.")
+        items.append({"old_path": str(f), "new_id": new_id,
+                      "record_path": f".maestro/items/{sub}{new_id}.md",
+                      "record_text": record_text, "status": canonical,
+                      "advanced_to": None})
+    return items, merges
+
+
+def apply_merges(track_plans, merge_candidates):
+    by_old = {tp["old_id"]: tp for tp in track_plans}
+    unmatched = []
+    for mc in merge_candidates:
+        tp = by_old.get(mc["advanced_to"])
+        if not tp:
+            unmatched.append(mc)
+            continue
+        name = pathlib.Path(mc["old_path"]).name
+        tp.setdefault("folded", []).append(name)
+        addition = (f"\n> Origin issue: {name} (advanced-to {mc['advanced_to']}).\n"
+                    f"\n### Original issue\n\n{mc['body'].strip()}\n")
+        if "## Notes" in tp["record_text"]:
+            tp["record_text"] = tp["record_text"].rstrip() + "\n" + addition
+        else:
+            tp["record_text"] = tp["record_text"].rstrip() + "\n\n## Notes\n" + addition
+    return track_plans, unmatched
+
+
+_CONTEXT_RENAME = {"product-guidelines.md": "guidelines.md"}
+_CONTEXT_PASS = {"product.md", "tech-stack.md", "workflow.md"}
+
+
+def plan_context(conductor_dir):
+    conductor_dir = pathlib.Path(conductor_dir)
+    pairs = []
+    for name in sorted(_CONTEXT_PASS | set(_CONTEXT_RENAME)):
+        src = conductor_dir / name
+        if src.exists():
+            dst = _CONTEXT_RENAME.get(name, name)
+            pairs.append({"src": str(src), "dst": f".maestro/context/{dst}"})
+    styles = conductor_dir / "code_styleguides"
+    if styles.is_dir():
+        for f in sorted(styles.glob("*.md")):
+            pairs.append({"src": str(f), "dst": f".maestro/context/styleguides/{f.name}"})
+    return pairs
+
+
+_INBOX_HEADER = ("# Inbox\n\nPre-triage scratch. Run /triage (or $triage) to convert "
+                 "bullets into work items.\n\n## Inbox\n")
+
+
+def plan_inbox(issues_dir):
+    inbox = pathlib.Path(issues_dir) / "INBOX.md"
+    if not inbox.exists():
+        return None
+    bullets = []
+    in_section = False
+    for line in inbox.read_text().splitlines():
+        if line.strip().lower().startswith("## inbox"):
+            in_section = True
+            continue
+        if in_section and line.strip().startswith("- "):
+            bullets.append(line.rstrip())
+    text = _INBOX_HEADER + ("\n".join(bullets) + "\n" if bullets else "")
+    return {"dst": ".maestro/inbox.md", "text": text}
+
+
+def build_plan(repo_root, assets_root=None):
+    repo_root = pathlib.Path(repo_root)
+    resolved_assets = pathlib.Path(assets_root) if assets_root is not None else ASSETS_SRC
+    conductor = repo_root / "conductor"
+    issues = repo_root / "issues"
+    context = plan_context(conductor) if conductor.exists() else []
+    tracks = plan_tracks(conductor, 1) if (conductor / "tracks").exists() else []
+    seq_after = 1 + len(tracks)
+    items, merges = (plan_issues(issues, 100 + seq_after) if issues.exists() else ([], []))
+    tracks, unmatched = apply_merges(tracks, merges)
+    next_seq = 100 + seq_after + len(items)
+    for mc in unmatched:  # advanced issue with no surviving track -> light reviewed item
+        name = pathlib.Path(mc["old_path"]).stem
+        nid = f"{next_seq:04d}-{sanitize_slug(name)}"
+        next_seq += 1
+        items.append({"old_path": mc["old_path"], "new_id": nid,
+                      "record_path": f".maestro/items/{nid}.md",
+                      "record_text": _render_record(nid, name, mc["fm"].get("type", "chore"),
+                          mc["fm"].get("priority", "P3"), "reviewed", "light",
+                          mc["fm"].get("filed", "1970-01-01"), mc["fm"].get("filed", "1970-01-01"),
+                          body=mc["body"], note="Was advanced-to a track that no longer exists."),
+                      "status": "reviewed", "advanced_to": None})
+    inbox = plan_inbox(issues) if issues.exists() else None
+    dropped = [str(conductor / n) for n in ("tracks.md", "index.md", "setup_state.json")
+               if (conductor / n).exists()]
+    assets = {"CONTRACT.md": ".maestro/CONTRACT.md",
+              "config.template.json": ".maestro/config.json"}
+    adapters_src = resolved_assets / "adapters"
+    if adapters_src.is_dir():
+        for ad in sorted(adapters_src.glob("*.md")):
+            assets[f"adapters/{ad.name}"] = f".maestro/adapters/{ad.name}"
+    return {"repo_root": str(repo_root), "assets_root": str(resolved_assets),
+            "context": context, "tracks": tracks,
+            "items": items, "inbox": inbox, "dropped": dropped,
+            "unmatched": unmatched, "assets": assets}
+
+
+def render_dry_run(plan):
+    L = ["=== Maestro migration plan (dry-run) ==="]
+    L.append(f"context docs : {len(plan['context'])}")
+    L.append(f"tracks->items: {len(plan['tracks'])}")
+    L.append(f"issues->items: {len(plan['items'])}")
+    L.append(f"dropped      : {len(plan['dropped'])} (old registry files)")
+    for p in plan["context"]:
+        L.append(f"  move {p['src']} -> {p['dst']}")
+    for tp in plan["tracks"]:
+        L.append(f"  track {tp['old_id']} -> {tp['record_path']} ({tp['status']})")
+        for w in tp["work_pairs"]:
+            L.append(f"    prose {w['src']} -> {w['dst']}")
+        for fname in tp.get("folded", []):
+            L.append(f"    merge {fname} -> folded into {tp['new_id']}")
+    for it in plan["items"]:
+        L.append(f"  issue {it['old_path']} -> {it['record_path']} ({it['status']})")
+    if plan["inbox"]:
+        L.append(f"  inbox -> {plan['inbox']['dst']}")
+    for d in plan["dropped"]:
+        L.append(f"  DROP {d} (not migrated; old registry)")
+    L.append("Run again with --apply to perform this migration.")
+    return "\n".join(L)
+
+
+def _write(repo_root, rel, text):
+    dst = pathlib.Path(repo_root) / rel
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_text(text)
+
+
+def apply_plan(repo_root, plan, remove_legacy=False):
+    repo_root = pathlib.Path(repo_root)
+    if (repo_root / ".maestro").exists():
+        raise ValueError(
+            f".maestro/ already exists at {repo_root}; refusing to overwrite. "
+            "Remove or back it up first."
+        )
+    # Defense-in-depth: detect any duplicate destinations before writing anything.
+    all_dsts = list(plan["assets"].values())
+    for p in plan["context"]:
+        all_dsts.append(p["dst"])
+    for tp in plan["tracks"]:
+        all_dsts.append(tp["record_path"])
+        for w in tp["work_pairs"]:
+            all_dsts.append(w["dst"])
+    for it in plan["items"]:
+        all_dsts.append(it["record_path"])
+    if plan["inbox"]:
+        all_dsts.append(plan["inbox"]["dst"])
+    seen, dupes = set(), set()
+    for d in all_dsts:
+        if d in seen:
+            dupes.add(d)
+        seen.add(d)
+    if dupes:
+        raise ValueError(f"migration plan has colliding destinations: {sorted(dupes)}")
+    assets_root = pathlib.Path(plan["assets_root"])
+    for src_rel, dst_rel in plan["assets"].items():
+        _write(repo_root, dst_rel, (assets_root / src_rel).read_text())
+    for p in plan["context"]:
+        _write(repo_root, p["dst"], pathlib.Path(p["src"]).read_text())
+    for tp in plan["tracks"]:
+        _write(repo_root, tp["record_path"], tp["record_text"])
+        for w in tp["work_pairs"]:
+            _write(repo_root, w["dst"], pathlib.Path(w["src"]).read_text())
+    for it in plan["items"]:
+        _write(repo_root, it["record_path"], it["record_text"])
+    if plan["inbox"]:
+        _write(repo_root, plan["inbox"]["dst"], plan["inbox"]["text"])
+    for name in ("conductor", "issues"):
+        d = repo_root / name
+        if d.exists():
+            d.rename(repo_root / f".{name}.bak")
+    if remove_legacy:
+        for name in (".conductor.bak", ".issues.bak"):
+            shutil.rmtree(repo_root / name, ignore_errors=True)
+
+
+def parse_args(argv):
+    p = argparse.ArgumentParser(prog="migrate-to-maestro",
+                                description="Migrate conductor/ + issues/ to .maestro/")
+    p.add_argument("--path", default=".", help="repo root (default: .)")
+    p.add_argument("--apply", action="store_true", help="write changes (default: dry-run)")
+    p.add_argument("--remove-legacy", action="store_true",
+                   help="with --apply: delete .conductor.bak/.issues.bak after success")
+    return p.parse_args(argv)
+
+
+def main(argv=None):
+    args = parse_args(sys.argv[1:] if argv is None else argv)
+    plan = build_plan(args.path)
+    if not args.apply:
+        print(render_dry_run(plan))
+        return 0
+    try:
+        apply_plan(args.path, plan, remove_legacy=args.remove_legacy)
+    except (ValueError, OSError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print("Migration applied. Legacy dirs backed up to .conductor.bak/.issues.bak.")
+    if not args.remove_legacy:
+        print("Verify .maestro/, then delete the .bak dirs (or re-run with --remove-legacy).")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

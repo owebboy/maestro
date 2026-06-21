@@ -1,7 +1,7 @@
 {
   "name": "maestro",
-  "version": "1.3.0",
-  "description": "Complete development workflow: track management, issue pipeline, UAT, codebase review, and session wrap-up. Uses Superpowers as the execution engine for brainstorming, planning, TDD, and subagent-driven development.",
+  "version": "2.0.0",
+  "description": "Unified work-item workflow with pluggable backends (files/gitea/github/gitlab/linear/jira): inbox triage, review, spec + plan, implementation, UAT, codebase review, and session wrap-up. Uses Superpowers as the execution engine for brainstorming, planning, TDD, and subagent-driven development.",
   "author": {
     "name": "Oliver Pope",
     "url": "https://github.com/owebboy"
@@ -20,8 +20,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Maestro",
-    "shortDescription": "Track-driven development workflow for Claude Code and Codex.",
-    "longDescription": "Complete development workflow with setup, triage, tracked implementation, codebase review, UAT, and session wrap-up.",
+    "shortDescription": "Work-item workflow with pluggable backends for Claude Code and Codex.",
+    "longDescription": "Unified work-item workflow with pluggable backends (files/gitea/github/gitlab/linear/jira): inbox triage, review, spec + plan, implementation, UAT, codebase review, and session wrap-up.",
     "developerName": "Oliver Pope",
     "category": "Productivity",
     "capabilities": [
@@ -30,9 +30,9 @@
     ],
     "websiteURL": "https://github.com/owebboy/maestro",
     "defaultPrompt": [
-      "Use Maestro to set up tracked development for this repository.",
-      "Use Maestro to triage issues and turn them into implementation tracks.",
-      "Use Maestro to review the codebase and capture confirmed findings in INBOX."
+      "Use Maestro to set up work-item tracking with a pluggable backend for this repository.",
+      "Use Maestro to triage inbox items and turn them into structured work items.",
+      "Use Maestro to review the codebase and capture confirmed findings in the inbox."
     ],
     "brandColor": "#0F766E"
   }
