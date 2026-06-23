@@ -257,7 +257,7 @@ Collect the full list of native state names and display them to the user:
 
 #### E.2 Propose statusMap
 
-Using the default canonical→native state table below, plus fuzzy/synonym matching against the discovered states, propose a mapping for all 10 canonical statuses. Present it as an editable table:
+Using the chosen adapter profile's default canonical→native state table and tier-3 synonym sets (referenced below), match against the discovered states and propose a mapping for all 10 canonical statuses. Present it as an editable table:
 
 | Canonical status | Proposed native state | Source |
 |---|---|---|
@@ -272,22 +272,7 @@ Using the default canonical→native state table below, plus fuzzy/synonym match
 | `deferred` | `<proposed>` | … |
 | `duplicate` | `<proposed>` | … |
 
-Default canonical→native reference (use this as tier-2 starting point):
-
-| Canonical | Linear default | Jira typical |
-|---|---|---|
-| `inbox` | Triage | Backlog |
-| `triaged` | Backlog | To Do |
-| `reviewed` | Todo | Selected for Development |
-| `planned` | Todo | To Do |
-| `in-progress` | In Progress | In Progress |
-| `in-review` | In Review | In Review |
-| `done` | Done | Done |
-| `wont-fix` | Canceled | Won't Do |
-| `deferred` | Backlog | Backlog |
-| `duplicate` | Duplicate | Duplicate |
-
-Fuzzy/synonym rules (must match the adapter profile's tier-3 synonyms exactly): `reviewed` ↔ {Selected, Ready}; `in-progress` ↔ {In Progress, Doing}; `done` ↔ {Done, Closed, Complete}.
+The tier-2 default table and the tier-3 fuzzy/synonym sets live in the chosen adapter profile (`.maestro/adapters/linear-jira.md`) — its **"Default canonical → native state table"** and **"Four-tier resolution rule"** sections own the canonical copy. Read them there and apply the write path: tier-1 statusMap (none yet at setup) → tier-2 default table → tier-3 fuzzy/synonym match against the discovered states → tier-4 ask. Do not restate the table or synonym sets here, so the two files cannot drift.
 
 Ask:
 
@@ -339,18 +324,12 @@ Apply corrections and persist as `config.fieldMap` in `config.json`.
 
 #### E.5 Persist stateCache
 
-After confirming the statusMap (E.2/E.3) and fieldMap (E.4), write `config.backend.stateCache` to `.maestro/config.json`:
+After confirming the statusMap (E.2/E.3) and fieldMap (E.4), populate `config.backend.stateCache` in `.maestro/config.json`. The cache **shape** is owned by the adapter profile's **"What `/setup` writes"** section (`backend.stateCache`): Linear is `name → { id, type }`; Jira is `name → { id, transitionId }`, both keyed by native state name. The adapter's `set_status` op reads this cache to resolve native state IDs (and Jira transition IDs) without re-querying the API on every status change.
 
-- **Linear:** a map of state name → `{ "id": "<state id>", "type": "<state type>" }` for every discovered state. Example:
-  ```json
-  { "In Progress": { "id": "abc123", "type": "started" }, "Done": { "id": "def456", "type": "completed" } }
-  ```
-- **Jira:** a map of status name → `{ "id": "<status id>", "transitionId": "<transition id>" }` for each reachable status on the project. To get transition IDs, issue `GET <url>/rest/api/3/issue/<sample-issue-key>/transitions` (using any existing issue) or the equivalent MCP/CLI call; if no issues exist yet, store the status IDs from the statuses endpoint and leave `transitionId` as `null` (it will be resolved on first use). Example:
-  ```json
-  { "In Progress": { "id": "3", "transitionId": "21" }, "Done": { "id": "10001", "transitionId": "31" } }
-  ```
+How to populate it at setup:
 
-The adapter profile's `set_status` op reads `config.backend.stateCache` to resolve the correct native state ID and Jira transition ID without re-querying the API on every status change.
+- **Linear:** the states discovered in E.1 already carry `id` and `type` — write one entry per state.
+- **Jira:** transition IDs are not returned by the statuses endpoint. Fetch them with `GET <url>/rest/api/3/issue/<sample-issue-key>/transitions` (using any existing issue) or the equivalent MCP/CLI call. If the project has no issues yet, store the status `id`s and leave `transitionId` as `null` — the adapter resolves it on first use (its `set_status` op handles the cache miss).
 
 ### Step F: Capture mode
 
