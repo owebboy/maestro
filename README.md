@@ -125,6 +125,7 @@ Maestro (WHAT and WHEN)                    Superpowers (HOW)
 ├── /uat-create     → UAT checklist
 ├── /uat-run        → interactive proctor
 ├── /session-wrap-up → session cleanup
+├── /workflow-router → routing
 └── /agents-md-sync → Codex interop
 ```
 

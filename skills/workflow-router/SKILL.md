@@ -25,6 +25,7 @@ This project uses up to three workflow engines at different scope levels. Pick t
 | No `.maestro/config.json` present | **Setup** `/setup` | Initialize project context (product, tech stack, workflow) |
 | Need project overview | **Status** `/status` | Work item summary, current focus, next actions |
 | Work item housekeeping needed | **Manage** `/manage` | Archive, restore, delete, rename, cleanup |
+| Need Codex/AGENTS.md interop, or CLAUDE.md changed and AGENTS.md is stale | **AGENTS.md sync** `/agents-md-sync` | Generate/refresh AGENTS.md from CLAUDE.md for Codex |
 
 ## Availability Detection
 
