@@ -33,7 +33,7 @@ Maps to `set_status`.
    - Deferred (archive without completing) → `set_status(id, deferred)`
 3. Confirm with 'YES' before calling the op.
 
-Per LD-5: terminal statuses (`done`, `deferred`) cause the files adapter to move the record to `.maestro/items/archived/<status>/`. No direct file manipulation of legacy paths; the adapter handles storage.
+Archive sets `done` or `deferred`; both are terminal per LD-5, so the files adapter moves the record to `.maestro/items/archived/<status>/`. No direct file manipulation of legacy paths; the adapter handles storage.
 
 **Bulk:** Accept `--archive --bulk`. Call `list_items({})`, show non-terminal items, let the user multi-select, then apply `set_status` for each.
 
