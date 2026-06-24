@@ -1,6 +1,6 @@
 # Spec → Plan → Link Pipeline
 
-Shared procedure for `new-track` and `issue-advance`. Once an approved spec exists at `.maestro/work/<id>/spec.md` and the work-item `<id>` is known, both skills run this identical Design → Plan → Link → Subtasks sequence. This file is the single source of truth; each calling skill keeps only its distinct front half (item creation vs. in-place promotion) and its distinct tail (lifecycle status, and for promotion, weight + provenance) inline.
+Shared procedure for `track-new` and `item-advance`. Once an approved spec exists at `.maestro/work/<id>/spec.md` and the work-item `<id>` is known, both skills run this identical Design → Plan → Link → Subtasks sequence. This file is the single source of truth; each calling skill keeps only its distinct front half (item creation vs. in-place promotion) and its distinct tail (lifecycle status, and for promotion, weight + provenance) inline.
 
 ## 1. Design via brainstorming
 

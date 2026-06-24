@@ -220,9 +220,9 @@ Fix any errors it reports before wiring in the new adapter name.
 
 1. In a test project's `.maestro/config.json`, set `adapter: <your-new-name>`.
 2. Run `/setup` to trigger label bootstrap or state discovery.
-3. Run through the light-item workflow: `/triage` → `/issue-review` → `/implement` on a small
+3. Run through the light-item workflow: `/triage` → `/item-review` → `/implement` on a small
    item. Confirm each abstract op resolves correctly through your profile.
-4. If you declared `subtasks-as-tasklist` or `subissues`, create a tracked item (`/new-track`)
+4. If you declared `subtasks-as-tasklist` or `subissues`, create a tracked item (`/track-new`)
    and verify `set_subtasks` and `set_subtask_state` work.
 
 ---

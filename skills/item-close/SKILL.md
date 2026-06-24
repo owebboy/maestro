@@ -1,10 +1,10 @@
 ---
-name: issue-close
+name: item-close
 description: Use when closing a work item without implementing it — wont-fix, deferred, or duplicate.
 argument-hint: "<item-ref> [--reason wont-fix|deferred|duplicate]"
 ---
 
-# Issue Close
+# Item Close
 
 Close a work item without implementing it.
 

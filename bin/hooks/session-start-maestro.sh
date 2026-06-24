@@ -45,8 +45,8 @@ total=$((inbox + triaged + reviewed + planned + inprog + inreview))
 
 echo "MAESTRO:"
 [ "$inbox" -gt 0 ]    && echo "  Inbox: $inbox unprocessed → /triage"
-[ "$triaged" -gt 0 ]  && echo "  Triaged: $triaged → /issue-review"
-[ "$reviewed" -gt 0 ] && echo "  Reviewed: $reviewed → /issue-advance or /implement or /issue-close"
+[ "$triaged" -gt 0 ]  && echo "  Triaged: $triaged → /item-review"
+[ "$reviewed" -gt 0 ] && echo "  Reviewed: $reviewed → /item-advance or /implement or /item-close"
 [ "$planned" -gt 0 ]  && echo "  Planned: $planned → /implement"
 [ "$inprog" -gt 0 ]   && echo "  In progress: $inprog → /implement"
 [ "$inreview" -gt 0 ] && echo "  In review: $inreview → /uat-create or /uat-run"

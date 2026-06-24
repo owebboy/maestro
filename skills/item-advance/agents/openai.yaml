@@ -1,0 +1,7 @@
+interface:
+  display_name: "Item Advance"
+  short_description: "Promote a reviewed item to tracked."
+  default_prompt: "Use $item-advance to promote this reviewed work item to a tracked item with a spec and plan."
+
+policy:
+  allow_implicit_invocation: false

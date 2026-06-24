@@ -1,10 +1,10 @@
 ---
-name: new-track
-description: Use when starting a new tracked feature, bug fix, refactor, or chore. For work that already has a reviewed item, use issue-advance instead.
+name: track-new
+description: Use when starting a new tracked feature, bug fix, refactor, or chore. For work that already has a reviewed item, use item-advance instead.
 argument-hint: "<feature|bug|chore|refactor> <name>"
 ---
 
-# New Track
+# Track New
 
 Create a tracked work item (feature, bug fix, chore, or refactor) with a specification, then use Superpowers brainstorming and planning to produce the implementation plan.
 
@@ -13,7 +13,7 @@ Create a tracked work item (feature, bug fix, chore, or refactor) with a specifi
 Copy this checklist and track your progress:
 
 ```
-New Track Progress:
+Track New Progress:
 - [ ] Pre-flight: verify project initialized
 - [ ] Step 1: Track classification (type)
 - [ ] Step 2: Specification gathering (Q&A)

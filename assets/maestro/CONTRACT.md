@@ -67,18 +67,18 @@ Skills never hard-code an adapter name or a transport — they call the abstract
 
 | Op | Called by |
 |---|---|
-| `create_item` | triage, new-track |
-| `get_item` | implement, issue-advance, issue-close, issue-review, manage, status, uat-create |
-| `update_item` | issue-advance, issue-review, manage |
-| `set_status` | implement, issue-advance, issue-close, issue-review, manage, new-track, session-wrap-up, triage |
-| `list_items` | implement, issue-advance, issue-review, manage, session-wrap-up, status, uat-create |
-| `set_subtasks` | issue-advance, new-track |
+| `create_item` | triage, track-new |
+| `get_item` | implement, item-advance, item-close, item-review, manage, status, uat-create |
+| `update_item` | item-advance, item-review, manage |
+| `set_status` | implement, item-advance, item-close, item-review, manage, track-new, session-wrap-up, triage |
+| `list_items` | implement, item-advance, item-review, manage, session-wrap-up, status, uat-create |
+| `set_subtasks` | item-advance, track-new |
 | `set_subtask_state` | implement, session-wrap-up |
-| `link_artifact` | issue-advance, new-track |
-| `comment` | implement, issue-advance, issue-close, manage |
+| `link_artifact` | item-advance, track-new |
+| `comment` | implement, item-advance, item-close, manage |
 | `capture_raw` | codebase-review, implement, session-wrap-up, uat-run |
-| `search` | issue-review, triage |
-| `relate` | issue-close, triage |
+| `search` | item-review, triage |
+| `relate` | item-close, triage |
 
 ## Normalized record (anti-corruption layer — every get_item/list_items returns this)
 

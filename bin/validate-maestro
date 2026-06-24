@@ -14,8 +14,8 @@ SHAPE_SECTIONS = ["## Capabilities", "## Transport detection", "## Status mappin
 LEGACY = ["conductor/", "issues/", "metadata.json", "tracks.md"]
 BACKEND_TOKENS = ["mcp__gitea", "gh issue", "glab issue", "mcp__linear",
                   "mcp__atlassian", "jira issue"]
-LIFECYCLE = ["triage", "issue-review", "issue-advance", "new-track", "implement",
-             "issue-close", "status", "manage", "session-wrap-up", "workflow-router",
+LIFECYCLE = ["triage", "item-review", "item-advance", "track-new", "implement",
+             "item-close", "status", "manage", "session-wrap-up", "workflow-router",
              "uat-create", "uat-run", "codebase-review"]
 
 

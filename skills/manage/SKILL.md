@@ -1,6 +1,6 @@
 ---
 name: manage
-description: Use when archiving, restoring, renaming, deleting, or cleaning up work items. For closing without implementing use issue-close.
+description: Use when archiving, restoring, renaming, deleting, or cleaning up work items. For closing without implementing use item-close.
 argument-hint: "[--archive|--restore|--delete|--rename|--cleanup] [item-id]"
 ---
 

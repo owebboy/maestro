@@ -1,7 +1,7 @@
 interface:
-  display_name: "Issue Review"
+  display_name: "Item Review"
   short_description: "Add codebase context to a triaged work item (one item ref, or all)."
-  default_prompt: "Use $issue-review to add codebase context to this triaged work item."
+  default_prompt: "Use $item-review to add codebase context to this triaged work item."
 
 policy:
   allow_implicit_invocation: false
