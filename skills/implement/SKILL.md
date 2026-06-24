@@ -72,7 +72,7 @@ Branch on the item's `weight` field returned by `get_item`.
 
 Read detailed steps from `.maestro/work/<id>/plan.md`. This file is the source of truth for **steps**; the `## Tasks` checklist in the item record is the source of truth for **status** (updated via `set_subtask_state`).
 
-Detect `subagent-driven-development` and `executing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). Check both plugin-prefixed and bare forms.
+Detect `subagent-driven-development` and `executing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md), checking both plugin-prefixed and bare forms.
 
 If Superpowers is available, offer the choice:
 
@@ -173,7 +173,7 @@ This is the **phase file list** — all review and fixes are scoped to ONLY thes
 Launch Agent 1 first, then Agent 2 after it finishes. Running sequentially avoids edit conflicts.
 
 **Agent 1 — Code Simplifier:**
-Detect the `simplify` skill using the [multi-signal procedure](../../docs/detecting-optional-skills.md). If found, invoke it with the phase file list. Otherwise, launch a general-purpose agent:
+Detect the `simplify` skill using the [detection procedure](../../docs/detecting-optional-skills.md). If found, invoke it with the phase file list. Otherwise, launch a general-purpose agent:
 
 > Review ONLY the following files from this phase: [phase file list].
 > Check for: unnecessary complexity, duplicated logic across the phase's files, dead code introduced by this phase, inconsistent patterns between tasks in this phase.

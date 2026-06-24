@@ -31,7 +31,7 @@ This project uses up to three workflow engines at different scope levels. Pick t
 Before routing, check what's installed:
 
 - **Plan Mode**: Always available in Claude Code. In Codex, use a brief inline plan for small work or `$new-track` for tracked planning.
-- **Superpowers**: Detect using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). If found, `/new-track` and `/implement` use it as the execution engine. If not, they fall back to inline brainstorming and TDD.
+- **Superpowers**: Detect using the [detection procedure](../../docs/detecting-optional-skills.md), checking both plugin-prefixed and bare forms. If found, `/new-track` and `/implement` use it as the execution engine. If not, they fall back to inline brainstorming and TDD.
 - **Maestro**: Check if `.maestro/config.json` exists. If not, suggest `/setup` for projects that would benefit from Maestro's work-item pipeline. If present, read the `adapter` field and load the capability flags from `.maestro/adapters/<adapter>.md` — the unified work-item pipeline (triage → review → [advance] → implement) is available regardless of adapter.
 - **Hooks**: Some workflows benefit from hook-driven automation (e.g., SessionStart for context injection). Both harnesses support lifecycle hooks using the same nested schema; Codex hooks are on by default (disable with `[features] hooks = false`). Codex covers 5 events (SessionStart, PreToolUse, PostToolUse, UserPromptSubmit, Stop); Claude adds SessionEnd, SubagentStop, PreCompact, and Notification. Plan accordingly.
 
