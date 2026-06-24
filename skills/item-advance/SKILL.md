@@ -1,6 +1,6 @@
 ---
 name: item-advance
-description: Use when a reviewed work item is ready to grow a spec and plan (promote to tracked), or "all" to batch-promote. For an item that already has a plan, use implement.
+description: Use when a reviewed work item is ready to grow a spec and plan (promote to tracked), or "all" to batch-promote. For brand-new work with no existing reviewed item, use track-new instead. For an item that already has a plan, use implement.
 argument-hint: "<item-ref> | all"
 ---
 
@@ -75,7 +75,7 @@ After the pipeline completes:
 
 ## Error Handling
 
-- **Item not found**: Report the error and stop. Do not attempt to create a new item.
+- **Item not found**: Report the error and stop. Do not attempt to create a new item here — for brand-new work with nothing to promote, suggest running `/track-new` in Claude Code or `$track-new` in Codex instead.
 - **Spec rejected by user**: Return to Step 2 and revise the spec based on user feedback.
 - **Brainstorming or planning skill fails**: Fall back to the inline alternative for that step and continue.
 - **Superpowers writes files to wrong location**: Move the file to the correct `.maestro/work/<id>/` path and delete the external copy. Check both `docs/superpowers/specs/`, `docs/superpowers/plans/`, `docs/specs/`, and `docs/plans/` as common default locations.
