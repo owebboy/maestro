@@ -113,14 +113,14 @@ Maestro provides **organization and coordination**. Superpowers provides **execu
 ```
 Maestro (WHAT and WHEN)                    Superpowers (HOW)
 ├── /setup          → project context      ├── brainstorming → design
-├── /new-track      → spec + invokes ────► ├── writing-plans → plan
+├── /track-new      → spec + invokes ────► ├── writing-plans → plan
 ├── /implement      → track mgmt + ──────► ├── subagent-driven-development
 ├── /status         → progress view        ├── test-driven-development
 ├── /manage         → lifecycle            ├── systematic-debugging
-├── /triage         → issue pipeline       ├── verification-before-completion
-├── /issue-review   → codebase explore     └── finishing-a-development-branch
-├── /issue-advance  → issue → track
-├── /issue-close    → archive issue
+├── /triage         → item pipeline        ├── verification-before-completion
+├── /item-review    → codebase explore     └── finishing-a-development-branch
+├── /item-advance   → item → track
+├── /item-close     → archive item
 ├── /codebase-review → 6+6 agents
 ├── /uat-create     → UAT checklist
 ├── /uat-run        → interactive proctor
@@ -135,21 +135,21 @@ Maestro (WHAT and WHEN)                    Superpowers (HOW)
 | Skill | Invocation | Purpose |
 |-------|------------|---------|
 | setup | `/setup` or `$setup` | Initialize project context (product, tech stack, workflow) |
-| new-track | `/new-track <type> <name>` or `$new-track <type> <name>` | Create spec → brainstorm → plan (via Superpowers) |
+| track-new | `/track-new <type> <name>` or `$track-new <type> <name>` | Create spec → brainstorm → plan (via Superpowers) |
 | implement | `/implement [track-id\|issue-file]` or `$implement [track-id\|issue-file]` | Execute plan with TDD + subagent review (via Superpowers); small issues run directly, no track needed |
 | status | `/status [track-id]` or `$status [track-id]` | Project progress, current focus, next actions |
 | manage | `/manage [--archive\|--restore\|--delete]` or `$manage ...` | Track lifecycle management |
 
-### Issue Pipeline
+### Work Item Pipeline
 
 | Skill | Invocation | Purpose |
 |-------|------------|---------|
 | triage | `/triage` or `$triage` | `.maestro/inbox.md` bullets → structured item records |
-| issue-review | `/issue-review <path>` or `$issue-review <path>` | 3 parallel agents enrich issue with codebase context |
-| issue-advance | `/issue-advance <path\|all>` or `$issue-advance <path\|all>` | Issue → new track (spec + brainstorm + plan) |
-| issue-close | `/issue-close <path>` or `$issue-close <path>` | Archive as wont-fix, deferred, or duplicate |
+| item-review | `/item-review <path>` or `$item-review <path>` | 3 parallel agents enrich a work item with codebase context |
+| item-advance | `/item-advance <path\|all>` or `$item-advance <path\|all>` | Work item → new track (spec + brainstorm + plan) |
+| item-close | `/item-close <path>` or `$item-close <path>` | Archive as wont-fix, deferred, or duplicate |
 
-**Flow:** `.maestro/inbox.md → /triage → /issue-review → /issue-advance → /implement`
+**Flow:** `.maestro/inbox.md → /triage → /item-review → /item-advance → /implement`
 
 **Shortcut for small issues:** `/implement .maestro/items/<file>.md` skips the track ceremony — a simplicity gate sizes the issue (≤3 files, testable criteria, no design decisions), then TDD, one commit, one approval, and the issue archives as `done`.
 
@@ -201,8 +201,8 @@ claude plugin install elements-of-style@superpowers-marketplace
 
 | Plugin | Used by | What it adds |
 |--------|---------|-------------|
-| **[Superpowers](https://github.com/obra/superpowers)** | `/new-track`, `/implement` | Brainstorming, phased planning, subagent-driven TDD, code review |
-| **[Elements of Style](https://github.com/obra/the-elements-of-style)** | `/triage`, `/issue-review` | Clear, concise writing polish for issue descriptions |
+| **[Superpowers](https://github.com/obra/superpowers)** | `/track-new`, `/implement` | Brainstorming, phased planning, subagent-driven TDD, code review |
+| **[Elements of Style](https://github.com/obra/the-elements-of-style)** | `/triage`, `/item-review` | Clear, concise writing polish for issue descriptions |
 
 ### Optional
 
@@ -226,7 +226,7 @@ claude plugin install claude-md-management@claude-plugins-official
 
 ## Codex Compatibility
 
-Maestro now ships first-class Codex packaging: a `.codex-plugin/plugin.json` manifest, a repo-local `.agents/plugins/marketplace.json`, and per-skill `agents/openai.yaml` metadata. All 15 skills are packaged for Codex; a few remain partial or explicit-only. Install the skill bundle with [skills.sh](https://skills.sh/) or use the repo-local plugin when working from a checkout of this repository. In Codex, invoke skills with `$setup`, `$new-track`, `$triage`, and the rest of the `$skill-name` set:
+Maestro now ships first-class Codex packaging: a `.codex-plugin/plugin.json` manifest, a repo-local `.agents/plugins/marketplace.json`, and per-skill `agents/openai.yaml` metadata. All 15 skills are packaged for Codex; a few remain partial or explicit-only. Install the skill bundle with [skills.sh](https://skills.sh/) or use the repo-local plugin when working from a checkout of this repository. In Codex, invoke skills with `$setup`, `$track-new`, `$triage`, and the rest of the `$skill-name` set:
 
 ```bash
 # Maestro
@@ -263,7 +263,7 @@ claude plugin install maestro@maestro-dev
 **Path A: Direct track** — you know what you want to build.
 
 ```
-/new-track feature user-authentication
+/track-new feature user-authentication
 ```
 
 Maestro gathers a spec (interactive Q&A), runs brainstorming for the design, then generates a phased implementation plan. Prose artifacts (spec, design, plan) land in `.maestro/work/{trackId}/`; the item record lands in `.maestro/items/{id}.md`.
@@ -283,16 +283,16 @@ Executes the plan task-by-task with TDD (red-green-refactor), commits per task, 
 Parses raw bullets from `.maestro/inbox.md` into structured item records under `.maestro/items/` with type/priority classification.
 
 ```
-/issue-review all
+/item-review all
 ```
 
 Three parallel agents enrich each issue with affected files, related tests, and similar prior work. Writing gets polished automatically.
 
 ```
-/issue-advance all
+/item-advance all
 ```
 
-Converts reviewed issues into tracks (invokes `/new-track` under the hood, auto-answering from issue data). Related issues get grouped. Then `/implement` as above.
+Converts reviewed issues into tracks (invokes `/track-new` under the hood, auto-answering from issue data). Related issues get grouped. Then `/implement` as above.
 
 **Path C: Health check** — audit the whole codebase.
 
@@ -323,7 +323,7 @@ Parallel quality review (code simplifier + code reviewer + spec reviewer), captu
 /manage                      # interactive menu: archive, restore, delete, rename, cleanup
 /manage --archive auth_20260403   # archive a completed track
 /manage --cleanup            # find orphaned artifacts, stale in-progress tracks
-/issue-close .maestro/items/0042-old-bug.md   # close an item as wont-fix, deferred, or duplicate
+/item-close .maestro/items/0042-old-bug.md   # close an item as wont-fix, deferred, or duplicate
 ```
 
 ### 6. Check in anytime
@@ -336,12 +336,25 @@ Parallel quality review (code simplifier + code reviewer + spec reviewer), captu
 ### Lifecycle at a glance
 
 ```
-/setup → /new-track → /implement → /uat-create → /uat-run → /session-wrap-up
+/setup → /track-new → /implement → /uat-create → /uat-run → /session-wrap-up
                           ↑
-/triage → /issue-review → /issue-advance
+/triage → /item-review → /item-advance
                           ↑
               /codebase-review
 ```
+
+## Command renames
+
+The work-item pipeline commands were renamed so the command surface matches the "work item" vocabulary used everywhere else. Behavior is unchanged — only the invocation names moved:
+
+| Old | New |
+|-----|-----|
+| `/issue-review` | `/item-review` |
+| `/issue-advance` | `/item-advance` |
+| `/issue-close` | `/item-close` |
+| `/new-track` | `/track-new` |
+
+The old command names are removed (no aliases). Re-run `bin/setup-project` after upgrading to refresh the installed skill set.
 
 ## Upgrading from the legacy `conductor` + `issues` layout
 

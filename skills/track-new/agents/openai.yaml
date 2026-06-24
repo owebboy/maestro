@@ -1,0 +1,7 @@
+interface:
+  display_name: "Track New"
+  short_description: "Create a tracked item with spec and plan."
+  default_prompt: "Use $track-new to create a tracked work item with a spec and implementation plan."
+
+policy:
+  allow_implicit_invocation: false

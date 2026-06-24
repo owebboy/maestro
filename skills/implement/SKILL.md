@@ -131,7 +131,7 @@ Then ask the user:
 Recommendation: {implement directly | advance to a tracked item}
 
 1. Implement directly
-2. Advance to a tracked item instead (/issue-advance in Claude Code, $issue-advance in Codex)
+2. Advance to a tracked item instead (/item-advance in Claude Code, $item-advance in Codex)
 3. Cancel
 ```
 
@@ -143,7 +143,7 @@ Run the RED → GREEN → REFACTOR loop driven by the acceptance criteria instea
 
 If the test suite fails before you change anything: HALT and show the failures — do not build on a broken baseline.
 
-**Scope escalation:** if the work exceeds the assessed size (more files than expected, a design decision surfaces), stop and present: continue anyway / escalate to `/issue-advance` / pause. Escalation does not carry work-in-progress.
+**Scope escalation:** if the work exceeds the assessed size (more files than expected, a design decision surfaces), stop and present: continue anyway / escalate to `/item-advance` / pause. Escalation does not carry work-in-progress.
 
 Out-of-scope findings discovered during execution: call `capture_raw("<desc> in <file>:<line> (<severity>). Source: implement of <id>.")` — do not expand the current item's scope.
 

@@ -14,7 +14,7 @@ Display current status of the project: overall progress, work item board, and ne
    - If missing: suggest running `/setup` in Claude Code or `$setup` in Codex first.
 2. Read `.maestro/inbox.md` and count top-level bullet items (lines beginning with `- `) under `## Inbox` for the raw inbox count — match what triage processes; ignore continuation lines, blanks, and headers.
 3. Call `list_items({})` to retrieve all items.
-   - If the result is empty and inbox count is 0: show setup-complete message, suggest `/new-track` in Claude Code or `$new-track` in Codex.
+   - If the result is empty and inbox count is 0: show setup-complete message, suggest `/track-new` in Claude Code or `$track-new` in Codex.
 
 ## Data: Board counts
 
@@ -59,7 +59,7 @@ NEXT UP  (status: planned or reviewed, sorted P1 first, max 5)
 |----------|-----|-------|--------|
 | P2 | 0015-nav-fix | Nav collapses on mobile | light |
 
-Commands (Claude Code / Codex): /implement {id} | /new-track | /manage | /triage | /issue-review
+Commands (Claude Code / Codex): /implement {id} | /track-new | /manage | /triage | /item-review
 ```
 
 ## Output: Single Item (with ref argument)
@@ -77,7 +77,7 @@ If no item found: list active item IDs with suggestion.
 
 ## Empty States
 
-- No items and inbox empty: "No work yet. Run /new-track in Claude Code or $new-track in Codex to create one."
+- No items and inbox empty: "No work yet. Run /track-new in Claude Code or $track-new in Codex to create one."
 - Ref not found: list available item IDs with suggestion.
 - No active (in-progress/in-review) items: omit ACTIVE ITEMS section.
 - No planned/reviewed items: omit NEXT UP section.

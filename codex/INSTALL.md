@@ -12,7 +12,7 @@ If you are working from a checkout of this repository, Maestro exposes a repo-sc
 
 This path uses `.codex-plugin/plugin.json`, keeps plugin metadata in one place, and matches the current Codex plugin guidance.
 
-In Codex, invoke skills with `$setup`, `$new-track`, `$triage`, and the rest of the `$skill-name` set.
+In Codex, invoke skills with `$setup`, `$track-new`, `$triage`, and the rest of the `$skill-name` set.
 
 ## Install via skills.sh
 
@@ -119,14 +119,14 @@ After migration, re-run `bin/setup-project --codex` to register the updated hook
 | Skill | Codex Support | Notes |
 |-------|--------------|-------|
 | setup | Full | Interactive Q&A, creates markdown files |
-| new-track | Full* | *Superpowers brainstorming/planning falls back to inline if not installed |
+| track-new | Full* | *Superpowers brainstorming/planning falls back to inline if not installed |
 | implement | Full* | *Superpowers subagent-driven-dev falls back to inline TDD; direct issue mode is fully inline (no subagents needed) |
 | status | Full | Reads markdown files |
 | manage | Full | File operations + git |
 | triage | Full | Pure markdown workflow |
-| issue-review | Full | Read-heavy review flow; use explicit `explorer` agents in Codex |
-| issue-advance | Full | Calls the `new-track` skill (our own skill, not an external dependency) |
-| issue-close | Full | Pure markdown workflow |
+| item-review | Full | Read-heavy review flow; use explicit `explorer` agents in Codex |
+| item-advance | Full | Calls the `track-new` skill (our own skill, not an external dependency) |
+| item-close | Full | Pure markdown workflow |
 | codebase-review | Full | Read-heavy review flow; use explicit `explorer` agents in Codex |
 | uat-create | Partial | MCP tool detection varies |
 | uat-run | Partial | Falls back to manual verification |
@@ -136,8 +136,8 @@ After migration, re-run `bin/setup-project --codex` to register the updated hook
 
 ## Dependencies
 
-- **Superpowers** (strongly recommended): Powers brainstorming, planning, TDD, and subagent-driven development inside `/new-track` and `/implement`. Without it, these skills fall back to inline workflows. Superpowers skills are standard SKILL.md format and fully portable to Codex.
-- **No Conductor dependency**: Track management (setup, new-track, implement, status, manage) is built into Maestro.
+- **Superpowers** (strongly recommended): Powers brainstorming, planning, TDD, and subagent-driven development inside `/track-new` and `/implement`. Without it, these skills fall back to inline workflows. Superpowers skills are standard SKILL.md format and fully portable to Codex.
+- **No Conductor dependency**: Track management (setup, track-new, implement, status, manage) is built into Maestro.
 
 ## Differences from Claude Code
 

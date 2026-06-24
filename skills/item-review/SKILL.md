@@ -1,10 +1,10 @@
 ---
-name: issue-review
+name: item-review
 description: Use when a triaged work item needs codebase context or scoping before implementation, or "all" to batch-review triaged items.
 argument-hint: "<item-ref> | all"
 ---
 
-# Issue Review
+# Item Review
 
 Fill technical context in a triaged work item by exploring the codebase.
 

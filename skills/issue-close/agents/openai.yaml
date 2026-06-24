@@ -1,7 +1,0 @@
-interface:
-  display_name: "Issue Close"
-  short_description: "Close a work item without implementing."
-  default_prompt: "Use $issue-close to close this work item as wont-fix, deferred, or duplicate."
-
-policy:
-  allow_implicit_invocation: false

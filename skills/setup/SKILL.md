@@ -399,7 +399,7 @@ Created: .maestro/CONTRACT.md
          .maestro/items/  (+ archived/{done,wont-fix,deferred,duplicate}/)
          .maestro/inbox.md
 
-Next: Run /new-track in Claude Code or $new-track in Codex to create your first track.
+Next: Run /track-new in Claude Code or $track-new in Codex to create your first track.
 ```
 
 For a **forge** backend (`gitea` / `github` / `gitlab`), print:
@@ -417,7 +417,7 @@ Created: .maestro/CONTRACT.md
 
 Bootstrap: <N> labels created in <backend> (transport: <mcp|cli|api>)
 
-Next: Run /new-track in Claude Code or $new-track in Codex to create your first track.
+Next: Run /track-new in Claude Code or $track-new in Codex to create your first track.
 ```
 
 For a **native-tracker** backend (`linear` / `jira`), print:
@@ -437,7 +437,7 @@ Discovery: <N> native states discovered (transport: <mcp|cli|api>)
            statusMap: <N> canonical statuses mapped, <N> unmapped
            fieldMap: priority (P1/P2/P3 → native), type: <type or null>
 
-Next: Run /new-track in Claude Code or $new-track in Codex to create your first track.
+Next: Run /track-new in Claude Code or $track-new in Codex to create your first track.
 ```
 
 ## Resume

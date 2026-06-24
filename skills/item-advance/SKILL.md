@@ -1,10 +1,10 @@
 ---
-name: issue-advance
+name: item-advance
 description: Use when a reviewed work item is ready to grow a spec and plan (promote to tracked), or "all" to batch-promote. For an item that already has a plan, use implement.
 argument-hint: "<item-ref> | all"
 ---
 
-# Issue Advance
+# Item Advance
 
 Promote a reviewed work item to tracked in place — no new id minted, no file moved.
 
@@ -32,7 +32,7 @@ Promote a reviewed work item to tracked in place — no new id minted, no file m
 1. Call `get_item(ref)` to load the item
 2. Check `status`:
    - If `reviewed` — proceed
-   - If `triaged` — suggest running `/issue-review` in Claude Code or `$issue-review` in Codex first, then stop
+   - If `triaged` — suggest running `/item-review` in Claude Code or `$item-review` in Codex first, then stop
    - Any other status — inform the user and stop
 3. Note the existing `id` — this is the permanent identity. **Do NOT mint a new id.**
 

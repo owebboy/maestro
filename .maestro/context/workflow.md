@@ -32,4 +32,4 @@ When a change introduces real executable logic, defer to Superpowers' TDD workfl
 
 ## Track Lifecycle
 
-`issues/INBOX.md` → `/triage` → `/issue-review` → `/issue-advance` → track → `/new-track` (spec + plan) → `/implement` → verify → `/uat-create` / `/uat-run` → `/session-wrap-up`.
+`issues/INBOX.md` → `/triage` → `/item-review` → `/item-advance` → track → `/track-new` (spec + plan) → `/implement` → verify → `/uat-create` / `/uat-run` → `/session-wrap-up`.
