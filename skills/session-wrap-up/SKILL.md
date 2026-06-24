@@ -24,7 +24,7 @@ Call `list_items({status: in-progress})` and `list_items({status: planned})`. Fr
 Launch three agents in parallel. Pass each agent the **session file list** explicitly. Do NOT tell them to use `git diff HEAD` — give them the specific file paths.
 
 ### Agent 1 — Code Simplifier
-Detect the `simplify` skill using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). If found via any signal, use the detected invocation form. Pass it the session file list so it only reviews files from this session. Otherwise, launch a general-purpose agent that reviews for unnecessary complexity, duplication, and dead code.
+Detect the `simplify` skill using the [detection procedure](../../docs/detecting-optional-skills.md), checking both plugin-prefixed and bare forms. If found via any signal, use the detected invocation form. Pass it the session file list so it only reviews files from this session. Otherwise, launch a general-purpose agent that reviews for unnecessary complexity, duplication, and dead code.
 
 ### Agent 2 — Code Reviewer
 Launch a general-purpose agent with this prompt:
@@ -68,7 +68,7 @@ For each confirmed item, call `capture_raw("<brief description of the item>")`. 
 
 ## Phase 3: Update Project Instructions
 
-Detect `revise-claude-md` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). If found via any signal, use the detected invocation form. Otherwise, review the session for learnings and propose CLAUDE.md updates directly — ask for approval before making changes.
+Detect `revise-claude-md` using the [detection procedure](../../docs/detecting-optional-skills.md), checking both plugin-prefixed and bare forms. If found via any signal, use the detected invocation form. Otherwise, review the session for learnings and propose CLAUDE.md updates directly — ask for approval before making changes.
 
 Also check for and offer to update:
 - `AGENTS.md` — if it exists, sync any new conventions, commands, or architecture changes discovered during the session (Codex compatibility)

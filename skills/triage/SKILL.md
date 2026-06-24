@@ -44,7 +44,7 @@ If both sources are empty, inform the user and stop.
    - **Priority:** P1 (blocking/critical) | P2 (important) | P3 (nice-to-have)
 
 ### 4. Polish descriptions — before creating or promoting items, tighten the Summary and Problem Description:
-   - Detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory)
+   - Detect `writing-clearly-and-concisely` using the [detection procedure](../../docs/detecting-optional-skills.md), checking both plugin-prefixed and bare forms
    - If found, invoke it on the draft descriptions (batch all captures in a single invocation)
    - If not available, do a quick inline pass: remove filler words, prefer active voice, keep each description to 1-2 sentences
    - Do not change technical meaning — only improve clarity

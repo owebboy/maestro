@@ -18,9 +18,8 @@ New Track Progress:
 - [ ] Step 1: Track classification (type)
 - [ ] Step 2: Specification gathering (Q&A)
 - [ ] Step 3: Item creation + spec generation → user approval
-- [ ] Step 4: Design via brainstorming
-- [ ] Step 5: Plan via writing-plans
-- [ ] Step 6: Artifact linking + subtasks + lifecycle
+- [ ] Step 4: Spec → plan → link pipeline (design, plan, link, subtasks)
+- [ ] Step 5: Set lifecycle status
 ```
 
 ## Pre-flight
@@ -76,51 +75,13 @@ Ask ONE question per turn (max 6, tailored by type):
 
 3. Show spec to user for review. Wait for approval before proceeding.
 
-## Step 4: Design via Brainstorming
+## Step 4: Spec → Plan → Link Pipeline
 
-Detect `brainstorming` using the [detection procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
+Run the shared [Spec → Plan → Link pipeline](../../docs/spec-plan-pipeline.md) with the approved spec and the item `id`: design via brainstorming, plan via writing-plans, then link artifacts and mirror plan tasks as subtasks.
 
-If available, invoke the brainstorming skill using the detected form. Pass the approved spec as context AND instruct it to write its design doc to `.maestro/work/<id>/design.md`. Example invocation context:
+## Step 5: Set Lifecycle Status
 
-> Design a solution for the following specification. Write the design document to `.maestro/work/<id>/design.md`.
->
-> {spec content}
-
-If Superpowers writes the design doc elsewhere despite the instruction (e.g., `docs/superpowers/specs/` or `docs/specs/`), move it to `.maestro/work/<id>/design.md` and delete the external file.
-
-If Superpowers is not installed, run an inline design discussion:
-1. Propose 2-3 implementation approaches based on the spec
-2. Present trade-offs for each
-3. Get user approval on approach
-4. Write the approved design to `.maestro/work/<id>/design.md`
-
-## Step 5: Plan via Writing Plans
-
-Detect `writing-plans` using the [detection procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). Check both plugin-prefixed and bare forms, and use whichever invocation form was found.
-
-If available, invoke the writing-plans skill using the detected form. Instruct it to write the plan to `.maestro/work/<id>/plan.md`. Example invocation context:
-
-> Create an implementation plan based on the approved design at `.maestro/work/<id>/design.md`. Write the plan to `.maestro/work/<id>/plan.md`.
-
-If Superpowers writes the plan elsewhere despite the instruction (e.g., `docs/superpowers/plans/` or `docs/plans/`), move it to `.maestro/work/<id>/plan.md` and delete the external file. `/implement` reads this path directly — the plan MUST be there.
-
-If Superpowers is not installed, generate a phased plan inline:
-- Group tasks into logical phases
-- Each task: description, files to modify, test to write, verification step
-- Write plan directly to `.maestro/work/<id>/plan.md`
-
-## Step 6: Artifact Linking + Subtasks + Lifecycle
-
-After all prose is written:
-
-1. **Link artifacts** (one call per artifact):
-   - `link_artifact(id, spec, .maestro/work/<id>/spec.md)`
-   - `link_artifact(id, design, .maestro/work/<id>/design.md)`
-   - `link_artifact(id, plan, .maestro/work/<id>/plan.md)`
-
-2. **Mirror plan tasks as subtasks:** parse the plan for phase/task entries; call `set_subtasks(id, [{ref, title, state: todo} for each plan task])` where `ref` = the plan's phase.task number (e.g. `1.1`, `1.2`, `2.1`). This is the coarse progress store — detailed TDD steps remain in the plan file.
-
-3. **Set lifecycle status:** `set_status(id, planned)`
+After the pipeline completes: `set_status(id, planned)`
 
 ## Error Handling
 

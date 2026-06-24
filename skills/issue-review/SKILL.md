@@ -22,7 +22,7 @@ Fill technical context in a triaged work item by exploring the codebase.
    - Specific, searchable problem description?
    - At least one concrete acceptance criterion?
    - If NO to either:
-     - Detect `brainstorming` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory). If found via any signal, use the detected invocation form to scope the item with the user.
+     - Detect `brainstorming` using the [detection procedure](../../docs/detecting-optional-skills.md), checking both plugin-prefixed and bare forms. If found via any signal, use the detected invocation form to scope the item with the user.
      - Otherwise, run an inline brainstorming discussion: ask the user to clarify the problem, propose possible causes, and refine acceptance criteria.
      - Build the updated body with refined content, then call `update_item(id, { body })` to save it. Continue to step 3.
 
@@ -39,7 +39,7 @@ Fill technical context in a triaged work item by exploring the codebase.
 
 4. **Enrich item body** — build the enriched body: fill `### Affected Files` with Agent 1 findings; fill `### Related Tests` with Agent 2 findings; fill `### Similar Patterns` with Agent 3 findings; update `## Dependencies` if agents found any; refine `## Acceptance Criteria` if exploration revealed new requirements.
 
-5. **Polish writing** — detect `writing-clearly-and-concisely` using the [multi-signal procedure](../../docs/detecting-optional-skills.md) (check, in order: the available-skills list for the prefixed or bare name; `.claude/settings.json` `enabledPlugins`; a `.claude/skills/<name>/` or `.agents/skills/<name>/` directory).
+5. **Polish writing** — detect `writing-clearly-and-concisely` using the [detection procedure](../../docs/detecting-optional-skills.md), checking both plugin-prefixed and bare forms.
    - If found, invoke it against the enriched body to tighten the Summary, Problem Description, and Acceptance Criteria.
    - If not available, do a quick inline pass: remove filler words, prefer active voice, ensure each acceptance criterion is a single testable statement.
    - Do not change technical meaning — only improve clarity.
