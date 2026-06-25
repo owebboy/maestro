@@ -21,7 +21,7 @@ Call `list_items({status: in-progress})` and `list_items({status: planned})`. Fr
 
 ## Phase 1: Parallel Quality Review
 
-Launch three agents in parallel. Pass each agent the **session file list** explicitly. Do NOT tell them to use `git diff HEAD` — give them the specific file paths.
+Launch three agents in parallel. Pass each agent the **session file list** explicitly — give them the specific file paths rather than telling them to use `git diff HEAD`.
 
 ### Agent 1 — Code Simplifier
 Detect the `simplify` skill using the [detection procedure](../../docs/detecting-optional-skills.md), checking both plugin-prefixed and bare forms. If found via any signal, use the detected invocation form. Pass it the session file list so it only reviews files from this session. Otherwise, launch a general-purpose agent that reviews for unnecessary complexity, duplication, and dead code.
@@ -54,7 +54,7 @@ If your harness cannot spawn subagents (e.g. Gemini CLI, Copilot CLI, or plain c
 
 Wait for all agents to complete. Apply any fixes from the code reviewer that are critical or warning severity (ask before applying nits). Report a brief summary of all reviews.
 
-**CRITICAL: If a reviewer flags issues in files outside the session file list, discard those findings. Capture them as follow-ups instead of fixing them — they belong to a different session's work.**
+If a reviewer flags issues in files outside the session file list, discard those findings and capture them as follow-ups instead of fixing them — they belong to a different session's work.
 
 ## Phase 2: Follow-Up Capture
 
@@ -101,8 +101,8 @@ This step handles any git setup (monorepo, submodules, simple repo).
 1. **Detect git structure** — Check for submodules (`git submodule status`), worktrees, or nested repos.
 
 2. **For each repo/submodule with changes:**
-   a. Stage ONLY files from the **session file list** (never `git add -A` — other work may be in progress)
-   b. Do NOT stage pre-existing changes that were dirty before the session started
+   a. Stage only files from the **session file list** (never `git add -A` — other work may be in progress)
+   b. Don't stage pre-existing changes that were dirty before the session started
    c. Draft a commit message summarizing the session's work
    d. Show the user the staged changes and proposed message
    e. Commit only after user approval
