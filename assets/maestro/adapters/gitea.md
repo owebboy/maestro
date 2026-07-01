@@ -2,7 +2,7 @@
 
 ## Capabilities
 
-{ "supports": ["labels","relations","subtasks-as-tasklist"], "scoped_labels": false, "transports": ["mcp","cli","api"] }
+{ "supports": ["labels","relations","subtasks-as-tasklist","area"], "scoped_labels": false, "transports": ["mcp","cli","api"] }
 
 ## Transport detection
 
@@ -46,6 +46,7 @@ Reopening (e.g. `deferred` → active): reopen the issue (state=open) + remove r
 
 - **Type:** plain label `type:<x>` where x ∈ {bug, feature, refactor, chore}
 - **Priority:** plain label `priority:<x>` where x ∈ {P1, P2, P3}
+- **Area:** plain label `area:<x>` where x is free-form (project-defined, no closed enum — unlike type/priority there is no fixed value set, so there is no `## Label bootstrap` entry for it; the label is created on first use). Optional on every op — omit when not classifying by area.
 - **Weight (tracked):** presence of label `maestro:tracked` AND/OR a `## Tasks` task-list block in the issue body. Both are set together when `weight=tracked` is passed.
 
 Gitea has no native milestone-free weight field; the label + body task-list together serve as the tracked indicator.
@@ -56,26 +57,36 @@ Variable conventions: `<owner>`/`<repo>` come from splitting `config.backend.rep
 
 ### create_item
 
-Creates a new work item with type, priority, and initial status:inbox.
+Creates a new work item with type, priority, and initial status:inbox. `area` is optional — omit
+it entirely from all label operations below when not provided.
 
-- **MCP:** `mcp__gitea__issue_write` (action=create, title=title, body=body); then `mcp__gitea__label_write` to add labels `type:<x>`, `priority:<x>`, `status:inbox`; if `weight=tracked` also add `maestro:tracked`. Return the issue number.
+- **MCP:** `mcp__gitea__issue_write` (action=create, title=title, body=body); then
+  `mcp__gitea__label_write` to add labels `type:<x>`, `priority:<x>`, `status:inbox`; if
+  `weight=tracked` also add `maestro:tracked`. If `area` is provided: check `mcp__gitea__label_read`
+  for an existing `area:<value>` label; if absent, create it first via `mcp__gitea__label_write`
+  (action=create, name="area:<value>", color="#c5def5"), then add it to the issue. Return the
+  issue number.
 - **CLI:**
   ```
   tea issues create --title "<title>" --body "<body>" --labels "type:<x>,priority:<x>,status:inbox"
   ```
-  Append `,maestro:tracked` to `--labels` if `weight=tracked`.
+  Append `,maestro:tracked` to `--labels` if `weight=tracked`. If `area` is provided: run
+  `tea labels create --name "area:<value>" --color "#c5def5"` first (ignore an "already exists"
+  error), then append `,area:<value>` to `--labels`.
 - **API:**
   ```
   POST /api/v1/repos/<owner>/<repo>/issues
   { "title": "<title>", "body": "<body>", "labels": [<label_ids for type:x, priority:x, status:inbox>] }
   ```
-  Resolve label IDs via GET /labels first. Return `number` from response.
+  Resolve label IDs via GET /labels first. If `area` is provided and no `area:<value>` label
+  exists yet: `POST /api/v1/repos/<owner>/<repo>/labels { "name": "area:<value>", "color": "c5def5" }`
+  first, then include its id in the `labels` array above. Return `number` from response.
 
 ### get_item
 
 Fetches a single issue and maps it to the normalized record.
 
-- **MCP:** `mcp__gitea__issue_read` (number=ref) → extract title, body, labels, state, created_at, updated_at. Derive canonical status: find the `status:*` label for non-terminal; or the reason label (`done`/`wont-fix`/`deferred`/`duplicate`) for closed issues. Weight = `maestro:tracked` label present OR `## Tasks` block in body. Artifacts/links from `## Artifacts` body section.
+- **MCP:** `mcp__gitea__issue_read` (number=ref) → extract title, body, labels, state, created_at, updated_at. Derive canonical status: find the `status:*` label for non-terminal; or the reason label (`done`/`wont-fix`/`deferred`/`duplicate`) for closed issues. Weight = `maestro:tracked` label present OR `## Tasks` block in body. `area` = the value after `area:` on any `area:*` label if present, else omit the field entirely (never emit `area: null`). Artifacts/links from `## Artifacts` body section.
 - **CLI:**
   ```
   tea issues <ref> --output json
@@ -87,25 +98,33 @@ Fetches a single issue and maps it to the normalized record.
   ```
   Map response fields to normalized record.
 
-Normalized record fields: `{ id, title, body, type, priority, status (canonical), weight, artifacts, relations, created_at, updated_at }`.
+Normalized record fields: `{ id, title, body, type, priority, status (canonical), weight, area (optional), artifacts, relations, created_at, updated_at }`.
 
 ### update_item
 
-Edits title and/or body; updates type or priority labels.
+Edits title and/or body; updates type, priority, or area labels.
 
-- **MCP:** `mcp__gitea__issue_write` (action=edit, number=id) for title/body changes. For type/priority label changes: `mcp__gitea__label_read` to get current labels, remove old `type:*`/`priority:*` via label remove, add new via `mcp__gitea__label_write`.
+- **MCP:** `mcp__gitea__issue_write` (action=edit, number=id) for title/body changes. For
+  type/priority/area label changes: `mcp__gitea__label_read` to get current labels, remove old
+  `type:*`/`priority:*`/`area:*` via label remove, add new via `mcp__gitea__label_write`
+  (creating a new `area:<value>` label first via label_write action=create if it doesn't already
+  exist — same on-demand creation as `create_item`). Only touch `area:*` labels when `area` is
+  present in the update payload — leave existing `area:*` labels untouched otherwise.
 - **CLI:**
   ```
   tea issues edit <id> --title "<new_title>" --body "<new_body>"
   tea labels add <id> type:<new_type>
   tea labels remove <id> type:<old_type>
   ```
+  When `area` is in the update payload: `tea labels create --name "area:<new_value>" --color "#c5def5"` (ignore "already exists"), `tea labels add <id> area:<new_value>`, `tea labels remove <id> area:<old_value>` (if an old one existed).
 - **API:**
   ```
   PATCH /api/v1/repos/<owner>/<repo>/issues/<id>
   { "title": "<new_title>", "body": "<new_body>" }
   ```
-  Then GET current labels, compute add/remove sets, PATCH /issues/<id>/labels.
+  Then GET current labels, compute add/remove sets (including `area:*` only when `area` is in
+  the update payload — create the label first via POST /labels if it doesn't exist), PATCH
+  /issues/<id>/labels.
 
 ### set_status
 
@@ -145,23 +164,24 @@ Steps:
 
 ### list_items
 
-Lists work items, optionally filtered by status, type, priority, or weight.
+Lists work items, optionally filtered by status, type, priority, area, or weight.
 
 - **MCP:**
   ```
-  mcp__gitea__list_issues (state="open"|"closed"|"all", labels="status:<x>,type:<y>,priority:<z>")
+  mcp__gitea__list_issues (state="open"|"closed"|"all", labels="status:<x>,type:<y>,priority:<z>,area:<a>")
   ```
-  Use `search_issues` for keyword + label combined queries. Map each result to a normalized record.
+  Include `area:<a>` in the labels filter only when `area` was passed. Use `search_issues` for
+  keyword + label combined queries. Map each result to a normalized record.
 - **CLI:**
   ```
-  tea issues list --state all --labels "status:<x>,type:<y>,priority:<z>" --output json
+  tea issues list --state all --labels "status:<x>,type:<y>,priority:<z>,area:<a>" --output json
   ```
-  Omit label flags not specified in the filter. If `weight=tracked`, include `maestro:tracked` in label filter.
+  Omit label flags not specified in the filter (including `area:<a>` when `area` wasn't passed). If `weight=tracked`, include `maestro:tracked` in label filter.
 - **API:**
   ```
-  GET /api/v1/repos/<owner>/<repo>/issues?state=all&labels=status:<x>,type:<y>,priority:<z>&limit=50&page=1
+  GET /api/v1/repos/<owner>/<repo>/issues?state=all&labels=status:<x>,type:<y>,priority:<z>,area:<a>&limit=50&page=1
   ```
-  Paginate if response length equals limit. Map each item to normalized record.
+  Omit `area:<a>` from the `labels` query param when `area` wasn't passed. Paginate if response length equals limit. Map each item to normalized record.
 
 ### set_subtasks
 
@@ -364,4 +384,4 @@ Never error if a label already exists. On conflict (label exists with different 
 
 ## Degradation
 
-Follows CONTRACT §Degradation; this backend supports: labels, relations, subtasks-as-tasklist. Fallbacks apply for: link_artifact (no native artifact field → body `## Artifacts` section, as above); comment is native; capture_raw falls back to local .maestro/inbox.md when captureMode≠backend; search is native; relate uses a comment as the reliable fallback (see relate recipe above).
+Follows CONTRACT §Degradation; this backend supports: labels, relations, subtasks-as-tasklist, area. Fallbacks apply for: link_artifact (no native artifact field → body `## Artifacts` section, as above); comment is native; capture_raw falls back to local .maestro/inbox.md when captureMode≠backend; search is native; relate uses a comment as the reliable fallback (see relate recipe above). `area` has no fallback — it's simply omitted from ops when not provided.

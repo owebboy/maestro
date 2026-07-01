@@ -32,7 +32,7 @@ GitLab uses **scoped labels** (`status::reviewed`), which are natively mutually-
 
 1. **Source of truth.** On git-forge, the `status:*` label is authoritative for fine-grained status; open/closed is derived (closed iff status ∈ {done, wont-fix, deferred, duplicate}). `set_status` updates both atomically. On Linear/Jira the native state is authoritative. On files, the frontmatter field is authoritative.
 2. **The remap escape hatch.** Jira/Linear workflows are per-team and custom. `config.statusMap` remaps canonical → native names (`{ "reviewed": "Selected for Dev" }`) so a user fits Maestro to their board without editing any skill.
-3. **Fields, not just status.** `type` (bug/feature/refactor/chore) → `type:*` label or native issue-type; `priority` (P1/P2/P3) → `priority:*` label or native priority; `weight` (light/tracked) → presence of a plan/sub-issues (or a `maestro:tracked` label). Same canonical→native mapping pattern, via `config.fieldMap`.
+3. **Fields, not just status.** `type` (bug/feature/refactor/chore) → `type:*` label or native issue-type; `priority` (P1/P2/P3) → `priority:*` label or native priority; `weight` (light/tracked) → presence of a plan/sub-issues (or a `maestro:tracked` label). Same canonical→native mapping pattern, via `config.fieldMap`. `area` (free-form, project-defined — no closed enum) → `area:*` label, ONLY on adapters that declare the `area` capability token; it does not use `config.fieldMap` since there is no native-name remapping to do. Adapters that don't declare `area` simply never populate or accept it.
 
 ## Op execution protocol
 
@@ -46,11 +46,11 @@ Skills never hard-code an adapter name or a transport — they call the abstract
 ## The 12 operations
 
 ### CRUD + lifecycle (required — every backend)
-- `create_item({title,type,priority,body,weight})` → `id`
+- `create_item({title,type,priority,body,weight,area?})` → `id`
 - `get_item(ref)` → record            # ref = id | slug | url
-- `update_item(id,{fields})`           # title/type/priority/weight/body
+- `update_item(id,{fields})`           # title/type/priority/weight/body/area
 - `set_status(id, canonical)`          # maps to native; enforces exclusivity & open/close
-- `list_items({status?,type?,priority?,weight?})` → [record]
+- `list_items({status?,type?,priority?,weight?,area?})` → [record]
 
 ### Plan progress (required for tracked items)
 - `set_subtasks(id, [task])`           # task = {ref,title,state}
@@ -89,6 +89,7 @@ Skills never hard-code an adapter name or a transport — they call the abstract
   "priority": "P1|P2|P3",
   "status": "reviewed",            // canonical, never backend-native
   "weight": "light|tracked",
+  "area": "ci",                    // optional, free-form; null/absent if unset or adapter doesn't support it
   "artifacts": [{ "kind": "spec",  "ref": ".maestro/work/42/spec.md" }],
   "subtasks":  [{ "ref": "...", "title": "Phase 2: endpoints", "state": "doing" }],
   "links":     [{ "kind": "duplicate-of", "target": "#17" }],
@@ -96,20 +97,25 @@ Skills never hard-code an adapter name or a transport — they call the abstract
 }
 ```
 
-Short form: `{ id, title, url, type, priority, status (canonical), weight (light|tracked), artifacts:[{kind,ref}], subtasks:[{ref,title,state}], links:[{kind,target}], created, updated }`
+Short form: `{ id, title, url, type, priority, status (canonical), weight (light|tracked), area (optional, free-form), artifacts:[{kind,ref}], subtasks:[{ref,title,state}], links:[{kind,target}], created, updated }`
 
 Skills only ever read this shape. The adapter translates in and out.
 
 ## Capability flags (each profile declares them in its header)
 
 ```jsonc
-{ "supports": ["labels"|"subissues"|"subtasks"|"relations"|...], "scoped_labels": bool, "transports": [...] }
+{ "supports": ["labels"|"subissues"|"subtasks"|"relations"|"area"|...], "scoped_labels": bool, "transports": [...] }
 ```
 
 Example (gitea profile header):
 ```jsonc
-{ "supports": ["labels", "relations", "subtasks-as-tasklist"], "scoped_labels": false, "transports": ["mcp","cli","api"] }
+{ "supports": ["labels", "relations", "subtasks-as-tasklist", "area"], "scoped_labels": false, "transports": ["mcp","cli","api"] }
 ```
+
+`area` — the adapter can set/read a free-form `area` classification (see `## Config keys`
+and the adapter's own `## Field mapping` section for how it's represented). Optional: adapters
+that omit this token don't accept or return `area` at all — skills must not assume it's
+settable unless the active adapter declares it.
 
 `set_status(id, "reviewed")` rendered three ways from the same skill call:
 - **files** → rewrite the `status:` frontmatter field; move the file if terminal.
@@ -147,7 +153,7 @@ Net: a minimal backend (the 5 core) is usable; tracked features and niceties lay
 - adapter: files | gitea | github | gitlab | linear | jira
 - backend: { kind?, repo?, url?, token?, project_id?, team?, project?, email?, stateCache? }  (forge/native connection. kind: linear|jira (same value as adapter; the linear-jira profile branches on it). repo: github/gitea owner/name. project_id: GitLab project numeric id or path (gitlab MCP/REST). team: Linear team key. project: Jira project key. email: Jira account email. stateCache: linear/jira discovered native states + Jira transition ids, written by /setup and read by set_status/set_subtask_state)
 - statusMap: { <canonical>: <native name> }   (remap escape hatch)
-- fieldMap: { priority: {...}, type: {...} }
+- fieldMap: { priority: {...}, type: {...} }   (area does NOT use fieldMap — see Rule 3; it's a free-form label with no native-name remapping)
 - captureMode: local | backend
 - transport: mcp | cli | api   (optional; pins transport, overrides detection)
 - artifactsDir: .maestro/work

@@ -51,6 +51,10 @@ backend actually provides:
   comments.
 - `priority-field` — priority is a native first-class field rather than a label.
 - `type-field` — issue type is a native first-class field rather than a label.
+- `area` — the adapter can set/read a free-form `area` classification (a project-defined,
+  open-ended value — not a closed enum like type/priority). Optional; see
+  `assets/maestro/adapters/gitea.md` for the reference implementation (plain `area:<value>`
+  label, created on demand since there's no fixed set to pre-bootstrap).
 
 `scoped_labels: true` means the backend enforces label mutual-exclusivity natively within a
 scope (e.g. GitLab's `status::*`). Set `false` for plain-label backends; the adapter must then

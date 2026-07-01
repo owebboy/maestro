@@ -45,9 +45,10 @@ There are six adapter choices. Two of them (`linear` and `jira`) share one profi
 issue tracker. No authentication or service required.
 
 **`gitea`** — use when your team self-hosts a Gitea instance. Maestro represents status and
-metadata as plain `status:*` / `type:*` / `priority:*` labels. Subtasks appear as a task-list
-block in the issue body. Supports MCP (with the Gitea MCP server), the `tea` CLI, or direct
-REST API access.
+metadata as plain `status:*` / `type:*` / `priority:*` / `area:*` labels (area is free-form and
+optional — unlike type/priority it has no closed enum). Subtasks appear as a task-list block in
+the issue body. Supports MCP (with the Gitea MCP server), the `tea` CLI, or direct REST API
+access.
 
 **`github`** — use for projects hosted on GitHub or GitHub Enterprise. Same plain-label model
 as Gitea but the `gh` CLI has richer scripting support (close reason, search, label management).
