@@ -42,6 +42,12 @@ If both sources are empty, inform the user and stop.
 ### 3. Classify each capture — infer from description, confirm with user:
    - **Type:** bug | feature | refactor | chore
    - **Priority:** P1 (blocking/critical) | P2 (important) | P3 (nice-to-have)
+   - **Area** (only if the active adapter's capability profile declares `"area"` in `supports` —
+     check `.maestro/adapters/<adapter>.md`'s `## Capabilities` header): infer a free-form area
+     value from the capture's content and any existing `area:*` labels/values already in use on
+     other items (call `search`/`list_items` to see established values first, to avoid inventing
+     near-duplicate areas). If genuinely ambiguous, leave `area` unset rather than guessing — the
+     item can still be classified manually later, same as before this feature existed.
 
 ### 4. Polish descriptions — before creating or promoting items, tighten the Summary and Problem Description:
    - Detect `writing-clearly-and-concisely` using the [detection procedure](../../docs/detecting-optional-skills.md), checking both plugin-prefixed and bare forms
@@ -51,23 +57,26 @@ If both sources are empty, inform the user and stop.
 
 ### 5. Create or promote each capture
 
-Handling differs by origin:
+Handling differs by origin. Include `area` in the `create_item`/`update_item` payload only when
+Step 3 assigned one AND the active adapter declares the `area` capability — omit the key
+entirely otherwise (never pass `area: null`).
 
 **Local bullet** (from `.maestro/inbox.md`):
-- Call `create_item({title, type, priority, body, weight: light})`
+- Call `create_item({title, type, priority, body, weight: light[, area]})`
 - Then call `set_status(id, triaged)` on the returned id
 - The adapter handles id minting, `created` timestamp, and file placement
 
 **Backend capture** (from `list_items({status: inbox})`):
 - The item already exists — do NOT call `create_item`
-- If classification or body needs updating, call `update_item(id, {type, priority, body})` first
+- If classification or body needs updating, call `update_item(id, {type, priority, body[, area]})` first
 - Then call `set_status(id, triaged)` to promote it out of `inbox`
 
-### 6. Display summary table:
+### 6. Display summary table (add an `Area` column only when at least one capture in this run
+   was classified with an area; omit the column entirely otherwise):
 
-   | ID | Type | Priority | Summary |
-   |----|------|----------|---------|
-   | 0042-timer-pause | bug | P1 | Timer doesn't pause... |
+   | ID | Type | Priority | Area | Summary |
+   |----|------|----------|------|---------|
+   | 0042-timer-pause | bug | P1 | ci | Timer doesn't pause... |
 
 ### 7. Clear processed bullets from `.maestro/inbox.md` after user confirms
    - Leave the `## Inbox` header intact
